@@ -6,30 +6,34 @@
 #include <unordered_set>
 #include <vector>
 
-Move::Move(int fx, int fy, int tx, int ty, int captured = -1, int promo = -1, bool castling = false, int rfx = -1,
-           int rfy = -1, int rtx = -1, int rty = -1, bool enPassant = false)
-    : from_x(fx)
-    , from_y(fy)
-    , to_x(tx)
-    , to_y(ty)
-    , capturedPiece(captured)
-    , promotion(promo)
-    , isCastling(castling)
-    , rook_from_x(rfx)
-    , rook_from_y(rfy)
-    , rook_to_x(rtx)
-    , rook_to_y(rty)
-    , isEnPassant(enPassant)
+Move::Move(Piece moving_piece = Piece(), Piece captured_piece = Piece(), Piece promotion_piece = Piece(), int from_x,
+           int from_y, int to_x, int to_y, bool is_castling = false, bool is_castling_king_side = true,
+           bool is_en_passant = false)
+    : moving_piece(moving_piece)
+    , captured_piece(captured_piece)
+    , promotion_piece(promotion_piece)
+    , from_x(from_x)
+    , from_y(from_y)
+    , to_x(to_x)
+    , to_y(to_y)
+    , is_castling(is_castling)
+    , is_castling_king_side(is_castling_king_side)
+    , is_en_passant(is_en_passant)
 {
 }
 
-void PieceBase::updatePosition(int new_pos_x, int new_pos_y)
+Piece::Piece()
+    : type(PieceType::EMPTY)
+    , color(PieceColor::NONE)
+    , value(0)
+    , pawn_moved_two(false)
 {
-    pos_x = new_pos_x;
-    pos_y = new_pos_y;
-    updatePieceValue();
 }
 
-int PieceBase::getValue() const { return value; }
-
-std::string PieceBase::getPieceName() const { return piece_name; }
+Piece::Piece(PieceType type, PieceColor color, int value, bool moved = false, bool pawn_moved_two = false)
+    : type(type)
+    , color(color)
+    , value(value)
+    , pawn_moved_two(pawn_moved_two)
+{
+}
