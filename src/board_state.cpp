@@ -4,7 +4,7 @@
 
 BoardState::BoardState() { resetBoard(); }
 
-BoardState::BoardState(const std::array<std::array<PieceType, 8>, 8>& input_chess_board)
+BoardState::BoardState(std::array<std::array<Piece, 8>, 8>& input_chess_board)
     : chess_board(input_chess_board)
 {
 }
@@ -14,35 +14,35 @@ void BoardState::resetBoard()
     // Set empty squares.
     for(int y = 2; y < 6; ++y) {
         for(int x = 0; x < 8; ++x) {
-            chess_board[x][y] = PieceType::EMPTY;
+            chess_board[x][y] = Piece();
         }
     }
     // Set Pawns.
     for(int x = 0; x < 8; ++x) {
-        chess_board[x][1] = PieceType::PAWN_WHITE;
+        chess_board[x][1] = Piece(PieceType::PAWN, PieceColor::WHITE);
     }
     for(int x = 0; x < 8; ++x) {
-        chess_board[x][6] = PieceType::PAWN_BLACK;
+        chess_board[x][6] = Piece(PieceType::PAWN, PieceColor::BLACK);
     }
     // Set Rooks.
-    chess_board[0][0] = PieceType::ROOK_WHITE;
-    chess_board[7][0] = PieceType::ROOK_WHITE;
-    chess_board[0][7] = PieceType::ROOK_BLACK;
-    chess_board[7][7] = PieceType::ROOK_BLACK;
+    chess_board[0][0] = Piece(PieceType::ROOK, PieceColor::WHITE);
+    chess_board[7][0] = Piece(PieceType::ROOK, PieceColor::WHITE);
+    chess_board[0][7] = Piece(PieceType::ROOK, PieceColor::BLACK);
+    chess_board[7][7] = Piece(PieceType::ROOK, PieceColor::BLACK);
     // Set Knights.
-    chess_board[1][0] = PieceType::KNIGHT_WHITE;
-    chess_board[6][0] = PieceType::KNIGHT_WHITE;
-    chess_board[1][7] = PieceType::KNIGHT_BLACK;
-    chess_board[6][7] = PieceType::KNIGHT_BLACK;
+    chess_board[1][0] = Piece(PieceType::KNIGHT, PieceColor::WHITE);
+    chess_board[6][0] = Piece(PieceType::KNIGHT, PieceColor::WHITE);
+    chess_board[1][7] = Piece(PieceType::KNIGHT, PieceColor::BLACK);
+    chess_board[6][7] = Piece(PieceType::KNIGHT, PieceColor::BLACK);
     // Set Bishops.
-    chess_board[2][0] = PieceType::BISHOP_WHITE;
-    chess_board[5][0] = PieceType::BISHOP_WHITE;
-    chess_board[2][7] = PieceType::BISHOP_BLACK;
-    chess_board[5][7] = PieceType::BISHOP_BLACK;
+    chess_board[2][0] = Piece(PieceType::BISHOP, PieceColor::WHITE);
+    chess_board[5][0] = Piece(PieceType::BISHOP, PieceColor::WHITE);
+    chess_board[2][7] = Piece(PieceType::BISHOP, PieceColor::BLACK);
+    chess_board[5][7] = Piece(PieceType::BISHOP, PieceColor::BLACK);
     // Set Queens.
-    chess_board[3][0] = PieceType::QUEEN_WHITE;
-    chess_board[3][7] = PieceType::QUEEN_BLACK;
+    chess_board[3][0] = Piece(PieceType::QUEEN, PieceColor::WHITE);
+    chess_board[3][7] = Piece(PieceType::QUEEN, PieceColor::BLACK);
     // Set Kings.
-    chess_board[4][0] = PieceType::KING_WHITE;
-    chess_board[4][7] = PieceType::KING_BLACK;
+    chess_board[4][0] = Piece(PieceType::KING, PieceColor::WHITE);
+    chess_board[4][7] = Piece(PieceType::KING, PieceColor::BLACK);
 }
