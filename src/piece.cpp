@@ -6,8 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, bool first_move = false,
-           bool is_castling = false, bool is_castling_king_side = true, bool pawn_moved_two = false)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, bool first_move = false,
+         bool is_castling = false, bool is_castling_king_side = true, bool pawn_moved_two = false)
     : from_x(from_x)
     , from_y(from_y)
     , to_x(to_x)
@@ -23,7 +23,7 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, bool
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, PieceType promotion_piece_type)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, PieceType promotion_piece_type)
     : from_x(from_x)
     , from_y(from_y)
     , to_x(to_x)
@@ -39,7 +39,7 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, Piec
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, Piece& captured_piece,
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, Piece captured_piece,
            bool first_move = false, bool is_en_passant = true)
     : from_x(from_x)
     , from_y(from_y)
@@ -56,7 +56,7 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, Piec
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece& moving_piece, Piece& captured_piece,
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, Piece captured_piece,
            PieceType promotion_piece_type)
     : from_x(from_x)
     , from_y(from_y)

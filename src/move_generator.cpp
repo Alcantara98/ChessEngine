@@ -120,8 +120,22 @@ void generateKingMove(const std::array<std::array<Piece, 8>, 8>& board, int x, i
         }
     }
     // Castle Moves
-    if(first_move){
-        
+    if(first_move) {
+        // Castle king side.
+        if(board[x + 1][y].type == PieceType::EMPTY && board[x + 2][y].type == PieceType::EMPTY) {
+            Piece rook = board[7][y];
+            if(rook.type == PieceType::ROOK && rook.moved == false) {
+                possible_moves.push_back(Move(x, y, x + 2, y, king_piece, first_move, true));
+            }
+        }
+        // Castle queen side.
+        if(board[x - 1][y].type == PieceType::EMPTY && board[x - 2][y].type == PieceType::EMPTY &&
+           board[x - 3][y].type == PieceType::EMPTY) {
+            Piece rook = board[0][y];
+            if(rook.type == PieceType::ROOK && rook.moved == false) {
+                possible_moves.push_back(Move(x, y, x - 2, y, king_piece, first_move, true));
+            }
+        }
     }
 }
 
@@ -269,4 +283,11 @@ void generateRookMove(const std::array<std::array<Piece, 8>, 8>& board, int x, i
             break;
         }
     }
+}
+
+void generateQueenMove(const std::array<std::array<Piece, 8>, 8>& board, int x, int y,
+                       std::vector<Move>& possible_moves)
+{
+    generateRookMove(board, x, y, possible_moves);
+    generateBishopMove(board, x, y, possible_moves);
 }
