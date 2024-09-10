@@ -6,8 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, bool first_move = false,
-         bool is_castling = false, bool is_castling_king_side = true, bool pawn_moved_two = false)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, bool first_move, bool is_castling,
+           bool is_castling_king_side, bool pawn_moved_two)
     : from_x(from_x)
     , from_y(from_y)
     , to_x(to_x)
@@ -40,7 +40,7 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, Piece
 }
 
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, Piece captured_piece,
-           bool first_move = false, bool is_en_passant = true)
+           bool first_move, bool is_en_passant)
     : from_x(from_x)
     , from_y(from_y)
     , to_x(to_x)
@@ -73,7 +73,7 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece, Piece
 {
 }
 
-Piece::Piece(PieceType type, PieceColor color, int value, bool moved = false, bool pawn_moved_two = false)
+Piece::Piece(PieceType type, PieceColor color, int value, bool moved, bool pawn_moved_two)
     : type(type)
     , color(color)
     , value(value)
