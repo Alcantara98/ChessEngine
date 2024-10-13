@@ -1,0 +1,12 @@
+{
+    "name": "elby-chess-engine",
+    "version-string": "0.1.0",
+    "dependencies": [
+      {
+        "name": "gtest",
+        "version>=": "1.15.2"
+      },
+      "vcpkg-cmake"
+    ]
+  }
+  
