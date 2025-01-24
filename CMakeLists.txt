@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(MyProject)
+project(chess_engine)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -12,4 +12,4 @@ include_directories(include)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # Create the executable
-add_executable(my_program ${SOURCES})
+add_executable(chess_engine ${SOURCES})

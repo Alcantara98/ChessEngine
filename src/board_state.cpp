@@ -4,7 +4,7 @@
 
 BoardState::BoardState() { resetBoard(); }
 
-BoardState::BoardState(std::array<std::array<Piece, 8>, 8>& input_chess_board)
+BoardState::BoardState(std::array<std::array<Piece, 8>, 8> &input_chess_board)
     : chess_board(input_chess_board)
 {
 }
@@ -12,16 +12,20 @@ BoardState::BoardState(std::array<std::array<Piece, 8>, 8>& input_chess_board)
 void BoardState::resetBoard()
 {
     // Set empty squares.
-    for(int y = 2; y < 6; ++y) {
-        for(int x = 0; x < 8; ++x) {
+    for (int y = 2; y < 6; ++y)
+    {
+        for (int x = 0; x < 8; ++x)
+        {
             chess_board[x][y] = Piece();
         }
     }
     // Set Pawns.
-    for(int x = 0; x < 8; ++x) {
+    for (int x = 0; x < 8; ++x)
+    {
         chess_board[x][1] = Piece(PieceType::PAWN, PieceColor::WHITE);
     }
-    for(int x = 0; x < 8; ++x) {
+    for (int x = 0; x < 8; ++x)
+    {
         chess_board[x][6] = Piece(PieceType::PAWN, PieceColor::BLACK);
     }
     // Set Rooks.
