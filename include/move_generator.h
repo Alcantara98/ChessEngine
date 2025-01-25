@@ -25,9 +25,9 @@ struct Move {
    * @param to_x Final position of piece in x axis.
    * @param to_y Final position of piece in y axis.
    * @param moving_piece The piece to move.
+   * @param first_move Specifies whether this is the piece's first move.
    * @param is_castling True if King is castling.
    * @param is_castling_king_side True if King castles King Side.
-   * @param first_move Specifies whether this is the piece's first move.
    * @param pawn_moved_two Specifies whether a pawn moved two squares forward.
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,

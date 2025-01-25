@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-Piece::Piece(PieceType type, PieceColor color, int value, bool moved, bool pawn_moved_two)
-    : type(type), color(color), value(value), pawn_moved_two(pawn_moved_two)
-{
-}
+Piece::Piece(PieceType type, PieceColor color, int value, bool moved,
+             bool pawn_moved_two)
+    : type(type), color(color), value(value), moved(moved),
+      pawn_moved_two(pawn_moved_two) {}

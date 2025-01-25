@@ -49,9 +49,16 @@ void generatePawnMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
   }
   if (y != promotion_tile || y != promotion_tile + pawn_direction) {
     // Normal one square move forward.
-    if (board[x][y + 1].type == PieceType::EMPTY) {
+    if (board[x][y + pawn_direction].type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, x, y + pawn_direction, pawn_piece, first_move));
+    }
+    // Normal two square move forward.
+    if (board[x][y + pawn_direction].type == PieceType::EMPTY &&
+        board[x][y + (2 * pawn_direction)].type == PieceType::EMPTY &&
+        first_move) {
+      possible_moves.push_back(Move(x, y, x, y + (2 * pawn_direction),
+                                    pawn_piece, true, false, false, true));
     }
     // Normal capture.
     Piece capture_left = board[x - 1][y + pawn_direction];
@@ -132,17 +139,10 @@ void generatePawnMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
                                     capture_right, PieceType::ROOK));
     }
   }
-  if (!pawn_piece.moved) {
-    if (board[x][y + pawn_direction].type == PieceType::EMPTY &&
-        board[x][y + (2 * pawn_direction)].type == PieceType::EMPTY) {
-      possible_moves.push_back(Move(x, y, x, y + (2 * pawn_direction),
-                                    pawn_piece, true, false, false, true));
-    }
-    // Record if pawn's first move since pawns can move two squares forward if
-    // they have not moved yet.
-    for (auto move : possible_moves) {
-      move.first_move = true;
-    }
+  // Record if pawn's first move since pawns can move two squares forward if
+  // they have not moved yet.
+  for (auto move : possible_moves) {
+    move.first_move = true;
   }
 }
 
