@@ -2,6 +2,7 @@
 #define BEST_MOVE_FINDER_H
 
 #include "move_generator.h"
+#include <limits>
 
 class BestMoveFinder {
 private:
