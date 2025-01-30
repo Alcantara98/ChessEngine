@@ -16,7 +16,7 @@ void BoardState::resetBoard() {
   // Set empty squares.
   for (int y = 2; y < 6; ++y) {
     for (int x = 0; x < 8; ++x) {
-      chess_board[x][y] = Piece();
+      chess_board[x][y] = empty_square;
     }
   }
   // Set Pawns.
@@ -47,4 +47,20 @@ void BoardState::resetBoard() {
   // Set Kings.
   chess_board[4][0] = Piece(PieceType::KING, PieceColor::WHITE);
   chess_board[4][7] = Piece(PieceType::KING, PieceColor::BLACK);
+}
+
+void BoardState::printBoard() {
+  for (int y = 7; y >= 0; --y) {
+    for (int x = 0; x < 8; ++x) {
+      Piece &piece = chess_board[x][y];
+      char piece_char;
+      if (piece.color == PieceColor::WHITE) {
+        piece_char = w_piece_to_char[piece.type];
+      } else {
+        piece_char = b_piece_to_char[piece.type];
+      }
+      printf("%c ", piece_char);
+    }
+    printf("\n");
+  }
 }

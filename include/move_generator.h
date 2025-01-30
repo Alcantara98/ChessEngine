@@ -11,8 +11,6 @@ struct Move {
   PieceType promotion_piece_type;
   int from_x, from_y;
   int to_x, to_y;
-  bool is_castling;
-  bool is_castling_king_side;
   bool is_en_passant;
   bool first_move;
   bool pawn_moved_two;
@@ -26,13 +24,10 @@ struct Move {
    * @param to_y Final position of piece in y axis.
    * @param moving_piece The piece to move.
    * @param first_move Specifies whether this is the piece's first move.
-   * @param is_castling True if King is castling.
-   * @param is_castling_king_side True if King castles King Side.
    * @param pawn_moved_two Specifies whether a pawn moved two squares forward.
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
-       bool first_move = false, bool is_castling = false,
-       bool is_castling_king_side = true, bool pawn_moved_two = false);
+       bool first_move = false, bool pawn_moved_two = false);
 
   /**
    * @brief Constructor for pawn promotion through normal move.
