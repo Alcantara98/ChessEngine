@@ -4,12 +4,14 @@
 #include "move_generator.h"
 #include "piece.h"
 
-
 #include <array>
 #include <unordered_map>
 
 class BoardState {
 private:
+  // All empty squares point to the same instance.
+  Piece empty_piece = Piece();
+
   // Char to represent white pieces.
   std::unordered_map<PieceType, char> w_piece_to_char = {
       {PieceType::EMPTY, '='},  {PieceType::KING, 'K'},
@@ -26,7 +28,7 @@ private:
 
 public:
   // 8 x 8 array to represent a chess board.
-  std::array<std::array<Piece, 8>, 8> chess_board;
+  std::array<std::array<Piece *, 8>, 8> chess_board;
 
   // Represents who is to move.
   PieceColor move_color = PieceColor::WHITE;
@@ -51,7 +53,7 @@ public:
    * the game.
    * @param engine_color Determines which color to maximise for.
    */
-  BoardState(std::array<std::array<Piece, 8>, 8> &input_chess_board,
+  BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
              PieceColor move_color = PieceColor::WHITE,
              PieceColor engine_color = PieceColor::BLACK);
 

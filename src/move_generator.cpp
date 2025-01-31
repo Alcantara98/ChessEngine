@@ -1,41 +1,41 @@
 #include "move_generator.h"
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            bool first_move, bool pawn_moved_two)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
-      moving_piece(moving_piece), captured_piece(Piece()),
+      moving_piece(moving_piece), captured_piece(nullptr),
       promotion_piece_type(PieceType::EMPTY), is_en_passant(false),
       first_move(first_move), pawn_moved_two(pawn_moved_two) {}
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
-      moving_piece(moving_piece), captured_piece(Piece()),
+      moving_piece(moving_piece), captured_piece(nullptr),
       promotion_piece_type(promotion_piece_type), is_en_passant(false),
       first_move(false), pawn_moved_two(false) {}
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
-           Piece &captured_piece, bool first_move, bool is_en_passant)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
+           Piece *captured_piece, bool first_move, bool is_en_passant)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(PieceType::EMPTY), is_en_passant(is_en_passant),
       first_move(first_move), pawn_moved_two(false) {}
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
-           Piece &captured_piece, PieceType promotion_piece_type)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
+           Piece *captured_piece, PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(promotion_piece_type), is_en_passant(false),
       first_move(false), pawn_moved_two(false) {}
 
-void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
-                      std::vector<Move> &possible_moves) {
-  Piece &pawn_piece = board[x][y];
-  bool first_move = !pawn_piece.moved;
+void generatePawnMove(std::array<std::array<Piece *, 8>, 8> &board, int x,
+                      int y, std::vector<Move> &possible_moves) {
+  Piece *pawn_piece = board[x][y];
+  bool first_move = !pawn_piece->moved;
 
   // Create pawn moves.
   int pawn_direction, promotion_tile;
-  if (pawn_piece.color == PieceColor::WHITE) {
+  if (pawn_piece->color == PieceColor::WHITE) {
     pawn_direction = 1;
     promotion_tile = 7;
   } else {
@@ -44,48 +44,52 @@ void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
   if (y != promotion_tile || y != promotion_tile + pawn_direction) {
     // Normal one square move forward.
-    if (board[x][y + pawn_direction].type == PieceType::EMPTY) {
+    if (board[x][y + pawn_direction]->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, x, y + pawn_direction, pawn_piece, first_move));
     }
     // Normal two square move forward.
-    if (board[x][y + pawn_direction].type == PieceType::EMPTY &&
-        board[x][y + (2 * pawn_direction)].type == PieceType::EMPTY &&
+    if (board[x][y + pawn_direction]->type == PieceType::EMPTY &&
+        board[x][y + (2 * pawn_direction)]->type == PieceType::EMPTY &&
         first_move) {
       possible_moves.push_back(
           Move(x, y, x, y + (2 * pawn_direction), pawn_piece, true, true));
     }
     // Normal capture.
-    Piece capture_left = board[x - 1][y + pawn_direction];
-    Piece capture_right = board[x + 1][y + pawn_direction];
-    if (capture_left.type != PieceType::EMPTY &&
-        capture_left.color == PieceColor::BLACK) {
-      possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction, pawn_piece,
-                                    capture_left, first_move));
+    if (x > 0) {
+      Piece *capture_left = board[x - 1][y + pawn_direction];
+      if (capture_left->type != PieceType::EMPTY &&
+          capture_left->color != pawn_piece->color) {
+        possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction,
+                                      pawn_piece, capture_left, first_move));
+      }
     }
-    if (capture_right.type != PieceType::EMPTY &&
-        capture_right.color == PieceColor::BLACK) {
-      possible_moves.push_back(Move(x, y, x + 1, y + pawn_direction, pawn_piece,
-                                    capture_right, first_move));
+    if (x < 7) {
+      Piece *capture_right = board[x + 1][y + pawn_direction];
+      if (capture_right->type != PieceType::EMPTY &&
+          capture_right->color != pawn_piece->color) {
+        possible_moves.push_back(Move(x, y, x + 1, y + pawn_direction,
+                                      pawn_piece, capture_right, first_move));
+      }
     }
     // En-passant captures.
     if (y == 4) {
-      Piece left_piece = board[x - 1][y];
-      Piece right_piece = board[x + 1][y];
-      if (x > 0 && left_piece.type == PieceType::PAWN) {
-        if (left_piece.color == PieceColor::BLACK &&
-            left_piece.pawn_moved_two) {
-          if (board[x - 1][y + pawn_direction].type == PieceType::EMPTY) {
+      Piece *left_piece = board[x - 1][y];
+      Piece *right_piece = board[x + 1][y];
+      if (x > 0 && left_piece->type == PieceType::PAWN) {
+        if (left_piece->color != pawn_piece->color &&
+            left_piece->pawn_moved_two) {
+          if (board[x - 1][y + pawn_direction]->type == PieceType::EMPTY) {
             possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction,
                                           pawn_piece, left_piece, first_move,
                                           true));
           }
         }
       }
-      if (x < 7 && right_piece.type == PieceType::PAWN) {
-        if (right_piece.color == PieceColor::BLACK &&
-            right_piece.pawn_moved_two) {
-          if (board[x + 1][y + pawn_direction].type == PieceType::EMPTY) {
+      if (x < 7 && right_piece->type == PieceType::PAWN) {
+        if (right_piece->color != pawn_piece->color &&
+            right_piece->pawn_moved_two) {
+          if (board[x + 1][y + pawn_direction]->type == PieceType::EMPTY) {
             possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction,
                                           pawn_piece, right_piece, first_move,
                                           true));
@@ -98,7 +102,7 @@ void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   else if (y == promotion_tile) {
     int new_x, new_y;
     // Promotion through normal one square move forward.
-    if (board[x][y + pawn_direction].type == PieceType::EMPTY) {
+    if (board[x][y + pawn_direction]->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, x, y + pawn_direction, pawn_piece, PieceType::QUEEN));
       possible_moves.push_back(
@@ -109,10 +113,10 @@ void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
           Move(x, y, x, y + pawn_direction, pawn_piece, PieceType::ROOK));
     }
     // Promotion through capture.
-    Piece capture_left = board[x - 1][y + pawn_direction];
-    Piece capture_right = board[x + 1][y + pawn_direction];
-    if (capture_left.type != PieceType::EMPTY &&
-        capture_left.color == PieceColor::BLACK) {
+    Piece *capture_left = board[x - 1][y + pawn_direction];
+    Piece *capture_right = board[x + 1][y + pawn_direction];
+    if (capture_left->type != PieceType::EMPTY &&
+        capture_left->color != pawn_piece->color) {
       possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction, pawn_piece,
                                     capture_left, PieceType::QUEEN));
       possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction, pawn_piece,
@@ -122,8 +126,8 @@ void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
       possible_moves.push_back(Move(x, y, x - 1, y + pawn_direction, pawn_piece,
                                     capture_left, PieceType::ROOK));
     }
-    if (capture_right.type != PieceType::EMPTY &&
-        capture_right.color == PieceColor::BLACK) {
+    if (capture_right->type != PieceType::EMPTY &&
+        capture_right->color != pawn_piece->color) {
       possible_moves.push_back(Move(x, y, x + 1, y + pawn_direction, pawn_piece,
                                     capture_right, PieceType::QUEEN));
       possible_moves.push_back(Move(x, y, x + 1, y + pawn_direction, pawn_piece,
@@ -136,10 +140,10 @@ void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
 }
 
-void generateKingMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
-                      std::vector<Move> &possible_moves) {
-  Piece &king_piece = board[x][y];
-  bool first_move = !king_piece.moved;
+void generateKingMove(std::array<std::array<Piece *, 8>, 8> &board, int x,
+                      int y, std::vector<Move> &possible_moves) {
+  Piece *king_piece = board[x][y];
+  bool first_move = !king_piece->moved;
 
   for (int new_x = x - 1; new_x <= x + 1; ++new_x) {
     for (int new_y = y - 1; new_y <= y + 1; ++new_y) {
@@ -151,14 +155,14 @@ void generateKingMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
       if (new_x == x && new_y == y) {
         continue;
       }
-      Piece target_piece = board[new_x][new_y];
+      Piece *target_piece = board[new_x][new_y];
       // Normal move.
-      if (target_piece.type == PieceType::EMPTY) {
+      if (target_piece->type == PieceType::EMPTY) {
         possible_moves.push_back(
             Move(x, y, new_x, new_y, king_piece, first_move));
       }
       // Capture move.
-      else if (target_piece.color != king_piece.color) {
+      else if (target_piece->color != king_piece->color) {
         possible_moves.push_back(
             Move(x, y, new_x, new_y, king_piece, target_piece, first_move));
       }
@@ -167,20 +171,20 @@ void generateKingMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   // Castle Moves
   if (first_move) {
     // Castle king side.
-    if (board[x + 1][y].type == PieceType::EMPTY &&
-        board[x + 2][y].type == PieceType::EMPTY) {
-      Piece rook = board[7][y];
-      if (rook.type == PieceType::ROOK && rook.moved == false) {
+    if (board[x + 1][y]->type == PieceType::EMPTY &&
+        board[x + 2][y]->type == PieceType::EMPTY) {
+      Piece *rook = board[7][y];
+      if (rook->type == PieceType::ROOK && rook->moved == false) {
         possible_moves.push_back(
             Move(x, y, x + 2, y, king_piece, first_move, true));
       }
     }
     // Castle queen side.
-    if (board[x - 1][y].type == PieceType::EMPTY &&
-        board[x - 2][y].type == PieceType::EMPTY &&
-        board[x - 3][y].type == PieceType::EMPTY) {
-      Piece rook = board[0][y];
-      if (rook.type == PieceType::ROOK && rook.moved == false) {
+    if (board[x - 1][y]->type == PieceType::EMPTY &&
+        board[x - 2][y]->type == PieceType::EMPTY &&
+        board[x - 3][y]->type == PieceType::EMPTY) {
+      Piece *rook = board[0][y];
+      if (rook->type == PieceType::ROOK && rook->moved == false) {
         possible_moves.push_back(
             Move(x, y, x - 2, y, king_piece, first_move, true));
       }
@@ -188,10 +192,10 @@ void generateKingMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
 }
 
-void generateKnightMove(std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateKnightMove(std::array<std::array<Piece *, 8>, 8> &board, int x,
                         int y, std::vector<Move> &possible_moves) {
-  Piece &knight_piece = board[x][y];
-  bool first_move = !knight_piece.moved;
+  Piece *knight_piece = board[x][y];
+  bool first_move = !knight_piece->moved;
 
   std::vector<int> x_pos_list = {x - 2, x - 2, x - 1, x - 1,
                                  x + 1, x + 1, x + 2, x + 2};
@@ -204,24 +208,24 @@ void generateKnightMove(std::array<std::array<Piece, 8>, 8> &board, int x,
     if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7) {
       continue;
     }
-    Piece target_piece = board[new_x][new_y];
+    Piece *target_piece = board[new_x][new_y];
     // Normal move.
-    if (target_piece.type == PieceType::EMPTY) {
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, knight_piece, first_move));
     }
     // Capture move.
-    else if (target_piece.color != knight_piece.color) {
+    else if (target_piece->color != knight_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, knight_piece, target_piece, first_move));
     }
   }
 }
 
-void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateBishopMove(std::array<std::array<Piece *, 8>, 8> &board, int x,
                         int y, std::vector<Move> &possible_moves) {
-  Piece &bishop_piece = board[x][y];
-  bool first_move = !bishop_piece.moved;
+  Piece *bishop_piece = board[x][y];
+  bool first_move = !bishop_piece->moved;
 
   // Bishop can go four directions diagonally from its current position.
   // Calculate using for loop for each direction.
@@ -229,11 +233,11 @@ void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
   new_x = x + 1;
   new_y = y + 1;
   for (; new_x < 8 && new_y < 8; ++new_x, ++new_y) {
-    Piece target_piece = board[new_x][new_y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[new_x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece.color != bishop_piece.color) {
+    } else if (target_piece->color != bishop_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
       break;
@@ -244,11 +248,11 @@ void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
   new_x = x - 1;
   new_y = y - 1;
   for (; new_x >= 0 && new_y >= 0; --new_x, --new_y) {
-    Piece target_piece = board[new_x][new_y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[new_x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece.color != bishop_piece.color) {
+    } else if (target_piece->color != bishop_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
       break;
@@ -259,11 +263,11 @@ void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
   new_x = x + 1;
   new_y = y - 1;
   for (; new_x < 8 && new_y >= 0; ++new_x, --new_y) {
-    Piece target_piece = board[new_x][new_y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[new_x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece.color != bishop_piece.color) {
+    } else if (target_piece->color != bishop_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
       break;
@@ -274,11 +278,11 @@ void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
   new_x = x - 1;
   new_y = y + 1;
   for (; new_x >= 0 && new_y < 8; --new_x, ++new_y) {
-    Piece target_piece = board[new_x][new_y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[new_x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece.color != bishop_piece.color) {
+    } else if (target_piece->color != bishop_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
       break;
@@ -288,20 +292,20 @@ void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
   }
 }
 
-void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
-                      std::vector<Move> &possible_moves) {
-  Piece &rook_piece = board[x][y];
-  bool first_move = !rook_piece.moved;
+void generateRookMove(std::array<std::array<Piece *, 8>, 8> &board, int x,
+                      int y, std::vector<Move> &possible_moves) {
+  Piece *rook_piece = board[x][y];
+  bool first_move = !rook_piece->moved;
 
   // Bishop can go four directions diagonally from its current position.
   // Calculate ussing forloop for each direction.
   int new_x, new_y;
   new_x = x + 1;
   for (; new_x < 8; ++new_x) {
-    Piece target_piece = board[new_x][y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[new_x][y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(Move(x, y, new_x, y, rook_piece, first_move));
-    } else if (target_piece.color != rook_piece.color) {
+    } else if (target_piece->color != rook_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, y, rook_piece, target_piece, first_move));
       break;
@@ -311,10 +315,10 @@ void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
   new_x = x - 1;
   for (; new_x >= 0; --new_x) {
-    Piece target_piece = board[new_x][y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[new_x][y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(Move(x, y, new_x, y, rook_piece, first_move));
-    } else if (target_piece.color != rook_piece.color) {
+    } else if (target_piece->color != rook_piece->color) {
       possible_moves.push_back(
           Move(x, y, new_x, y, rook_piece, target_piece, first_move));
       break;
@@ -324,10 +328,10 @@ void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
   new_y = y - 1;
   for (; new_y >= 0; --new_y) {
-    Piece target_piece = board[x][new_y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(Move(x, y, x, new_y, rook_piece, first_move));
-    } else if (target_piece.color != rook_piece.color) {
+    } else if (target_piece->color != rook_piece->color) {
       possible_moves.push_back(
           Move(x, y, x, new_y, rook_piece, target_piece, first_move));
       break;
@@ -337,10 +341,10 @@ void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
   new_y = y + 1;
   for (; new_y < 8; ++new_y) {
-    Piece target_piece = board[x][new_y];
-    if (target_piece.type == PieceType::EMPTY) {
+    Piece *target_piece = board[x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
       possible_moves.push_back(Move(x, y, x, new_y, rook_piece, first_move));
-    } else if (target_piece.color != rook_piece.color) {
+    } else if (target_piece->color != rook_piece->color) {
       possible_moves.push_back(
           Move(x, y, x, new_y, rook_piece, target_piece, first_move));
       break;
@@ -350,8 +354,8 @@ void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
   }
 }
 
-void generateQueenMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
-                       std::vector<Move> &possible_moves) {
+void generateQueenMove(std::array<std::array<Piece *, 8>, 8> &board, int x,
+                       int y, std::vector<Move> &possible_moves) {
   generateRookMove(board, x, y, possible_moves);
   generateBishopMove(board, x, y, possible_moves);
 }
