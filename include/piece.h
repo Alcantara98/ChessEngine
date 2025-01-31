@@ -1,9 +1,6 @@
 #ifndef PIECE_BASE_H
 #define PIECE_BASE_H
 
-#include <string>
-#include <vector>
-
 /**
  * @brief Enum to represent chess piece type.
  */
@@ -21,7 +18,6 @@ struct Piece {
   PieceType type;
   PieceColor color;
   bool moved;
-  int value;
   bool pawn_moved_two;
 
   /**
@@ -31,7 +27,7 @@ struct Piece {
    * @param pawn_moved_two Whether the pawn's last move is two squares forward.
    */
   Piece(PieceType type = PieceType::EMPTY, PieceColor color = PieceColor::NONE,
-        int value = 0, bool moved = false, bool pawn_moved_two = false);
+        bool moved = false, bool pawn_moved_two = false);
 };
 
 #endif

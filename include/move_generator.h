@@ -1,9 +1,12 @@
 #ifndef MOVE_GENERATOR_H
 #define MOVE_GENERATOR_H
-#include "board_state.h"
+
+
 #include "piece.h"
+#include "move_generator.h"
 
 #include <vector>
+#include <array>
 
 struct Move {
   Piece moving_piece;
@@ -26,7 +29,7 @@ struct Move {
    * @param first_move Specifies whether this is the piece's first move.
    * @param pawn_moved_two Specifies whether a pawn moved two squares forward.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
+  Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
        bool first_move = false, bool pawn_moved_two = false);
 
   /**
@@ -39,7 +42,7 @@ struct Move {
    * @param moving_piece The piece to move.
    * @param promotion_piece_type Promote piece to this piece type.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
+  Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
        PieceType promotion_piece_type);
 
   /**
@@ -54,8 +57,8 @@ struct Move {
    * @param is_en_passant True if Pawn will capture En Passant.
    * @param first_move Specifies whether this is the piece's first move.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
-       Piece captured_piece, bool first_move = false,
+  Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
+       Piece &captured_piece, bool first_move = false,
        bool is_en_passant = false);
 
   /**
@@ -69,8 +72,8 @@ struct Move {
    * @param captured_piece True if move captures another piece.
    * @param promotion_piece_type Promote piece to this piece type.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
-       Piece captured_piece, PieceType promotion_piece_type);
+  Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
+       Piece &captured_piece, PieceType promotion_piece_type);
 };
 
 /**
@@ -83,7 +86,7 @@ struct Move {
  * board_state.
  * @return A vector of possible moves.
  */
-void generatePawnMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                       int y, std::vector<Move> &possible_moves);
 
 /**
@@ -96,7 +99,7 @@ void generatePawnMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
  * board_state.
  * @return A vector of possible moves.
  */
-void generateKnightMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateKnightMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                         int y, std::vector<Move> &possible_moves);
 
 /**
@@ -109,7 +112,7 @@ void generateKnightMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
  * board_state.
  * @return A vector of possible moves.
  */
-void generateBishopMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                         int y, std::vector<Move> &possible_moves);
 
 /**
@@ -122,7 +125,7 @@ void generateBishopMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
  * board_state.
  * @return A vector of possible moves.
  */
-void generateRookMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                       int y, std::vector<Move> &possible_moves);
 
 /**
@@ -135,7 +138,7 @@ void generateRookMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
  * board_state.
  * @return A vector of possible moves.
  */
-void generateQueenMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateQueenMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                        int y, std::vector<Move> &possible_moves);
 
 /**
@@ -148,7 +151,7 @@ void generateQueenMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
  * board_state.
  * @return A vector of possible moves.
  */
-void generateKingMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateKingMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                       int y, std::vector<Move> &possible_moves);
 
 #endif // MOVE_GENERATOR_H

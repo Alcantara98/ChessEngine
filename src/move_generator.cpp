@@ -1,36 +1,36 @@
 #include "move_generator.h"
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
            bool first_move, bool pawn_moved_two)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(Piece()),
       promotion_piece_type(PieceType::EMPTY), is_en_passant(false),
       first_move(first_move), pawn_moved_two(pawn_moved_two) {}
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
            PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(Piece()),
       promotion_piece_type(promotion_piece_type), is_en_passant(false),
       first_move(false), pawn_moved_two(false) {}
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
-           Piece captured_piece, bool first_move, bool is_en_passant)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
+           Piece &captured_piece, bool first_move, bool is_en_passant)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(PieceType::EMPTY), is_en_passant(is_en_passant),
       first_move(first_move), pawn_moved_two(false) {}
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece moving_piece,
-           Piece captured_piece, PieceType promotion_piece_type)
+Move::Move(int from_x, int from_y, int to_x, int to_y, Piece &moving_piece,
+           Piece &captured_piece, PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(promotion_piece_type), is_en_passant(false),
       first_move(false), pawn_moved_two(false) {}
 
-void generatePawnMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
-                      int y, std::vector<Move> &possible_moves) {
-  Piece pawn_piece = board[x][y];
+void generatePawnMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
+                      std::vector<Move> &possible_moves) {
+  Piece &pawn_piece = board[x][y];
   bool first_move = !pawn_piece.moved;
 
   // Create pawn moves.
@@ -134,16 +134,11 @@ void generatePawnMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
                                     capture_right, PieceType::ROOK));
     }
   }
-  // Record if pawn's first move since pawns can move two squares forward if
-  // they have not moved yet.
-  for (auto move : possible_moves) {
-    move.first_move = true;
-  }
 }
 
-void generateKingMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
-                      int y, std::vector<Move> &possible_moves) {
-  Piece king_piece = board[x][y];
+void generateKingMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
+                      std::vector<Move> &possible_moves) {
+  Piece &king_piece = board[x][y];
   bool first_move = !king_piece.moved;
 
   for (int new_x = x - 1; new_x <= x + 1; ++new_x) {
@@ -193,9 +188,9 @@ void generateKingMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
   }
 }
 
-void generateKnightMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateKnightMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                         int y, std::vector<Move> &possible_moves) {
-  Piece knight_piece = board[x][y];
+  Piece &knight_piece = board[x][y];
   bool first_move = !knight_piece.moved;
 
   std::vector<int> x_pos_list = {x - 2, x - 2, x - 1, x - 1,
@@ -223,13 +218,13 @@ void generateKnightMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
   }
 }
 
-void generateBishopMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
+void generateBishopMove(std::array<std::array<Piece, 8>, 8> &board, int x,
                         int y, std::vector<Move> &possible_moves) {
-  Piece bishop_piece = board[x][y];
+  Piece &bishop_piece = board[x][y];
   bool first_move = !bishop_piece.moved;
 
   // Bishop can go four directions diagonally from its current position.
-  // Calculate ussing forloop for each direction.
+  // Calculate using for loop for each direction.
   int new_x, new_y;
   new_x = x + 1;
   new_y = y + 1;
@@ -293,9 +288,9 @@ void generateBishopMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
   }
 }
 
-void generateRookMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
-                      int y, std::vector<Move> &possible_moves) {
-  Piece rook_piece = board[x][y];
+void generateRookMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
+                      std::vector<Move> &possible_moves) {
+  Piece &rook_piece = board[x][y];
   bool first_move = !rook_piece.moved;
 
   // Bishop can go four directions diagonally from its current position.
@@ -355,8 +350,8 @@ void generateRookMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
   }
 }
 
-void generateQueenMove(const std::array<std::array<Piece, 8>, 8> &board, int x,
-                       int y, std::vector<Move> &possible_moves) {
+void generateQueenMove(std::array<std::array<Piece, 8>, 8> &board, int x, int y,
+                       std::vector<Move> &possible_moves) {
   generateRookMove(board, x, y, possible_moves);
   generateBishopMove(board, x, y, possible_moves);
 }

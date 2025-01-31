@@ -1,15 +1,18 @@
 #ifndef BEST_MOVE_FINDER_H
 #define BEST_MOVE_FINDER_H
 
+#include "board_state.h"
 #include "move_generator.h"
+
 #include <limits>
 
 class BestMoveFinder {
 private:
   // Use for starting values of alpha and beta;
   const int INF = std::numeric_limits<int>::max();
-  BoardState board_state;
-  std::vector<Move> possible_moves;
+
+  // See BoardState.
+  BoardState &board_state;
 
   /**
    * @brief Recursive function to find the best move using minimax algorithm
@@ -25,14 +28,18 @@ private:
                                  bool maximise);
 
 public:
+  // Store possible moves.
+  std::vector<Move> possible_moves;
+
   /**
    * @brief Default Constructor - takes a chess board state.
    * @param chess_board BoardState object.
    */
-  BestMoveFinder(BoardState chess_board);
+  BestMoveFinder(BoardState &chess_board);
 
   /**
    * @brief Finds the best move with the given current state of the board.
+   * @param max_search_depth Max depth to search.
    */
   Move find_best_move(int max_search_depth);
 
@@ -46,18 +53,6 @@ public:
    * @brief Calculates all possible moves of current board state.
    */
   void calculate_possible_moves();
-
-  /**
-   * @brief Will apply the given move unto board_state;
-   * @param move Move to apply on board_state.
-   */
-  void apply_move(Move &move);
-
-  /**
-   * @brief Will undo the given move unto board_state;
-   * @param move Move to undo on board_state.
-   */
-  void undo_move(Move &move);
 };
 
 #endif

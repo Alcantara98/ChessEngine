@@ -1,7 +1,5 @@
 #include "board_state.h"
 
-#include "piece.h"
-
 BoardState::BoardState(PieceColor move_color, PieceColor engine_color)
     : move_color(move_color), engine_color(engine_color) {
   resetBoard();
@@ -16,7 +14,7 @@ void BoardState::resetBoard() {
   // Set empty squares.
   for (int y = 2; y < 6; ++y) {
     for (int x = 0; x < 8; ++x) {
-      chess_board[x][y] = empty_square;
+      chess_board[x][y] = Piece();
     }
   }
   // Set Pawns.
@@ -53,14 +51,56 @@ void BoardState::printBoard() {
   for (int y = 7; y >= 0; --y) {
     for (int x = 0; x < 8; ++x) {
       Piece &piece = chess_board[x][y];
-      char piece_char;
-      if (piece.color == PieceColor::WHITE) {
-        piece_char = w_piece_to_char[piece.type];
-      } else {
-        piece_char = b_piece_to_char[piece.type];
-      }
+      char piece_char = (piece.color == PieceColor::WHITE)
+                            ? w_piece_to_char[piece.type]
+                            : b_piece_to_char[piece.type];
       printf("%c ", piece_char);
     }
     printf("\n");
   }
+}
+
+void BoardState::apply_move(Move &move) {
+  if (move.is_en_passant) {
+    // Remove captured pawn.
+    int captured_y_pos = (move.moving_piece.color == PieceColor::WHITE)
+                             ? move.to_y - 1
+                             : move.to_y + 1;
+    chess_board[move.to_x][captured_y_pos] = Piece();
+  } else if (move.moving_piece.type == PieceType::KING) {
+    // Move Rook.
+    switch (move.to_x - move.from_x) {
+    case 2:
+      // King Side Castle.
+      chess_board[7][move.to_y].moved = true;
+      std::swap(chess_board[5][move.to_y], chess_board[7][move.to_y]);
+      break;
+    case -2:
+      // Queen Side Castle.
+      chess_board[0][move.to_y].moved = true;
+      std::swap(chess_board[0][move.to_y], chess_board[3][move.to_y]);
+      break;
+    default:
+      break;
+    }
+  }
+
+  std::swap(chess_board[move.from_x][move.from_y],
+            chess_board[move.to_x][move.to_y]);
+  if (move.promotion_piece_type != PieceType::EMPTY) {
+    // If pawn is promoting, moving piece will become promotion piece.
+    chess_board[move.to_x][move.to_y] =
+        Piece(move.promotion_piece_type, move.moving_piece.color);
+  }
+
+  if (move.captured_piece.type != PieceType::EMPTY) {
+    chess_board[move.from_x][move.from_y] = Piece();
+  }
+
+  if (move.first_move) {
+    chess_board[move.to_x][move.to_y].moved = true;
+  }
+
+  move_color =
+      (move_color == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
 }
