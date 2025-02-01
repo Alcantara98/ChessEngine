@@ -1,10 +1,11 @@
 #ifndef BOARD_STATE_H
 #define BOARD_STATE_H
 
-#include "move_generator.h"
+#include "move.h"
 #include "piece.h"
 
 #include <array>
+#include <stack>
 #include <unordered_map>
 
 class BoardState {
@@ -16,14 +17,14 @@ private:
   std::unordered_map<PieceType, char> w_piece_to_char = {
       {PieceType::EMPTY, '='},  {PieceType::KING, 'K'},
       {PieceType::QUEEN, 'Q'},  {PieceType::ROOK, 'R'},
-      {PieceType::BISHOP, 'B'}, {PieceType::KNIGHT, 'H'},
+      {PieceType::BISHOP, 'B'}, {PieceType::KNIGHT, 'N'},
       {PieceType::PAWN, 'P'}};
 
   // Char to represent black pieces.
   std::unordered_map<PieceType, char> b_piece_to_char = {
       {PieceType::EMPTY, '='},  {PieceType::KING, 'k'},
       {PieceType::QUEEN, 'q'},  {PieceType::ROOK, 'r'},
-      {PieceType::BISHOP, 'b'}, {PieceType::KNIGHT, 'h'},
+      {PieceType::BISHOP, 'b'}, {PieceType::KNIGHT, 'n'},
       {PieceType::PAWN, 'p'}};
 
 public:
@@ -36,8 +37,10 @@ public:
   // Color to maximise for.
   PieceColor engine_color;
 
+  std::stack<Move> previous_moves;
+
   /**
-   * @brief Default Constructor - sets chess_board using resetBoard.
+   * @brief Default Constructor - sets chess_board using reset_board.
    * @param move_color Color to move with current state. White by default starts
    * the game.
    * @param engine_color Determines which color to maximise for.
@@ -60,12 +63,12 @@ public:
   /**
    * @brief Resets chess board to default starting piece positions.
    */
-  void resetBoard();
+  void reset_board();
 
   /**
    * @brief Prints the board.
    */
-  void printBoard();
+  void print_board();
 
   /**
    * @brief Will apply the given move unto board_state;
@@ -75,9 +78,8 @@ public:
 
   /**
    * @brief Will undo the given move unto board_state;
-   * @param move Move to undo on board_state.
    */
-  void undo_move(Move &move);
+  void undo_move();
 };
 
 #endif
