@@ -1,7 +1,7 @@
 #include "best_move_finder.h"
 
-BestMoveFinder::BestMoveFinder(BoardState &chess_board)
-    : board_state(chess_board) {}
+BestMoveFinder::BestMoveFinder(BoardState &board_state)
+    : board_state(board_state) {}
 
 void BestMoveFinder::calculate_possible_moves() {
   for (int y = 0; y < 8; ++y) {

@@ -14,15 +14,15 @@ private:
   Piece empty_piece = Piece();
 
   // Char to represent white pieces.
-  std::unordered_map<PieceType, char> w_piece_to_char = {
-      {PieceType::EMPTY, '='},  {PieceType::KING, 'K'},
+  const std::unordered_map<PieceType, char> w_piece_to_char = {
+      {PieceType::EMPTY, '-'},  {PieceType::KING, 'K'},
       {PieceType::QUEEN, 'Q'},  {PieceType::ROOK, 'R'},
       {PieceType::BISHOP, 'B'}, {PieceType::KNIGHT, 'N'},
       {PieceType::PAWN, 'P'}};
 
   // Char to represent black pieces.
-  std::unordered_map<PieceType, char> b_piece_to_char = {
-      {PieceType::EMPTY, '='},  {PieceType::KING, 'k'},
+  const std::unordered_map<PieceType, char> b_piece_to_char = {
+      {PieceType::EMPTY, '-'},  {PieceType::KING, 'k'},
       {PieceType::QUEEN, 'q'},  {PieceType::ROOK, 'r'},
       {PieceType::BISHOP, 'b'}, {PieceType::KNIGHT, 'n'},
       {PieceType::PAWN, 'p'}};

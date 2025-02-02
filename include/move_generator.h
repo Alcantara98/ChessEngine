@@ -11,7 +11,7 @@
 /**
  * @brief Generates all possible moves for a given pawn.
  *
- * @param board Reference of the current board state.
+ * @param board_state Reference of the current board state.
  * @param x The x-coordinate of the pawn.
  * @param y The y-coordinate of the pawn.
  * @param possible_moves Reference to the list of possible moves of current
@@ -24,12 +24,11 @@ void generatePawnMove(BoardState &board_state, int x, int y,
 /**
  * @brief Generates all possible moves for a given knight.
  *
- * @param board Reference of the current board state.
+ * @param board_state Reference of the current board state.
  * @param x The x-coordinate of the knight.
  * @param y The y-coordinate of the knight.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
- * @return A vector of possible moves.
  */
 void generateKnightMove(BoardState &board_state, int x, int y,
                         std::vector<Move> &possible_moves);
@@ -37,12 +36,11 @@ void generateKnightMove(BoardState &board_state, int x, int y,
 /**
  * @brief Generates all possible moves for a given bishop.
  *
- * @param board Reference of the current board state.
+ * @param board_state Reference of the current board state.
  * @param x The x-coordinate of the bishop.
  * @param y The y-coordinate of the bishop.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
- * @return A vector of possible moves.
  */
 void generateBishopMove(BoardState &board_state, int x, int y,
                         std::vector<Move> &possible_moves);
@@ -50,12 +48,11 @@ void generateBishopMove(BoardState &board_state, int x, int y,
 /**
  * @brief Generates all possible moves for a given rook.
  *
- * @param board Reference of the current board state.
+ * @param board_state Reference of the current board state.
  * @param x The x-coordinate of the rook.
  * @param y The y-coordinate of the rook.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
- * @return A vector of possible moves.
  */
 void generateRookMove(BoardState &board_state, int x, int y,
                       std::vector<Move> &possible_moves);
@@ -63,12 +60,11 @@ void generateRookMove(BoardState &board_state, int x, int y,
 /**
  * @brief Generates all possible moves for a given queen.
  *
- * @param board Reference of the current board state.
+ * @param board_state Reference of the current board state.
  * @param x The x-coordinate of the queen.
  * @param y The y-coordinate of the queen.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
- * @return A vector of possible moves.
  */
 void generateQueenMove(BoardState &board_state, int x, int y,
                        std::vector<Move> &possible_moves);
@@ -76,12 +72,11 @@ void generateQueenMove(BoardState &board_state, int x, int y,
 /**
  * @brief Generates all possible moves for a given king.
  *
- * @param board Reference of the current board state.
+ * @param board_state Reference of the current board state.
  * @param x The x-coordinate of the king.
  * @param y The y-coordinate of the king.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
- * @return A vector of possible moves.
  */
 void generateKingMove(BoardState &board_state, int x, int y,
                       std::vector<Move> &possible_moves);

@@ -33,9 +33,9 @@ public:
 
   /**
    * @brief Default Constructor - takes a chess board state.
-   * @param chess_board BoardState object.
+   * @param board_state BoardState object.
    */
-  BestMoveFinder(BoardState &chess_board);
+  BestMoveFinder(BoardState &board_state);
 
   /**
    * @brief Finds the best move with the given current state of the board.
