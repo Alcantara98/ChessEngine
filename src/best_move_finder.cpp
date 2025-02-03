@@ -12,22 +12,22 @@ void BestMoveFinder::calculate_possible_moves() {
       if (current_piece->color == board_state.move_color) {
         switch (piece_type) {
         case PieceType::PAWN:
-          generatePawnMove(board_state, x, y, possible_moves);
+          MoveGenerator::generatePawnMove(board_state, x, y, possible_moves);
           break;
         case PieceType::ROOK:
-          generateRookMove(board_state, x, y, possible_moves);
+          MoveGenerator::generateRookMove(board_state, x, y, possible_moves);
           break;
         case PieceType::KNIGHT:
-          generateKnightMove(board_state, x, y, possible_moves);
+          MoveGenerator::generateKnightMove(board_state, x, y, possible_moves);
           break;
         case PieceType::BISHOP:
-          generateBishopMove(board_state, x, y, possible_moves);
+          MoveGenerator::generateBishopMove(board_state, x, y, possible_moves);
           break;
         case PieceType::QUEEN:
-          generateQueenMove(board_state, x, y, possible_moves);
+          MoveGenerator::generateQueenMove(board_state, x, y, possible_moves);
           break;
         case PieceType::KING:
-          generateKingMove(board_state, x, y, possible_moves);
+          MoveGenerator::generateKingMove(board_state, x, y, possible_moves);
           break;
         default:
           // Empty square.

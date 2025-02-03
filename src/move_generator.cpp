@@ -29,8 +29,8 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
       promotion_piece_type(promotion_piece_type), is_en_passant(false),
       first_move(false), pawn_moved_two(false) {}
 
-void generatePawnMove(BoardState &board_state, int x, int y,
-                      std::vector<Move> &possible_moves) {
+void MoveGenerator::generatePawnMove(BoardState &board_state, int x, int y,
+                                     std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *pawn_piece = board[x][y];
   bool first_move = !pawn_piece->moved;
@@ -151,8 +151,8 @@ void generatePawnMove(BoardState &board_state, int x, int y,
   }
 }
 
-void generateKingMove(BoardState &board_state, int x, int y,
-                      std::vector<Move> &possible_moves) {
+void MoveGenerator::generateKingMove(BoardState &board_state, int x, int y,
+                                     std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *king_piece = board[x][y];
   bool first_move = !king_piece->moved;
@@ -204,8 +204,8 @@ void generateKingMove(BoardState &board_state, int x, int y,
   }
 }
 
-void generateKnightMove(BoardState &board_state, int x, int y,
-                        std::vector<Move> &possible_moves) {
+void MoveGenerator::generateKnightMove(BoardState &board_state, int x, int y,
+                                       std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *knight_piece = board[x][y];
   bool first_move = !knight_piece->moved;
@@ -235,8 +235,8 @@ void generateKnightMove(BoardState &board_state, int x, int y,
   }
 }
 
-void generateBishopMove(BoardState &board_state, int x, int y,
-                        std::vector<Move> &possible_moves) {
+void MoveGenerator::generateBishopMove(BoardState &board_state, int x, int y,
+                                       std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *bishop_piece = board[x][y];
   bool first_move = !bishop_piece->moved;
@@ -306,8 +306,8 @@ void generateBishopMove(BoardState &board_state, int x, int y,
   }
 }
 
-void generateRookMove(BoardState &board_state, int x, int y,
-                      std::vector<Move> &possible_moves) {
+void MoveGenerator::generateRookMove(BoardState &board_state, int x, int y,
+                                     std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *rook_piece = board[x][y];
   bool first_move = !rook_piece->moved;
@@ -369,8 +369,8 @@ void generateRookMove(BoardState &board_state, int x, int y,
   }
 }
 
-void generateQueenMove(BoardState &board_state, int x, int y,
-                       std::vector<Move> &possible_moves) {
+void MoveGenerator::generateQueenMove(BoardState &board_state, int x, int y,
+                                      std::vector<Move> &possible_moves) {
   generateRookMove(board_state, x, y, possible_moves);
   generateBishopMove(board_state, x, y, possible_moves);
 }
