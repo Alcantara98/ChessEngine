@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> dis(0, 10);
 
-  std::array move_num = {13, 1, 9, 1, 9, 1, 5, 1, 7, 1};
+  std::array<int, 10> move_num = {13, 1, 9, 1, 9, 1, 5, 1, 7, 1};
 
   // Test Applying Moves.
   int i = 0;
