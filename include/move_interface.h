@@ -8,11 +8,22 @@
 
 class MoveInterface {
 private:
+  // Map to convert algebraic coordinates to int.
   const std::map<char, int> algebraic_to_int = {{'a', 1}, {'b', 1}, {'c', 1},
                                                 {'d', 1}, {'e', 1}, {'f', 1},
                                                 {'g', 1}, {'h', 1}};
+  // Reference of all possible moves;
+  std::vector<Move> &possible_moves;
+
+  // Reference of the baord state;
+  BoardState &board_state;
 
 public:
+  /**
+   * @brief User to Engine move interface.
+   */
+  MoveInterface(BoardState &board_state, std::vector<Move> &possible_moves);
+
   /**
    * @brief Use to convert command line input into a Move.
    * @param move_string Converts this string into a Move.alignas

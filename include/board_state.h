@@ -5,6 +5,7 @@
 #include "piece.h"
 
 #include <array>
+#include <cstdio>
 #include <stack>
 #include <unordered_map>
 
