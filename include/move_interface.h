@@ -24,13 +24,15 @@ public:
    */
   MoveInterface(BoardState &board_state, std::vector<Move> &possible_moves);
 
+  Move take_move_input();
+
   /**
    * @brief Use to convert command line input into a Move.
    * @param move_string Converts this string into a Move.alignas
    * @param board_state Chess board to help conversion.
    * @return Returns the converted Move.
    */
-  Move string_to_move(std::string &move_string, BoardState &board_state);
+  Move string_to_move(std::string &move_string);
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).
@@ -38,7 +40,7 @@ public:
    * @param board_state Chess board to help conversion.
    * @return Returns a string reprsenting the move.
    */
-  std::string move_to_string(Move &move, BoardState &board_state);
+  std::string move_to_string(Move &move);
 };
 
 #endif
