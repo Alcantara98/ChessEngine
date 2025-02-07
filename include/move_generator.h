@@ -84,4 +84,6 @@ public:
                                std::vector<Move> &possible_moves);
 };
 
+
+
 #endif // MOVE_GENERATOR_H

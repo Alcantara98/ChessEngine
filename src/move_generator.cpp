@@ -154,20 +154,20 @@ void MoveGenerator::generateKingMove(BoardState &board_state, int x, int y,
   // Castle Moves
   if (first_move) {
     // Castle king side.
-    if (board[x + 1][y]->type == PieceType::EMPTY &&
-        board[x + 2][y]->type == PieceType::EMPTY) {
-      Piece *rook = board[7][y];
-      if (rook->type == PieceType::ROOK && rook->moved == false) {
+    Piece *rook = board[7][y];
+    if (rook->type == PieceType::ROOK && rook->moved == false) {
+      if (board[x + 1][y]->type == PieceType::EMPTY &&
+          board[x + 2][y]->type == PieceType::EMPTY) {
         possible_moves.push_back(
             Move(x, y, x + 2, y, king_piece, first_move, true));
       }
     }
     // Castle queen side.
-    if (board[x - 1][y]->type == PieceType::EMPTY &&
-        board[x - 2][y]->type == PieceType::EMPTY &&
-        board[x - 3][y]->type == PieceType::EMPTY) {
-      Piece *rook = board[0][y];
-      if (rook->type == PieceType::ROOK && rook->moved == false) {
+    rook = board[0][y];
+    if (rook->type == PieceType::ROOK && rook->moved == false) {
+      if (board[x - 1][y]->type == PieceType::EMPTY &&
+          board[x - 2][y]->type == PieceType::EMPTY &&
+          board[x - 3][y]->type == PieceType::EMPTY) {
         possible_moves.push_back(
             Move(x, y, x - 2, y, king_piece, first_move, true));
       }

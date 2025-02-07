@@ -8,13 +8,34 @@
 #include <regex>
 #include <string>
 
-
 class MoveInterface {
 private:
   // Map to convert algebraic coordinates to int.
-  const std::map<char, int> algebraic_to_int = {{'a', 1}, {'b', 1}, {'c', 1},
-                                                {'d', 1}, {'e', 1}, {'f', 1},
-                                                {'g', 1}, {'h', 1}};
+  const std::map<char, int> algebraic_to_int = {{'a', 0}, {'b', 1}, {'c', 2},
+                                                {'d', 3}, {'e', 4}, {'f', 5},
+                                                {'g', 6}, {'h', 7}};
+
+  // Map to convert int to algebraic coordinates.
+  const std::map<int, char> int_to_algebraic = {{0, 'a'}, {1, 'b'}, {2, 'c'},
+                                                {3, 'd'}, {4, 'e'}, {5, 'f'},
+                                                {6, 'g'}, {7, 'h'}};
+
+  // Map to convert string piece type to PieceType.
+  const std::map<char, PieceType> string_to_piece_type = {
+      {'K', PieceType::KING},
+      {'Q', PieceType::QUEEN},
+      {'R', PieceType::ROOK},
+      {'B', PieceType::BISHOP},
+      {'N', PieceType::KNIGHT}};
+
+  // Map to convert PieceType to string piece type.
+  const std::map<PieceType, char> piece_type_to_string = {
+      {PieceType::KING, 'K'},
+      {PieceType::QUEEN, 'Q'},
+      {PieceType::ROOK, 'R'},
+      {PieceType::BISHOP, 'B'},
+      {PieceType::KNIGHT, 'N'}};
+
   // Reference of all possible moves;
   std::vector<Move> &possible_moves;
 
