@@ -30,8 +30,8 @@ struct Move {
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
        Piece *captured_piece, PieceType promotion_piece_type,
-       bool is_en_passant, bool first_move = false, bool pawn_moved_two = false,
-       int pmt_x = -1, int pmt_y = -1);
+       bool is_en_passant, bool first_move, bool pawn_moved_two, int pmt_x,
+       int pmt_y);
 
   /**
    * @brief Constructor for normal move without captures.

@@ -68,8 +68,9 @@ Move MoveInterface::input_to_move() {
           pmt_x = to_x;
           pmt_y = to_y;
         }
-        if(matches[6].matched) {
-          promotion_piece_type = string_to_piece_type.at(matches[6].str().at(0));
+        if (matches[6].matched) {
+          promotion_piece_type =
+              string_to_piece_type.at(matches[6].str().at(0));
         }
       }
     } else {
@@ -89,4 +90,7 @@ Move MoveInterface::input_to_move() {
       first_move = true;
     }
   }
+  return Move(from_x, from_y, to_x, to_y, moving_piece, captured_piece,
+              promotion_piece_type, is_en_passant, first_move, pawn_moved_two,
+              pmt_x, pmt_y);
 }
