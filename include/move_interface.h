@@ -22,19 +22,15 @@ private:
 
   // Map to convert string piece type to PieceType.
   const std::map<char, PieceType> string_to_piece_type = {
-      {'K', PieceType::KING},
-      {'Q', PieceType::QUEEN},
-      {'R', PieceType::ROOK},
-      {'B', PieceType::BISHOP},
-      {'N', PieceType::KNIGHT}};
+      {'k', PieceType::KING},   {'q', PieceType::QUEEN},
+      {'r', PieceType::ROOK},   {'b', PieceType::BISHOP},
+      {'n', PieceType::KNIGHT}, {'p', PieceType::PAWN}};
 
   // Map to convert PieceType to string piece type.
   const std::map<PieceType, char> piece_type_to_string = {
-      {PieceType::KING, 'K'},
-      {PieceType::QUEEN, 'Q'},
-      {PieceType::ROOK, 'R'},
-      {PieceType::BISHOP, 'B'},
-      {PieceType::KNIGHT, 'N'}};
+      {PieceType::KING, 'k'},   {PieceType::QUEEN, 'q'},
+      {PieceType::ROOK, 'r'},   {PieceType::BISHOP, 'b'},
+      {PieceType::KNIGHT, 'n'}, {PieceType::PAWN, 'p'}};
 
   // Reference of all possible moves;
   std::vector<Move> &possible_moves;
@@ -52,7 +48,7 @@ public:
    * @brief Use to convert command line input into a Move.
    * @return Returns the converted Move.
    */
-  Move input_to_move();
+  Move input_to_move(std::string string_move);
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).

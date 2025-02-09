@@ -38,3 +38,15 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(promotion_piece_type), is_en_passant(false),
       first_move(false), pawn_moved_two(false) {}
+
+bool Move::operator==(const Move &other) const {
+  return from_x == other.from_x && from_y == other.from_y &&
+         to_x == other.to_x && to_y == other.to_y &&
+         moving_piece == other.moving_piece &&
+         captured_piece == other.captured_piece &&
+         promotion_piece_type == other.promotion_piece_type &&
+         is_en_passant == other.is_en_passant &&
+         first_move == other.first_move &&
+         pawn_moved_two == other.pawn_moved_two && pmt_x == other.pmt_x &&
+         pmt_y == other.pmt_y;
+}

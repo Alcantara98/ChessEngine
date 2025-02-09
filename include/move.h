@@ -14,6 +14,11 @@ struct Move {
   bool pawn_moved_two;
   // Coordinates of the pawn that moved two.
   int pmt_x, pmt_y;
+  /**
+   * @brief Overloaded operator to compare two moves.
+   * @return True if the two moves are the same.
+   */
+  bool operator==(const Move &other) const;
 
   /**
    * @brief Constructor with all parameters.
