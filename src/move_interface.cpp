@@ -108,7 +108,7 @@ Move MoveInterface::input_to_move(std::string string_move) {
       for (int y = 0; y < 8; ++y) {
         Piece *test_piece = board_state.chess_board[x][y];
         if (test_piece->type == PieceType::KING &&
-            test_piece->color == board_state.move_color) {
+            test_piece->color == current_color) {
           if (MoveGenerator::square_is_attacked(board_state, x, y,
                                                 current_color)) {
             king_is_checked = true;
@@ -122,7 +122,7 @@ Move MoveInterface::input_to_move(std::string string_move) {
       continue;
     }
 
-    return std::move(next_move);
+    return next_move;
   }
   return Move(from_x, from_y, to_x, to_y, moving_piece, captured_piece,
               promotion_piece_type, is_en_passant, first_move, pawn_moved_two,

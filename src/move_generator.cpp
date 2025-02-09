@@ -113,7 +113,7 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
     }
   }
   // Promotion moves.
-  else if (y == promotion_tile) {
+  else {
     int new_x, new_y;
     // Promotion through normal one square move forward.
     if (board[x][y_plus_pd]->type == PieceType::EMPTY) {
@@ -201,7 +201,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
         if (!square_is_attacked(board_state, x_plus_1, y, king_piece->color) &&
             !square_is_attacked(board_state, x + 2, y, king_piece->color)) {
           possible_moves.push_back(
-              Move(x, y, x + 2, y, king_piece, first_move, true));
+              Move(x, y, x + 2, y, king_piece, first_move, false));
         }
       }
     }
@@ -296,13 +296,13 @@ bool MoveGenerator::square_is_attacked(BoardState &board_state, int x, int y,
   int pawn_direction = (color == PieceColor::WHITE) ? 1 : -1;
   if (x > 0 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
     if (board[x - 1][y + pawn_direction]->type == PieceType::PAWN &&
-        board[x - 1][y + pawn_direction]->color == color) {
+        board[x - 1][y + pawn_direction]->color != color) {
       return true;
     }
   }
   if (x < 7 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
     if (board[x + 1][y + pawn_direction]->type == PieceType::PAWN &&
-        board[x + 1][y + pawn_direction]->color == color) {
+        board[x + 1][y + pawn_direction]->color != color) {
       return true;
     }
   }
@@ -316,7 +316,7 @@ bool MoveGenerator::square_is_attacked(BoardState &board_state, int x, int y,
     int new_y = move.second;
     if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       if (board[new_x][new_y]->type == PieceType::KNIGHT &&
-          board[new_x][new_y]->color == color) {
+          board[new_x][new_y]->color != color) {
         return true;
       }
     }
@@ -333,7 +333,7 @@ bool MoveGenerator::square_is_attacked(BoardState &board_state, int x, int y,
       if (target_piece->type != PieceType::EMPTY) {
         if ((target_piece->type == PieceType::ROOK ||
              target_piece->type == PieceType::QUEEN) &&
-            target_piece->color == color) {
+            target_piece->color != color) {
           return true;
         }
         break;
@@ -353,7 +353,7 @@ bool MoveGenerator::square_is_attacked(BoardState &board_state, int x, int y,
       if (target_piece->type != PieceType::EMPTY) {
         if ((target_piece->type == PieceType::BISHOP ||
              target_piece->type == PieceType::QUEEN) &&
-            target_piece->color == color) {
+            target_piece->color != color) {
           return true;
         }
         break;
@@ -372,7 +372,7 @@ bool MoveGenerator::square_is_attacked(BoardState &board_state, int x, int y,
     int new_y = move.second;
     if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       if (board[new_x][new_y]->type == PieceType::KING &&
-          board[new_x][new_y]->color == color) {
+          board[new_x][new_y]->color != color) {
         return true;
       }
     }
