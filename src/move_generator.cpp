@@ -1,7 +1,35 @@
 #include "move_generator.h"
 
-void MoveGenerator::generatePawnMove(BoardState &board_state, int x, int y,
-                                     std::vector<Move> &possible_moves) {
+// PRIVATE FUNCTIONS
+void MoveGenerator::rook_bishop_move_helper(BoardState &board_state, int x,
+                                            int y, int x_direction,
+                                            int y_direction,
+                                            std::vector<Move> &possible_moves) {
+  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
+  Piece *moving_piece = board[x][y];
+  bool first_move = !moving_piece->moved;
+
+  int new_x = x + x_direction;
+  int new_y = y + y_direction;
+  for (; new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8;
+       new_x += x_direction, new_y += y_direction) {
+    Piece *target_piece = board[new_x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
+      possible_moves.push_back(
+          Move(x, y, new_x, new_y, moving_piece, first_move));
+    } else if (target_piece->color != moving_piece->color) {
+      possible_moves.push_back(
+          Move(x, y, new_x, new_y, moving_piece, target_piece, first_move));
+      break;
+    } else {
+      break;
+    }
+  }
+}
+
+//  PUBLIC FUNCTIONS
+void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
+                                       std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *pawn_piece = board[x][y];
   bool first_move = !pawn_piece->moved;
@@ -130,8 +158,8 @@ void MoveGenerator::generatePawnMove(BoardState &board_state, int x, int y,
   }
 }
 
-void MoveGenerator::generateKingMove(BoardState &board_state, int x, int y,
-                                     std::vector<Move> &possible_moves) {
+void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
+                                       std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *king_piece = board[x][y];
   bool first_move = !king_piece->moved;
@@ -187,26 +215,17 @@ void MoveGenerator::generateKingMove(BoardState &board_state, int x, int y,
   }
 }
 
-void MoveGenerator::generateKnightMove(BoardState &board_state, int x, int y,
-                                       std::vector<Move> &possible_moves) {
+void MoveGenerator::generate_knight_move(BoardState &board_state, int x, int y,
+                                         std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *knight_piece = board[x][y];
   bool first_move = !knight_piece->moved;
 
-  // Helper variables.
-  int x_minus_1 = x - 1;
-  int x_minus_2 = x - 2;
-  int x_plus_1 = x + 1;
-  int x_plus_2 = x + 2;
-  int y_minus_1 = y - 1;
-  int y_minus_2 = y - 2;
-  int y_plus_1 = y + 1;
-  int y_plus_2 = y + 2;
+  std::vector<int> x_pos_list = {x - 2, x - 2, x - 1, x - 1,
+                                 x + 1, x + 1, x + 2, x + 2};
+  std::vector<int> y_pos_list = {y - 1, y + 1, y - 2, y + 2,
+                                 y - 2, y + 2, y - 1, y + 1};
 
-  std::vector<int> x_pos_list = {x_minus_2, x_minus_2, x_minus_1, x_minus_1,
-                                 x_plus_1,  x_plus_1,  x_plus_2,  x_plus_2};
-  std::vector<int> y_pos_list = {y_minus_1, y_plus_1, y_minus_2, y_plus_2,
-                                 y_minus_2, y_plus_2, y_minus_1, y_plus_1};
   for (int index = 0; index < 8; ++index) {
     int new_x = x_pos_list[index];
     int new_y = y_pos_list[index];
@@ -228,142 +247,36 @@ void MoveGenerator::generateKnightMove(BoardState &board_state, int x, int y,
   }
 }
 
-void MoveGenerator::generateBishopMove(BoardState &board_state, int x, int y,
-                                       std::vector<Move> &possible_moves) {
+void MoveGenerator::generate_bishop_move(BoardState &board_state, int x, int y,
+                                         std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *bishop_piece = board[x][y];
   bool first_move = !bishop_piece->moved;
 
   // Bishop can go four directions diagonally from its current position.
   // Calculate using for loop for each direction.
-  int new_x, new_y;
-  new_x = x + 1;
-  new_y = y + 1;
-  for (; new_x < 8 && new_y < 8; ++new_x, ++new_y) {
-    Piece *target_piece = board[new_x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece->color != bishop_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-  new_x = x - 1;
-  new_y = y - 1;
-  for (; new_x >= 0 && new_y >= 0; --new_x, --new_y) {
-    Piece *target_piece = board[new_x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece->color != bishop_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-  new_x = x + 1;
-  new_y = y - 1;
-  for (; new_x < 8 && new_y >= 0; ++new_x, --new_y) {
-    Piece *target_piece = board[new_x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece->color != bishop_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-  new_x = x - 1;
-  new_y = y + 1;
-  for (; new_x >= 0 && new_y < 8; --new_x, ++new_y) {
-    Piece *target_piece = board[new_x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, first_move));
-    } else if (target_piece->color != bishop_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, bishop_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
+  rook_bishop_move_helper(board_state, x, y, 1, 1, possible_moves);
+  rook_bishop_move_helper(board_state, x, y, 1, -1, possible_moves);
+  rook_bishop_move_helper(board_state, x, y, -1, 1, possible_moves);
+  rook_bishop_move_helper(board_state, x, y, -1, -1, possible_moves);
 }
 
-void MoveGenerator::generateRookMove(BoardState &board_state, int x, int y,
-                                     std::vector<Move> &possible_moves) {
+void MoveGenerator::generate_rook_move(BoardState &board_state, int x, int y,
+                                       std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *rook_piece = board[x][y];
   bool first_move = !rook_piece->moved;
 
   // Rook can go four directions horizontally and vertically from its current
   // position. Calculate using for loop for each direction.
-  int new_x, new_y;
-  new_x = x + 1;
-  for (; new_x < 8; ++new_x) {
-    Piece *target_piece = board[new_x][y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(Move(x, y, new_x, y, rook_piece, first_move));
-    } else if (target_piece->color != rook_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, y, rook_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-  new_x = x - 1;
-  for (; new_x >= 0; --new_x) {
-    Piece *target_piece = board[new_x][y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(Move(x, y, new_x, y, rook_piece, first_move));
-    } else if (target_piece->color != rook_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, y, rook_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-  new_y = y - 1;
-  for (; new_y >= 0; --new_y) {
-    Piece *target_piece = board[x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(Move(x, y, x, new_y, rook_piece, first_move));
-    } else if (target_piece->color != rook_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, x, new_y, rook_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-  new_y = y + 1;
-  for (; new_y < 8; ++new_y) {
-    Piece *target_piece = board[x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(Move(x, y, x, new_y, rook_piece, first_move));
-    } else if (target_piece->color != rook_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, x, new_y, rook_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
+  rook_bishop_move_helper(board_state, x, y, 1, 0, possible_moves);
+  rook_bishop_move_helper(board_state, x, y, -1, 0, possible_moves);
+  rook_bishop_move_helper(board_state, x, y, 0, 1, possible_moves);
+  rook_bishop_move_helper(board_state, x, y, 0, -1, possible_moves);
 }
 
-void MoveGenerator::generateQueenMove(BoardState &board_state, int x, int y,
-                                      std::vector<Move> &possible_moves) {
-  generateRookMove(board_state, x, y, possible_moves);
-  generateBishopMove(board_state, x, y, possible_moves);
+void MoveGenerator::generate_queen_move(BoardState &board_state, int x, int y,
+                                        std::vector<Move> &possible_moves) {
+  generate_rook_move(board_state, x, y, possible_moves);
+  generate_bishop_move(board_state, x, y, possible_moves);
 }

@@ -9,6 +9,19 @@
 #include <vector>
 
 class MoveGenerator {
+private:
+  /**
+   * @brief Generates bishop and rook moves in one given direction.
+   *
+   * @param board_state Reference of the current board state.
+   * @param x, y The coordinate of the bishop or bishop.
+   * @param possible_moves Reference to the list of possible moves of current
+   * board_state.
+   */
+  static void rook_bishop_move_helper(BoardState &board_state, int x, int y,
+                                      int x_direction, int y_direction,
+                                      std::vector<Move> &possible_moves);
+
 public:
   /**
    * @brief Generates all possible moves for a given pawn.
@@ -19,8 +32,8 @@ public:
    * board_state.
    * @return A vector of possible moves.
    */
-  static void generatePawnMove(BoardState &board_state, int x, int y,
-                               std::vector<Move> &possible_moves);
+  static void generate_pawn_move(BoardState &board_state, int x, int y,
+                                 std::vector<Move> &possible_moves);
 
   /**
    * @brief Generates all possible moves for a given knight.
@@ -30,8 +43,8 @@ public:
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
-  static void generateKnightMove(BoardState &board_state, int x, int y,
-                                 std::vector<Move> &possible_moves);
+  static void generate_knight_move(BoardState &board_state, int x, int y,
+                                   std::vector<Move> &possible_moves);
 
   /**
    * @brief Generates all possible moves for a given bishop.
@@ -41,8 +54,8 @@ public:
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
-  static void generateBishopMove(BoardState &board_state, int x, int y,
-                                 std::vector<Move> &possible_moves);
+  static void generate_bishop_move(BoardState &board_state, int x, int y,
+                                   std::vector<Move> &possible_moves);
 
   /**
    * @brief Generates all possible moves for a given rook.
@@ -52,8 +65,8 @@ public:
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
-  static void generateRookMove(BoardState &board_state, int x, int y,
-                               std::vector<Move> &possible_moves);
+  static void generate_rook_move(BoardState &board_state, int x, int y,
+                                 std::vector<Move> &possible_moves);
 
   /**
    * @brief Generates all possible moves for a given queen.
@@ -63,8 +76,8 @@ public:
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
-  static void generateQueenMove(BoardState &board_state, int x, int y,
-                                std::vector<Move> &possible_moves);
+  static void generate_queen_move(BoardState &board_state, int x, int y,
+                                  std::vector<Move> &possible_moves);
 
   /**
    * @brief Generates all possible moves for a given king.
@@ -74,8 +87,8 @@ public:
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
-  static void generateKingMove(BoardState &board_state, int x, int y,
-                               std::vector<Move> &possible_moves);
+  static void generate_king_move(BoardState &board_state, int x, int y,
+                                 std::vector<Move> &possible_moves);
 
   /**
    * @brief Checks if the given square is attacked.
