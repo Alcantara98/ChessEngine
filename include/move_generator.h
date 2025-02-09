@@ -14,8 +14,7 @@ public:
    * @brief Generates all possible moves for a given pawn.
    *
    * @param board_state Reference of the current board state.
-   * @param x The x-coordinate of the pawn.
-   * @param y The y-coordinate of the pawn.
+   * @param x, y The coordinate of the pawn.
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    * @return A vector of possible moves.
@@ -27,8 +26,7 @@ public:
    * @brief Generates all possible moves for a given knight.
    *
    * @param board_state Reference of the current board state.
-   * @param x The x-coordinate of the knight.
-   * @param y The y-coordinate of the knight.
+   * @param x, y The coordinate of the knight.
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
@@ -39,8 +37,7 @@ public:
    * @brief Generates all possible moves for a given bishop.
    *
    * @param board_state Reference of the current board state.
-   * @param x The x-coordinate of the bishop.
-   * @param y The y-coordinate of the bishop.
+   * @param x, y The coordinate of the bishop.
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
@@ -51,8 +48,7 @@ public:
    * @brief Generates all possible moves for a given rook.
    *
    * @param board_state Reference of the current board state.
-   * @param x The x-coordinate of the rook.
-   * @param y The y-coordinate of the rook.
+   * @param x, y The coordinate of the rook.
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
@@ -63,8 +59,7 @@ public:
    * @brief Generates all possible moves for a given queen.
    *
    * @param board_state Reference of the current board state.
-   * @param x The x-coordinate of the queen.
-   * @param y The y-coordinate of the queen.
+   * @param x, y The coordinate of the queen.
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
@@ -75,15 +70,22 @@ public:
    * @brief Generates all possible moves for a given king.
    *
    * @param board_state Reference of the current board state.
-   * @param x The x-coordinate of the king.
-   * @param y The y-coordinate of the king.
+   * @param x, y The coordinate of the king.
    * @param possible_moves Reference to the list of possible moves of current
    * board_state.
    */
   static void generateKingMove(BoardState &board_state, int x, int y,
                                std::vector<Move> &possible_moves);
+
+  /**
+   * @brief Checks if the given square is attacked.
+   * @param board_state Reference of the current board state.
+   * @param x, y The coordinate of the square.
+   * @param color The color of the attacking pieces.
+   * @return True if the square is attacked, false otherwise.
+   */
+  static bool square_is_attacked(BoardState &board_state, int x, int y,
+                                 PieceColor color);
 };
-
-
 
 #endif // MOVE_GENERATOR_H
