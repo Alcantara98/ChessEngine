@@ -170,7 +170,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
 
   for (int new_x = x - 1; new_x <= x + 1; ++new_x) {
     for (int new_y = y - 1; new_y <= y + 1; ++new_y) {
-      // Continue if coordinate is out of the chess baord.
+      // Continue if coordinate is out of the chess board.
       if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7) {
         continue;
       }
@@ -192,14 +192,14 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
     }
   }
   // Castle Moves
-  if (first_move && !square_is_attacked(board_state, x, y, king_piece->color)) {
+  if (first_move && !board_state.square_is_attacked(x, y, king_piece->color)) {
     // Castle king side.
     Piece *rook = board[7][y];
     if (rook->type == PieceType::ROOK && rook->moved == false) {
       if (board[x_plus_1][y]->type == PieceType::EMPTY &&
           board[x + 2][y]->type == PieceType::EMPTY) {
-        if (!square_is_attacked(board_state, x_plus_1, y, king_piece->color) &&
-            !square_is_attacked(board_state, x + 2, y, king_piece->color)) {
+        if (!board_state.square_is_attacked(x_plus_1, y, king_piece->color) &&
+            !board_state.square_is_attacked(x + 2, y, king_piece->color)) {
           possible_moves.push_back(
               Move(x, y, x + 2, y, king_piece, first_move, false));
         }
@@ -211,9 +211,9 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
       if (board[x_minus_1][y]->type == PieceType::EMPTY &&
           board[x - 2][y]->type == PieceType::EMPTY &&
           board[x - 3][y]->type == PieceType::EMPTY) {
-        if (!square_is_attacked(board_state, x_minus_1, y, king_piece->color) &&
-            !square_is_attacked(board_state, x - 2, y, king_piece->color) &&
-            !square_is_attacked(board_state, x - 3, y, king_piece->color)) {
+        if (!board_state.square_is_attacked(x_minus_1, y, king_piece->color) &&
+            !board_state.square_is_attacked(x - 2, y, king_piece->color) &&
+            !board_state.square_is_attacked(x - 3, y, king_piece->color)) {
           possible_moves.push_back(
               Move(x, y, x - 2, y, king_piece, first_move, true));
         }
@@ -236,7 +236,7 @@ void MoveGenerator::generate_knight_move(BoardState &board_state, int x, int y,
   for (int index = 0; index < 8; ++index) {
     int new_x = x_pos_list[index];
     int new_y = y_pos_list[index];
-    // Continue if coordinate is out of the chess baord.
+    // Continue if coordinate is out of the chess board.
     if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7) {
       continue;
     }
@@ -286,97 +286,4 @@ void MoveGenerator::generate_queen_move(BoardState &board_state, int x, int y,
                                         std::vector<Move> &possible_moves) {
   generate_rook_move(board_state, x, y, possible_moves);
   generate_bishop_move(board_state, x, y, possible_moves);
-}
-
-bool MoveGenerator::square_is_attacked(BoardState &board_state, int x, int y,
-                                       PieceColor color) {
-  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
-
-  // Check for pawn attacks
-  int pawn_direction = (color == PieceColor::WHITE) ? 1 : -1;
-  if (x > 0 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
-    if (board[x - 1][y + pawn_direction]->type == PieceType::PAWN &&
-        board[x - 1][y + pawn_direction]->color != color) {
-      return true;
-    }
-  }
-  if (x < 7 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
-    if (board[x + 1][y + pawn_direction]->type == PieceType::PAWN &&
-        board[x + 1][y + pawn_direction]->color != color) {
-      return true;
-    }
-  }
-
-  // Check for knight attacks
-  std::vector<std::pair<int, int>> knight_moves = {
-      {x - 2, y - 1}, {x - 2, y + 1}, {x - 1, y - 2}, {x - 1, y + 2},
-      {x + 1, y - 2}, {x + 1, y + 2}, {x + 2, y - 1}, {x + 2, y + 1}};
-  for (auto &move : knight_moves) {
-    int new_x = move.first;
-    int new_y = move.second;
-    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
-      if (board[new_x][new_y]->type == PieceType::KNIGHT &&
-          board[new_x][new_y]->color != color) {
-        return true;
-      }
-    }
-  }
-
-  // Check for rook/queen attacks (horizontal and vertical)
-  std::vector<std::pair<int, int>> directions = {
-      {1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-  for (auto &direction : directions) {
-    int new_x = x + direction.first;
-    int new_y = y + direction.second;
-    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
-      Piece *target_piece = board[new_x][new_y];
-      if (target_piece->type != PieceType::EMPTY) {
-        if ((target_piece->type == PieceType::ROOK ||
-             target_piece->type == PieceType::QUEEN) &&
-            target_piece->color != color) {
-          return true;
-        }
-        break;
-      }
-      new_x += direction.first;
-      new_y += direction.second;
-    }
-  }
-
-  // Check for bishop/queen attacks (diagonal)
-  directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-  for (auto &direction : directions) {
-    int new_x = x + direction.first;
-    int new_y = y + direction.second;
-    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
-      Piece *target_piece = board[new_x][new_y];
-      if (target_piece->type != PieceType::EMPTY) {
-        if ((target_piece->type == PieceType::BISHOP ||
-             target_piece->type == PieceType::QUEEN) &&
-            target_piece->color != color) {
-          return true;
-        }
-        break;
-      }
-      new_x += direction.first;
-      new_y += direction.second;
-    }
-  }
-
-  // Check for king attacks
-  std::vector<std::pair<int, int>> king_moves = {
-      {x - 1, y - 1}, {x - 1, y},     {x - 1, y + 1}, {x, y - 1},
-      {x, y + 1},     {x + 1, y - 1}, {x + 1, y},     {x + 1, y + 1}};
-  for (auto &move : king_moves) {
-    int new_x = move.first;
-    int new_y = move.second;
-    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
-      if (board[new_x][new_y]->type == PieceType::KING &&
-          board[new_x][new_y]->color != color) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }

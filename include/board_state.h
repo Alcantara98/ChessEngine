@@ -81,6 +81,19 @@ public:
    * @brief Will undo the given move unto board_state;
    */
   void undo_move();
+
+  /**
+   * @brief Checks if the given square is attacked.
+   * @param x, y The coordinate of the square.
+   * @param color The color of the attacked pieces.
+   * @return True if the square is attacked, false otherwise.
+   */
+  bool square_is_attacked(int x, int y, PieceColor color);
+
+  /**
+   * @brief Checks if the king of the given color is checked.
+   */
+  bool king_is_checked(PieceColor color);
 };
 
 #endif

@@ -35,7 +35,7 @@ private:
   // Reference of all possible moves;
   std::vector<Move> &possible_moves;
 
-  // Reference of the baord state;
+  // Reference of the board state;
   BoardState &board_state;
 
 public:

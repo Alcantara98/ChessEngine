@@ -39,3 +39,5 @@ void BestMoveFinder::calculate_possible_moves() {
     }
   }
 }
+
+int BestMoveFinder::evaluate_position() {}

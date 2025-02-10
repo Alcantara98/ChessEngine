@@ -87,9 +87,13 @@ Move MoveInterface::input_to_move(std::string string_move) {
     } else {
       first_move = true;
     }
+
+    // Create Move.
     Move next_move = Move(from_x, from_y, to_x, to_y, moving_piece,
                           captured_piece, promotion_piece_type, is_en_passant,
                           first_move, pawn_moved_two, pmt_x, pmt_y);
+
+    // Check if move is in generated possible moves.
     bool found_move = false;
     for (auto &possible_move : possible_moves) {
       if (possible_move == next_move) {
@@ -101,28 +105,18 @@ Move MoveInterface::input_to_move(std::string string_move) {
       printf("Invalid Move - Move not found in possible moves\n");
       continue;
     }
+
+    // Check if move puts king in check.
     PieceColor current_color = board_state.move_color;
     board_state.apply_move(next_move);
-    bool king_is_checked = false;
-    for (int x = 0; x < 8; ++x) {
-      for (int y = 0; y < 8; ++y) {
-        Piece *test_piece = board_state.chess_board[x][y];
-        if (test_piece->type == PieceType::KING &&
-            test_piece->color == current_color) {
-          if (MoveGenerator::square_is_attacked(board_state, x, y,
-                                                current_color)) {
-            king_is_checked = true;
-          }
-        }
-      }
-    }
+    bool king_is_checked = board_state.king_is_checked(current_color);
     board_state.undo_move();
     if (king_is_checked) {
       printf("King is checked - Choose a different move\n");
       continue;
     }
-
-    return next_move;
+    // Move is valid, exit loop.
+    break;
   }
   return Move(from_x, from_y, to_x, to_y, moving_piece, captured_piece,
               promotion_piece_type, is_en_passant, first_move, pawn_moved_two,

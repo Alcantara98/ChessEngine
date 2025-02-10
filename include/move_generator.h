@@ -89,16 +89,6 @@ public:
    */
   static void generate_king_move(BoardState &board_state, int x, int y,
                                  std::vector<Move> &possible_moves);
-
-  /**
-   * @brief Checks if the given square is attacked.
-   * @param board_state Reference of the current board state.
-   * @param x, y The coordinate of the square.
-   * @param color The color of the attacking pieces.
-   * @return True if the square is attacked, false otherwise.
-   */
-  static bool square_is_attacked(BoardState &board_state, int x, int y,
-                                 PieceColor color);
 };
 
 #endif // MOVE_GENERATOR_H

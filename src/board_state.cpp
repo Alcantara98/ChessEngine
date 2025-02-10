@@ -167,3 +167,105 @@ void BoardState::undo_move() {
       (move_color == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
   previous_moves.pop();
 }
+
+bool BoardState::square_is_attacked(int x, int y, PieceColor color) {
+  // Check for pawn attacks
+  int pawn_direction = (color == PieceColor::WHITE) ? 1 : -1;
+  if (x > 0 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
+    if (chess_board[x - 1][y + pawn_direction]->type == PieceType::PAWN &&
+        chess_board[x - 1][y + pawn_direction]->color != color) {
+      return true;
+    }
+  }
+  if (x < 7 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
+    if (chess_board[x + 1][y + pawn_direction]->type == PieceType::PAWN &&
+        chess_board[x + 1][y + pawn_direction]->color != color) {
+      return true;
+    }
+  }
+
+  // Check for knight attacks
+  std::vector<std::pair<int, int>> knight_moves = {
+      {x - 2, y - 1}, {x - 2, y + 1}, {x - 1, y - 2}, {x - 1, y + 2},
+      {x + 1, y - 2}, {x + 1, y + 2}, {x + 2, y - 1}, {x + 2, y + 1}};
+  for (auto &move : knight_moves) {
+    int new_x = move.first;
+    int new_y = move.second;
+    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      if (chess_board[new_x][new_y]->type == PieceType::KNIGHT &&
+          chess_board[new_x][new_y]->color != color) {
+        return true;
+      }
+    }
+  }
+
+  // Check for rook/queen attacks (horizontal and vertical)
+  std::vector<std::pair<int, int>> directions = {
+      {1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+  for (auto &direction : directions) {
+    int new_x = x + direction.first;
+    int new_y = y + direction.second;
+    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      Piece *target_piece = chess_board[new_x][new_y];
+      if (target_piece->type != PieceType::EMPTY) {
+        if ((target_piece->type == PieceType::ROOK ||
+             target_piece->type == PieceType::QUEEN) &&
+            target_piece->color != color) {
+          return true;
+        }
+        break;
+      }
+      new_x += direction.first;
+      new_y += direction.second;
+    }
+  }
+
+  // Check for bishop/queen attacks (diagonal)
+  directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+  for (auto &direction : directions) {
+    int new_x = x + direction.first;
+    int new_y = y + direction.second;
+    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      Piece *target_piece = chess_board[new_x][new_y];
+      if (target_piece->type != PieceType::EMPTY) {
+        if ((target_piece->type == PieceType::BISHOP ||
+             target_piece->type == PieceType::QUEEN) &&
+            target_piece->color != color) {
+          return true;
+        }
+        break;
+      }
+      new_x += direction.first;
+      new_y += direction.second;
+    }
+  }
+
+  // Check for king attacks
+  std::vector<std::pair<int, int>> king_moves = {
+      {x - 1, y - 1}, {x - 1, y},     {x - 1, y + 1}, {x, y - 1},
+      {x, y + 1},     {x + 1, y - 1}, {x + 1, y},     {x + 1, y + 1}};
+  for (auto &move : king_moves) {
+    int new_x = move.first;
+    int new_y = move.second;
+    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      if (chess_board[new_x][new_y]->type == PieceType::KING &&
+          chess_board[new_x][new_y]->color != color) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool BoardState::king_is_checked(PieceColor color) {
+  for (int x = 0; x < 8; ++x) {
+    for (int y = 0; y < 8; ++y) {
+      Piece *test_piece = chess_board[x][y];
+      if (test_piece->type == PieceType::KING && test_piece->color == color) {
+        return BoardState::square_is_attacked(x, y, color);
+      }
+    }
+  }
+  return false;
+}
