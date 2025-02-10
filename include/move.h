@@ -12,8 +12,10 @@ struct Move {
   bool is_en_passant;
   bool first_move;
   bool pawn_moved_two;
+
   // Coordinates of the pawn that moved two.
   int pmt_x, pmt_y;
+
   /**
    * @brief Overloaded operator to compare two moves.
    * @return True if the two moves are the same.

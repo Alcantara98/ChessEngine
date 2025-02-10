@@ -260,8 +260,7 @@ void MoveGenerator::generate_bishop_move(BoardState &board_state, int x, int y,
   Piece *bishop_piece = board[x][y];
   bool first_move = !bishop_piece->moved;
 
-  // Bishop can go four directions diagonally from its current position.
-  // Calculate using for loop for each direction.
+  // Each respective pair of x and y directions represent a diagonal.
   rook_bishop_move_helper(board_state, x, y, 1, 1, possible_moves);
   rook_bishop_move_helper(board_state, x, y, 1, -1, possible_moves);
   rook_bishop_move_helper(board_state, x, y, -1, 1, possible_moves);
@@ -274,8 +273,8 @@ void MoveGenerator::generate_rook_move(BoardState &board_state, int x, int y,
   Piece *rook_piece = board[x][y];
   bool first_move = !rook_piece->moved;
 
-  // Rook can go four directions horizontally and vertically from its current
-  // position. Calculate using for loop for each direction.
+  // Each respective pair of x and y directions represent horizontal or
+  // vertical moves.
   rook_bishop_move_helper(board_state, x, y, 1, 0, possible_moves);
   rook_bishop_move_helper(board_state, x, y, -1, 0, possible_moves);
   rook_bishop_move_helper(board_state, x, y, 0, 1, possible_moves);
@@ -284,6 +283,8 @@ void MoveGenerator::generate_rook_move(BoardState &board_state, int x, int y,
 
 void MoveGenerator::generate_queen_move(BoardState &board_state, int x, int y,
                                         std::vector<Move> &possible_moves) {
+
+  // Queen moves are a combination of rook and bishop moves.
   generate_rook_move(board_state, x, y, possible_moves);
   generate_bishop_move(board_state, x, y, possible_moves);
 }

@@ -44,12 +44,6 @@ public:
   Move find_best_move(int max_search_depth);
 
   /**
-   * @brief Evaluates current position using chess heuristics.
-   * @return Score of the given position.
-   */
-  int evaluate_position();
-
-  /**
    * @brief Calculates all possible moves of current board state.
    */
   void calculate_possible_moves();
