@@ -2,6 +2,7 @@
 #define POSITION_EVALUATOR_H
 
 #include "board_state.h"
+
 class PositionEvaluator {
 private:
   BoardState &board_state;

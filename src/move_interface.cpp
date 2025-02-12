@@ -1,10 +1,9 @@
 #include "move_interface.h"
 
-MoveInterface::MoveInterface(BoardState &board_state,
-                             std::vector<Move> &possible_moves)
-    : board_state(board_state), possible_moves(possible_moves) {}
+MoveInterface::MoveInterface(BoardState &board_state)
+    : board_state(board_state){}
 
-Move MoveInterface::input_to_move(std::string string_move) {
+Move MoveInterface::input_to_move(std::vector<Move> possible_moves, std::string string_move) {
   Piece *moving_piece;
   Piece *captured_piece = nullptr;
   PieceType promotion_piece_type = PieceType::EMPTY;
@@ -18,9 +17,9 @@ Move MoveInterface::input_to_move(std::string string_move) {
   char piece_type;
   int i = 0;
   while (i == 0) {
-    ++i;
-    // std::string string_move;
-    // std::cin >> string_move;
+    std::cout << "Enter move: ";
+    std::cin >> string_move;
+    std::cout << std::endl;
     std::regex moveRegex(
         R"(^(O-O(?:-O)?)|([kqrbnp])?([a-h][1-8])(x)?([a-h][1-8])=?([qrbns])?([+#])?$)");
 

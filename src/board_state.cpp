@@ -1,14 +1,13 @@
 #include "board_state.h"
 
 BoardState::BoardState(PieceColor move_color, PieceColor engine_color)
-    : move_color(move_color), engine_color(engine_color) {
+    : move_color(move_color) {
   reset_board();
 }
 
 BoardState::BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
                        PieceColor move_color, PieceColor engine_color)
-    : chess_board(input_chess_board), move_color(move_color),
-      engine_color(engine_color) {}
+    : chess_board(input_chess_board), move_color(move_color) {}
 
 void BoardState::reset_board() {
   // Set empty squares.
@@ -58,6 +57,7 @@ void BoardState::print_board() {
     }
     printf("\n");
   }
+  printf("\n");
 }
 
 void BoardState::apply_move(Move &move) {

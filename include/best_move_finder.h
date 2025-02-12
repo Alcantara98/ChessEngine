@@ -3,6 +3,7 @@
 
 #include "board_state.h"
 #include "move_generator.h"
+#include "position_evaluator.h"
 
 #include <limits>
 
@@ -14,6 +15,9 @@ private:
   // See BoardState.
   BoardState &board_state;
 
+  // Position Evaluator object.
+  PositionEvaluator position_evaluator;
+
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
@@ -23,13 +27,12 @@ private:
    * @param depth Current depth of search.
    * @param maximise Determines if the current turn will try to maximise
    * score.
+   * @return Evaluation score from search branch.
    */
-  void minimax_alpha_beta_search(Move move, int alpha, int beta, int depth,
-                                 bool maximise);
+  int minimax_alpha_beta_search(int alpha, int beta, int depth, bool maximise);
 
 public:
-  // Store possible moves.
-  std::vector<Move> possible_moves;
+  PieceColor engine_color = PieceColor::WHITE;
 
   /**
    * @brief Default Constructor - takes a chess board state.
@@ -46,7 +49,7 @@ public:
   /**
    * @brief Calculates all possible moves of current board state.
    */
-  void calculate_possible_moves();
+  std::vector<Move> calculate_possible_moves();
 };
 
 #endif

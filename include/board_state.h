@@ -36,9 +36,7 @@ public:
   // Represents who is to move.
   PieceColor move_color = PieceColor::WHITE;
 
-  // Color to maximise for.
-  PieceColor engine_color;
-
+  // List of all moves that have been applied to the current board.
   std::stack<Move> previous_moves;
 
   /**

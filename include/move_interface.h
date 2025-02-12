@@ -32,9 +32,6 @@ private:
       {PieceType::ROOK, 'r'},   {PieceType::BISHOP, 'b'},
       {PieceType::KNIGHT, 'n'}, {PieceType::PAWN, 'p'}};
 
-  // Reference of all possible moves;
-  std::vector<Move> &possible_moves;
-
   // Reference of the board state;
   BoardState &board_state;
 
@@ -42,13 +39,13 @@ public:
   /**
    * @brief User to Engine move interface.
    */
-  MoveInterface(BoardState &board_state, std::vector<Move> &possible_moves);
+  MoveInterface(BoardState &board_state);
 
   /**
    * @brief Use to convert command line input into a Move.
    * @return Returns the converted Move.
    */
-  Move input_to_move(std::string string_move);
+  Move input_to_move(std::vector<Move> possible_moves, std::string string_move = "");
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).
