@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <stack>
 #include <unordered_map>
+#include <vector>
 
 class BoardState {
 private:
