@@ -5,11 +5,6 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
                                               bool maximise) {
   if (depth == 0) {
     int eval = position_evaluator.evaluate_position();
-    // if (eval < 0) {
-    //   printf("Max Depth - Eval: %d\n", eval);
-    //   board_state.print_board();
-    //   printf("\n");
-    // }
     return eval;
   }
 
@@ -91,11 +86,11 @@ std::vector<Move> BestMoveFinder::calculate_possible_moves() {
 Move BestMoveFinder::find_best_move(int max_search_depth) {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<int> move_scores;
-  bool maximising = engine_color == PieceColor::WHITE ? true : false;
+  bool maximising = engine_color == PieceColor::WHITE;
   for (Move move : possible_moves) {
     board_state.apply_move(move);
     move_scores.push_back(
-        minimax_alpha_beta_search(-INF, INF, max_search_depth, maximising));
+        minimax_alpha_beta_search(-INF, INF, max_search_depth, !maximising));
     board_state.undo_move();
   }
   int best_score = move_scores[0];

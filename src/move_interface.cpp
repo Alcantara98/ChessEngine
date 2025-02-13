@@ -1,9 +1,10 @@
 #include "move_interface.h"
 
 MoveInterface::MoveInterface(BoardState &board_state)
-    : board_state(board_state){}
+    : board_state(board_state) {}
 
-Move MoveInterface::input_to_move(std::vector<Move> possible_moves, std::string string_move) {
+Move MoveInterface::input_to_move(std::vector<Move> possible_moves,
+                                  std::string string_move) {
   Piece *moving_piece;
   Piece *captured_piece = nullptr;
   PieceType promotion_piece_type = PieceType::EMPTY;
@@ -21,7 +22,7 @@ Move MoveInterface::input_to_move(std::vector<Move> possible_moves, std::string 
     std::cin >> string_move;
     std::cout << std::endl;
     std::regex moveRegex(
-        R"(^(O-O(?:-O)?)|([kqrbnp])?([a-h][1-8])(x)?([a-h][1-8])=?([qrbns])?([+#])?$)");
+        R"(^(O-O(?:-O)?)|([kqrbnp])([a-h][1-8])(x)?([a-h][1-8])=?([qrbns])?([+#])?$)");
 
     std::smatch matches;
 
@@ -73,8 +74,11 @@ Move MoveInterface::input_to_move(std::vector<Move> possible_moves, std::string 
       printf("Invalid Move - Regex Match Failure\n");
       continue;
     }
-
     moving_piece = board_state.chess_board[from_x][from_y];
+    if (moving_piece->type == PieceType::EMPTY) {
+      printf("Invalid Move - Empty Square\n");
+      continue;
+    }
     if (string_to_piece_type.at(piece_type) != moving_piece->type) {
       printf("Given piece type: %c does not match square piece type: %c\n",
              piece_type, piece_type_to_string.at(moving_piece->type));
@@ -114,6 +118,7 @@ Move MoveInterface::input_to_move(std::vector<Move> possible_moves, std::string 
       printf("King is checked - Choose a different move\n");
       continue;
     }
+
     // Move is valid, exit loop.
     break;
   }

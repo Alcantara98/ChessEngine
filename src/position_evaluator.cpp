@@ -100,9 +100,9 @@ void PositionEvaluator::evaluate_bishop(int x, int y, Piece &piece, int &eval) {
 void PositionEvaluator::evaluate_rook(int x, int y, Piece &piece, int &eval) {
   // Piece value.
   if (piece.color == PieceColor::WHITE) {
-    eval += 500;
+    eval += 400;
   } else {
-    eval -= 500;
+    eval -= 400;
   }
 }
 

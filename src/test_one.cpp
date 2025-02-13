@@ -1,6 +1,6 @@
+#include "test_one.h"
 #include "best_move_finder.h"
 #include "move_interface.h"
-#include "test_one.h"
 
 #include <iostream>
 #include <random>
@@ -32,8 +32,10 @@ void testing_one() {
     } else {
       move_color = "Black";
     }
-    printf("Move(%s): %d - %s\n", move_color.c_str(), i, move_strings[i].c_str());
-    Move move = my_interface.input_to_move(my_engine.calculate_possible_moves(), move_strings[i]);
+    printf("Move(%s): %d - %s\n", move_color.c_str(), i,
+           move_strings[i].c_str());
+    Move move = my_interface.input_to_move(my_engine.calculate_possible_moves(),
+                                           move_strings[i]);
     my_board.apply_move(move);
     my_board.print_board();
     printf("\n");
