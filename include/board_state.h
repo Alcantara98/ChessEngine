@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdio>
+#include <random>
 #include <stack>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +29,15 @@ private:
       {PieceType::QUEEN, 'q'},  {PieceType::ROOK, 'r'},
       {PieceType::BISHOP, 'b'}, {PieceType::KNIGHT, 'n'},
       {PieceType::PAWN, 'p'}};
+
+  // Zobrist keys
+  std::array<std::array<std::array<size_t, 2>, 6>, 64> zobrist_keys;
+  size_t zobrist_side_to_move;
+
+  /**
+   * @brief Initialises the zobrist keys.
+   */
+  void initialize_zobrist_keys();
 
 public:
   // 8 x 8 array to represent a chess board.
@@ -93,6 +103,12 @@ public:
    * @brief Checks if the king of the given color is checked.
    */
   bool king_is_checked(PieceColor color);
+
+  /**
+   * @brief Computes the Zobrist hash for the current board state.
+   * @return The Zobrist hash value.
+   */
+  size_t compute_zobrist_hash() const;
 };
 
 #endif

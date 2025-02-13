@@ -6,9 +6,13 @@ ChessEngine::ChessEngine()
       position_evaluator(PositionEvaluator(board_state)) {}
 
 void ChessEngine::start_game() {
-  std::cout << "Please Enter Player Color (w = White, b = Black):";
   char user_color;
+  std::cout << "Please Enter Player Color (w = White, b = Black):";
   std::cin >> user_color;
+
+  int engine_depth;
+  std::cout << "Please Enter Engine Depth:";
+  std::cin >> engine_depth;
 
   if (user_color == 'w') {
     Move user_move =
@@ -20,7 +24,7 @@ void ChessEngine::start_game() {
   }
 
   while (true) {
-    Move engine_move = search_engine.find_best_move(4);
+    Move engine_move = search_engine.find_best_move(engine_depth);
     board_state.apply_move(engine_move);
     printf("eval: %d\n", position_evaluator.evaluate_position());
     board_state.print_board();

@@ -1,0 +1,51 @@
+#include "transposition_table.h"
+
+void TranspositionTable::store(const BoardState &board_state, int depth,
+                               int value, int flag) {
+  size_t hash = board_state.compute_zobrist_hash();
+  auto it = table.find(hash);
+
+  if (it != table.end()) {
+    // Update existing entry
+    it->second.depth = depth;
+    it->second.value = value;
+    it->second.flag = flag;
+    lru_list.erase(it->second.lru_position);
+  } else {
+    // Insert new entry
+    if (table.size() >= max_size) {
+      trim();
+    }
+    table[hash] = {depth, value, flag, lru_list.end()};
+  }
+
+  // Update LRU list
+  lru_list.push_front(hash);
+  table[hash].lru_position = lru_list.begin();
+}
+
+bool TranspositionTable::retrieve(const BoardState &board_state, int depth,
+                                  int &value, int &flag) {
+  size_t hash = board_state.compute_zobrist_hash();
+  auto it = table.find(hash);
+
+  if (it != table.end() && it->second.depth >= depth) {
+    value = it->second.value;
+    flag = it->second.flag;
+
+    // Update LRU list
+    lru_list.erase(it->second.lru_position);
+    lru_list.push_front(hash);
+    it->second.lru_position = lru_list.begin();
+
+    return true;
+  }
+  return false;
+}
+
+void TranspositionTable::trim() {
+  // Remove the least recently used entry
+  size_t lru_hash = lru_list.back();
+  lru_list.pop_back();
+  table.erase(lru_hash);
+}

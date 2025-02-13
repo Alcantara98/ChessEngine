@@ -4,8 +4,11 @@
 #include "board_state.h"
 #include "move_generator.h"
 #include "position_evaluator.h"
+#include "transposition_table.h"
 
+#include <algorithm>
 #include <limits>
+
 
 class BestMoveFinder {
 private:
@@ -17,6 +20,9 @@ private:
 
   // Position Evaluator object.
   PositionEvaluator position_evaluator;
+
+  // Transposition Table object.
+  TranspositionTable transposition_table;
 
   /**
    * @brief Recursive function to find the best move using minimax algorithm

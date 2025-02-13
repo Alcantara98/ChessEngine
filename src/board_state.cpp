@@ -1,13 +1,29 @@
 #include "board_state.h"
+// PRIVATE FUNCTIONS
+void BoardState::initialize_zobrist_keys() {
+  std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
+  std::uniform_int_distribution<size_t> dist;
 
+  for (int square = 0; square < 64; ++square) {
+    for (int piece = 0; piece < 6; ++piece) {
+      zobrist_keys[square][piece][0] = dist(rng); // White piece
+      zobrist_keys[square][piece][1] = dist(rng); // Black piece
+    }
+  }
+  zobrist_side_to_move = dist(rng);
+}
+// PUBLIC FUNCTIONS
 BoardState::BoardState(PieceColor move_color, PieceColor engine_color)
     : move_color(move_color) {
+  initialize_zobrist_keys();
   reset_board();
 }
 
 BoardState::BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
                        PieceColor move_color, PieceColor engine_color)
-    : chess_board(input_chess_board), move_color(move_color) {}
+    : chess_board(input_chess_board), move_color(move_color) {
+  initialize_zobrist_keys();
+}
 
 void BoardState::reset_board() {
   // Set empty squares.
@@ -268,4 +284,25 @@ bool BoardState::king_is_checked(PieceColor color) {
     }
   }
   return false;
+}
+
+size_t BoardState::compute_zobrist_hash() const {
+  size_t hash = 0;
+
+  for (int y = 0; y < 8; ++y) {
+    for (int x = 0; x < 8; ++x) {
+      Piece *piece = chess_board[x][y];
+      if (piece->type != PieceType::EMPTY) {
+        int piece_index = static_cast<int>(piece->type) - 1;
+        int color_index = (piece->color == PieceColor::WHITE) ? 0 : 1;
+        hash ^= zobrist_keys[y * 8 + x][piece_index][color_index];
+      }
+    }
+  }
+
+  if (move_color == PieceColor::BLACK) {
+    hash ^= zobrist_side_to_move;
+  }
+
+  return hash;
 }

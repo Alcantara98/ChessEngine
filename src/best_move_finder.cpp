@@ -1,8 +1,19 @@
 #include "best_move_finder.h"
+#include "transposition_table.h"
 
-// PRIVATE FUNTIONS
+// PRIVATE FUNCTIONS
 int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
                                               bool maximise) {
+  int tt_value, tt_flag;
+  if (transposition_table.retrieve(board_state, depth, tt_value, tt_flag)) {
+    if (tt_flag == 0)
+      return tt_value;
+    if (tt_flag == -1 && tt_value <= alpha)
+      return tt_value;
+    if (tt_flag == 1 && tt_value >= beta)
+      return tt_value;
+  }
+
   if (depth == 0) {
     int eval = position_evaluator.evaluate_position();
     return eval;
@@ -22,6 +33,8 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
         break;
       }
     }
+    transposition_table.store(board_state, depth, max_eval,
+                              (max_eval >= beta) ? 1 : 0);
     return max_eval;
   } else {
     int min_eval = INF;
@@ -35,6 +48,8 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
         break;
       }
     }
+    transposition_table.store(board_state, depth, min_eval,
+                              (min_eval <= alpha) ? -1 : 0);
     return min_eval;
   }
 }
@@ -42,7 +57,8 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
 // PUBLIC FUNCTIONS
 BestMoveFinder::BestMoveFinder(BoardState &board_state)
     : board_state(board_state),
-      position_evaluator(PositionEvaluator(board_state)) {}
+      position_evaluator(PositionEvaluator(board_state)),
+      transposition_table(1000000) {} // Initialize with a max size
 
 std::vector<Move> BestMoveFinder::calculate_possible_moves() {
   std::vector<Move> possible_moves;
@@ -85,30 +101,51 @@ std::vector<Move> BestMoveFinder::calculate_possible_moves() {
 
 Move BestMoveFinder::find_best_move(int max_search_depth) {
   std::vector<Move> possible_moves = calculate_possible_moves();
-  std::vector<int> move_scores;
+  std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
   for (Move move : possible_moves) {
     board_state.apply_move(move);
     move_scores.push_back(
-        minimax_alpha_beta_search(-INF, INF, max_search_depth, !maximising));
+        {move, minimax_alpha_beta_search(-INF, INF, 4, !maximising)});
     board_state.undo_move();
   }
-  int best_score = move_scores[0];
-  int best_index = 0;
+
   if (engine_color == PieceColor::WHITE) {
-    for (int i = 1; i < move_scores.size(); ++i) {
-      if (move_scores[i] > best_score) {
-        best_score = move_scores[i];
-        best_index = i;
-      }
-    }
+    // Sort by descending order.
+    sort(move_scores.begin(), move_scores.end(),
+         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
+           return a.second > b.second;
+         });
   } else {
-    for (int i = 1; i < move_scores.size(); ++i) {
-      if (move_scores[i] < best_score) {
-        best_score = move_scores[i];
-        best_index = i;
-      }
-    }
+    // Sort by ascending order.
+    sort(move_scores.begin(), move_scores.end(),
+         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
+           return a.second < b.second;
+         });
   }
-  return possible_moves[best_index];
+
+  std::vector<std::pair<Move, int>> pruned_move_scores;
+  for (int i = 0; i < 4; ++i) {
+    Move &move = move_scores[i].first;
+    board_state.apply_move(move);
+    pruned_move_scores.push_back(
+        {move,
+         minimax_alpha_beta_search(-INF, INF, max_search_depth, !maximising)});
+    board_state.undo_move();
+  }
+
+  if (engine_color == PieceColor::WHITE) {
+    // Sort by descending order.
+    sort(move_scores.begin(), move_scores.end(),
+         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
+           return a.second > b.second;
+         });
+  } else {
+    // Sort by ascending order.
+    sort(move_scores.begin(), move_scores.end(),
+         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
+           return a.second < b.second;
+         });
+  }
+  return pruned_move_scores[0].first;
 }
