@@ -1,8 +1,7 @@
 #include "transposition_table.h"
 
-void TranspositionTable::store(const BoardState &board_state, int depth,
+void TranspositionTable::store(uint64_t &hash, int depth,
                                int value, int flag, int best_move_index) {
-  uint64_t hash = board_state.compute_zobrist_hash();
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -25,9 +24,8 @@ void TranspositionTable::store(const BoardState &board_state, int depth,
   table[hash].lru_position = lru_list.begin();
 }
 
-bool TranspositionTable::retrieve(const BoardState &board_state, int &depth,
+bool TranspositionTable::retrieve(uint64_t &hash, int &depth,
                                   int &value, int &flag, int &best_move_index) {
-  uint64_t hash = board_state.compute_zobrist_hash();
   auto it = table.find(hash);
 
   if (it != table.end()) {

@@ -105,6 +105,11 @@ public:
   bool king_is_checked(PieceColor color);
 
   /**
+   * @brief Checks if the current player is in checkmate.
+   */
+  bool is_checkmate(PieceColor color);
+
+  /**
    * @brief Computes the Zobrist hash for the current board state.
    * @return The Zobrist hash value.
    */

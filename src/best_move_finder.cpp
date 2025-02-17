@@ -6,7 +6,8 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
                                               bool maximise) {
   int tt_value, tt_flag, entry_depth;
   int entry_best_move = -1;
-  if (transposition_table.retrieve(board_state, entry_depth, tt_value, tt_flag,
+  uint64_t hash = board_state.compute_zobrist_hash();
+  if (transposition_table.retrieve(hash, entry_depth, tt_value, tt_flag,
                                    entry_best_move)) {
     if (entry_depth == iterative_depth_search) {
       if (tt_flag == 0)
@@ -53,7 +54,7 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
         break;
       }
     }
-    transposition_table.store(board_state, iterative_depth_search, max_eval,
+    transposition_table.store(hash, iterative_depth_search, max_eval,
                               (max_eval >= beta) ? 1 : 0, best_move_index);
     return max_eval;
   } else {
@@ -82,7 +83,7 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
         break;
       }
     }
-    transposition_table.store(board_state, iterative_depth_search, min_eval,
+    transposition_table.store(hash, iterative_depth_search, min_eval,
                               (min_eval <= alpha) ? -1 : 0, best_move_index);
     return min_eval;
   }
@@ -141,7 +142,7 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
   for (Move move : possible_moves) {
     board_state.apply_move(move);
     move_scores.push_back(
-        {move, minimax_alpha_beta_search(-INF, INF, 4, !maximising)});
+        {move, minimax_alpha_beta_search(-INF, INF, 1, !maximising)});
     board_state.undo_move();
   }
 

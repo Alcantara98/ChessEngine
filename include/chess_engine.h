@@ -18,6 +18,10 @@ public:
   ChessEngine();
 
   void start_game();
+
+  bool is_checkmate();
+
+  bool is_stalemate();
 };
 
 #endif

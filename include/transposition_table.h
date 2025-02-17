@@ -39,7 +39,7 @@ public:
    * @param value Value of the board state.
    * @param flag Flag of the value.
    */
-  void store(const BoardState &board_state, int depth, int value, int flag,
+  void store(uint64_t &hash, int depth, int value, int flag,
              int best_move_index);
 
   /**
@@ -50,7 +50,7 @@ public:
    * @param flag Flag of the value.
    * @return true if the entry was found, false otherwise.
    */
-  bool retrieve(const BoardState &board_state, int &depth, int &value,
+  bool retrieve(uint64_t &hash, int &depth, int &value,
                 int &flag, int &best_move_index);
 };
 
