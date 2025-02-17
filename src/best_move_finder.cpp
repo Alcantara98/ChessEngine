@@ -139,10 +139,11 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
   iterative_depth_search = 4;
+  int first_search_depth = max_search_depth >= 4 ? 4 : max_search_depth;
   for (Move move : possible_moves) {
     board_state.apply_move(move);
     move_scores.push_back(
-        {move, minimax_alpha_beta_search(-INF, INF, 1, !maximising)});
+        {move, minimax_alpha_beta_search(-INF, INF, 4, !maximising)});
     board_state.undo_move();
   }
 
