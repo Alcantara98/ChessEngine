@@ -36,6 +36,12 @@ private:
    */
   int minimax_alpha_beta_search(int alpha, int beta, int depth, bool maximise);
 
+  /**
+   * @brief Sorts the moves based on their scores.
+   * @param move_scores Vector of moves and their scores.
+   */
+  void sort_moves(std::vector<std::pair<Move, int>> &move_scores);
+
 public:
   // Max depth to search.
   int iterative_depth_search = 0;

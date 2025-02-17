@@ -89,6 +89,23 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
   }
 }
 
+void BestMoveFinder::sort_moves(
+    std::vector<std::pair<Move, int>> &move_scores) {
+  if (engine_color == PieceColor::WHITE) {
+    // Sort by descending order.
+    sort(move_scores.begin(), move_scores.end(),
+         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
+           return a.second > b.second;
+         });
+  } else {
+    // Sort by ascending order.
+    sort(move_scores.begin(), move_scores.end(),
+         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
+           return a.second < b.second;
+         });
+  }
+}
+
 // PUBLIC FUNCTIONS
 BestMoveFinder::BestMoveFinder(BoardState &board_state)
     : board_state(board_state),
@@ -140,29 +157,21 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
   bool maximising = engine_color == PieceColor::WHITE;
   iterative_depth_search = 4;
   int first_search_depth = max_search_depth >= 4 ? 4 : max_search_depth;
+
+  // Search to depth 4 to get initial move scores, then sort.
   for (Move move : possible_moves) {
     board_state.apply_move(move);
     move_scores.push_back(
         {move, minimax_alpha_beta_search(-INF, INF, 4, !maximising)});
     board_state.undo_move();
   }
+  sort_moves(move_scores);
 
-  if (engine_color == PieceColor::WHITE) {
-    // Sort by descending order.
-    sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
-           return a.second > b.second;
-         });
-  } else {
-    // Sort by ascending order.
-    sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
-           return a.second < b.second;
-         });
-  }
-
+  // Prune to 8 moves.
   std::vector<std::pair<Move, int>> pruned_move_scores(move_scores.begin(),
                                                        move_scores.begin() + 8);
+
+  // Search to max_search_depth with iterative deepening.
   for (int iterative_depth = 5; iterative_depth <= max_search_depth;
        ++iterative_depth) {
     iterative_depth_search = iterative_depth;
@@ -174,19 +183,7 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
       board_state.undo_move();
     }
   }
+  sort_moves(pruned_move_scores);
 
-  if (engine_color == PieceColor::WHITE) {
-    // Sort by descending order.
-    sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
-           return a.second > b.second;
-         });
-  } else {
-    // Sort by ascending order.
-    sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b) {
-           return a.second < b.second;
-         });
-  }
   return pruned_move_scores[0].first;
 }
