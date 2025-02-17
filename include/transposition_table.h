@@ -24,6 +24,9 @@ private:
   // List of hash values in least recently used order.
   std::list<uint64_t> lru_list;
 
+  /**
+   * @brief Remove the least recently used entry from the table.
+   */
   void trim();
 
 public:
@@ -50,8 +53,8 @@ public:
    * @param flag Flag of the value.
    * @return true if the entry was found, false otherwise.
    */
-  bool retrieve(uint64_t &hash, int &depth, int &value,
-                int &flag, int &best_move_index);
+  bool retrieve(uint64_t &hash, int &depth, int &value, int &flag,
+                int &best_move_index);
 };
 
 #endif // TRANSPOSITION_TABLE_H
