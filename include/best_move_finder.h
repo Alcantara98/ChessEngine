@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <limits>
 
-
 class BestMoveFinder {
 private:
   // Use for starting values of alpha and beta;
@@ -38,6 +37,9 @@ private:
   int minimax_alpha_beta_search(int alpha, int beta, int depth, bool maximise);
 
 public:
+  // Max depth to search.
+  int iterative_depth_search = 0;
+
   PieceColor engine_color = PieceColor::WHITE;
 
   /**

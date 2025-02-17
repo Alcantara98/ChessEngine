@@ -1,8 +1,8 @@
 #include "transposition_table.h"
 
 void TranspositionTable::store(const BoardState &board_state, int depth,
-                               int value, int flag) {
-  size_t hash = board_state.compute_zobrist_hash();
+                               int value, int flag, int best_move_index) {
+  uint64_t hash = board_state.compute_zobrist_hash();
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -10,13 +10,14 @@ void TranspositionTable::store(const BoardState &board_state, int depth,
     it->second.depth = depth;
     it->second.value = value;
     it->second.flag = flag;
+    it->second.best_move_index = best_move_index;
     lru_list.erase(it->second.lru_position);
   } else {
     // Insert new entry
     if (table.size() >= max_size) {
       trim();
     }
-    table[hash] = {depth, value, flag, lru_list.end()};
+    table[hash] = {depth, value, flag, lru_list.end(), best_move_index};
   }
 
   // Update LRU list
@@ -24,14 +25,16 @@ void TranspositionTable::store(const BoardState &board_state, int depth,
   table[hash].lru_position = lru_list.begin();
 }
 
-bool TranspositionTable::retrieve(const BoardState &board_state, int depth,
-                                  int &value, int &flag) {
-  size_t hash = board_state.compute_zobrist_hash();
+bool TranspositionTable::retrieve(const BoardState &board_state, int &depth,
+                                  int &value, int &flag, int &best_move_index) {
+  uint64_t hash = board_state.compute_zobrist_hash();
   auto it = table.find(hash);
 
-  if (it != table.end() && it->second.depth >= depth) {
+  if (it != table.end()) {
     value = it->second.value;
     flag = it->second.flag;
+    depth = it->second.depth;
+    best_move_index = it->second.best_move_index;
 
     // Update LRU list
     lru_list.erase(it->second.lru_position);
@@ -45,7 +48,7 @@ bool TranspositionTable::retrieve(const BoardState &board_state, int depth,
 
 void TranspositionTable::trim() {
   // Remove the least recently used entry
-  size_t lru_hash = lru_list.back();
+  uint64_t lru_hash = lru_list.back();
   lru_list.pop_back();
   table.erase(lru_hash);
 }
