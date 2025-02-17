@@ -162,7 +162,7 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
   for (Move move : possible_moves) {
     board_state.apply_move(move);
     move_scores.push_back(
-        {move, minimax_alpha_beta_search(-INF, INF, 4, !maximising)});
+        {move, minimax_alpha_beta_search(-INF, INF, first_search_depth, !maximising)});
     board_state.undo_move();
   }
   sort_moves(move_scores);

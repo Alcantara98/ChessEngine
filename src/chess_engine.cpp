@@ -1,7 +1,7 @@
 #include "chess_engine.h"
 
 // PRIVATE FUNCTIONS
-void ChessEngine::game_loop() {
+void ChessEngine::game_loop(int max_search_depth) {
   while (true) {
     if (is_checkmate()) {
       printf("Checkmate, You WIN!\n");
@@ -12,7 +12,7 @@ void ChessEngine::game_loop() {
       break;
     }
 
-    Move engine_move = search_engine.find_best_move(4);
+    Move engine_move = search_engine.find_best_move(max_search_depth);
     board_state.apply_move(engine_move);
     printf("eval: %d\n", position_evaluator.evaluate_position());
     board_state.print_board();
@@ -58,7 +58,7 @@ void ChessEngine::start_game() {
   } else {
     search_engine.engine_color = PieceColor::WHITE;
   }
-  game_loop();
+  game_loop(engine_depth);
 }
 
 bool ChessEngine::is_checkmate() {
