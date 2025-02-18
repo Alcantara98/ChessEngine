@@ -31,6 +31,14 @@ if(OPTIMIZE)
     message(STATUS "Building with high optimization")
     set(CMAKE_BUILD_TYPE Release)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -flto")
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_AR "gcc-ar")
+        set(CMAKE_RANLIB "gcc-ranlib")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_AR "llvm-ar")
+        set(CMAKE_RANLIB "llvm-ranlib")
+    endif()
 endif()
 
 # Create the executable
