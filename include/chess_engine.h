@@ -16,7 +16,7 @@ private:
   /**
    * @brief Main game loop.
    */
-  void game_loop(int max_search_depth);
+  void game_loop(int max_search_depth, bool show_performance);
 
 public:
   /**

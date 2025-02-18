@@ -1,7 +1,7 @@
 #include "chess_engine.h"
 
 // PRIVATE FUNCTIONS
-void ChessEngine::game_loop(int max_search_depth) {
+void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
   while (true) {
     if (is_checkmate()) {
       printf("Checkmate, You WIN!\n");
@@ -12,7 +12,8 @@ void ChessEngine::game_loop(int max_search_depth) {
       break;
     }
 
-    Move engine_move = search_engine.find_best_move(max_search_depth);
+    Move engine_move =
+        search_engine.find_best_move(max_search_depth, show_performance);
     board_state.apply_move(engine_move);
     printf("eval: %d\n", position_evaluator.evaluate_position());
     board_state.print_board();
@@ -48,6 +49,10 @@ void ChessEngine::start_game() {
   std::cout << "Please Enter Engine Depth:";
   std::cin >> engine_depth;
 
+  bool show_performance;
+  std::cout << "Show Performance (1 = Yes, 0 = No):";
+  std::cin >> show_performance;
+
   if (user_color == 'w') {
     Move user_move =
         move_interface.input_to_move(search_engine.calculate_possible_moves());
@@ -58,7 +63,7 @@ void ChessEngine::start_game() {
   } else {
     search_engine.engine_color = PieceColor::WHITE;
   }
-  game_loop(engine_depth);
+  game_loop(engine_depth, show_performance);
 }
 
 bool ChessEngine::is_checkmate() {

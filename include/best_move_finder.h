@@ -94,7 +94,7 @@ public:
    * @brief Finds the best move with the given current state of the board.
    * @param max_search_depth Max depth to search.
    */
-  Move find_best_move(int max_search_depth);
+  Move find_best_move(int max_search_depth, bool show_performance);
 
   /**
    * @brief Calculates all possible moves of current board state.

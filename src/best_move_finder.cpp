@@ -159,7 +159,8 @@ std::vector<Move> BestMoveFinder::calculate_possible_moves() {
   return std::move(possible_moves);
 }
 
-Move BestMoveFinder::find_best_move(int max_search_depth) {
+Move BestMoveFinder::find_best_move(int max_search_depth,
+                                    bool show_performance) {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
@@ -167,24 +168,27 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
   // Search to max_search_depth with iterative deepening.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth) {
+    move_scores.clear();
     iterative_depth_search = iterative_depth;
     auto start_time = std::chrono::high_resolution_clock::now();
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
       Move &move = possible_moves[move_index];
       board_state.apply_move(move);
-      move_scores.push_back(
-          {move, minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
-                                           !maximising)});
+      int eval = minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
+                                           !maximising);
+      move_scores.push_back({move, eval});
       board_state.undo_move();
     }
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         end_time - start_time)
                         .count();
-    printf("Depth: %d, Time: %ldms\n", iterative_depth, duration);
-    printf("Nodes Visited %d\n", nodes_visited);
-    printf("Leaf Nodes Visited %d\n", leaf_nodes_visited);
-    printf("TT Size: %d\n", transposition_table.get_size());
+    if (show_performance) {
+      printf("Depth: %d, Time: %ldms\n", iterative_depth, duration);
+      printf("Nodes Visited %d\n", nodes_visited);
+      printf("Leaf Nodes Visited %d\n", leaf_nodes_visited);
+      printf("TT Size: %d\n", transposition_table.get_size());
+    }
     nodes_visited = 0;
     leaf_nodes_visited = 0;
   }

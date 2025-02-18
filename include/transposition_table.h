@@ -8,8 +8,8 @@
 struct TranspositionTableEntry {
   int depth;
   int value;
-  int flag;                                   // 0 = exact, -1 = alpha, 1 = beta
-  std::list<uint64_t>::iterator lru_position; // Position in the LRU list
+  int flag;
+  std::list<uint64_t>::iterator lru_position;
   int best_move_index;
 };
 
