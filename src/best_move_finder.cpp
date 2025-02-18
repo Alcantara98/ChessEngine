@@ -1,26 +1,31 @@
 #include "best_move_finder.h"
 #include "transposition_table.h"
 
+#include <chrono>
+
 // PRIVATE FUNCTIONS
 int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
                                               bool maximise) {
+  nodes_visited++;
   int tt_value, tt_flag, entry_depth;
   int entry_best_move = -1;
   uint64_t hash = board_state.compute_zobrist_hash();
   if (transposition_table.retrieve(hash, entry_depth, tt_value, tt_flag,
                                    entry_best_move)) {
+    if (entry_depth == iterative_depth_search && tt_flag == 0) {
+      return tt_value;
+    }
     if (entry_depth == iterative_depth_search) {
-      if (tt_flag == 0)
+      if ((tt_flag == -1 && tt_value <= alpha) ||
+          (tt_flag == 1 && tt_value >= beta)) {
         return tt_value;
-      if (tt_flag == -1 && tt_value <= alpha)
-        return tt_value;
-      if (tt_flag == 1 && tt_value >= beta)
-        return tt_value;
+      }
     }
   }
 
   if (depth == 0) {
     int eval = position_evaluator.evaluate_position();
+    leaf_nodes_visited++;
     return eval;
   }
 
@@ -30,26 +35,12 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
     int max_eval = -INF;
     int best_move_index = 0;
     if (entry_best_move >= 0 && entry_best_move < possible_moves.size()) {
-      board_state.apply_move(possible_moves[entry_best_move]);
-      eval = minimax_alpha_beta_search(alpha, beta, depth - 1, false);
-      if (eval > max_eval) {
-        max_eval = eval;
-        best_move_index = entry_best_move;
-      }
-      max_eval = std::max(max_eval, eval);
-      alpha = std::max(eval, alpha);
-      board_state.undo_move();
+      max_search(alpha, beta, max_eval, eval, depth, best_move_index,
+                 entry_best_move, possible_moves);
     }
     for (int index = 0; index < possible_moves.size(); ++index) {
-      board_state.apply_move(possible_moves[index]);
-      eval = minimax_alpha_beta_search(alpha, beta, depth - 1, false);
-      if (eval > max_eval) {
-        max_eval = eval;
-        best_move_index = index;
-      }
-      max_eval = std::max(max_eval, eval);
-      alpha = std::max(eval, alpha);
-      board_state.undo_move();
+      max_search(alpha, beta, max_eval, eval, depth, best_move_index, index,
+                 possible_moves);
       if (alpha >= beta) {
         break;
       }
@@ -61,24 +52,12 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
     int min_eval = INF;
     int best_move_index = 0;
     if (entry_best_move >= 0 && entry_best_move < possible_moves.size()) {
-      board_state.apply_move(possible_moves[entry_best_move]);
-      eval = minimax_alpha_beta_search(alpha, beta, depth - 1, true);
-      if (eval < min_eval) {
-        min_eval = eval;
-        best_move_index = entry_best_move;
-      }
-      beta = std::min(eval, beta);
-      board_state.undo_move();
+      min_search(alpha, beta, min_eval, eval, depth, best_move_index,
+                 entry_best_move, possible_moves);
     }
     for (int index = 0; index < possible_moves.size(); ++index) {
-      board_state.apply_move(possible_moves[index]);
-      eval = minimax_alpha_beta_search(alpha, beta, depth - 1, true);
-      if (eval < min_eval) {
-        min_eval = eval;
-        best_move_index = index;
-      }
-      beta = std::min(eval, beta);
-      board_state.undo_move();
+      min_search(alpha, beta, min_eval, eval, depth, best_move_index, index,
+                 possible_moves);
       if (alpha >= beta) {
         break;
       }
@@ -106,11 +85,40 @@ void BestMoveFinder::sort_moves(
   }
 }
 
+void BestMoveFinder::max_search(int &alpha, int &beta, int &max_eval, int &eval,
+                                int &depth, int &best_move_index,
+                                int &move_index,
+                                std::vector<Move> &possible_moves) {
+  board_state.apply_move(possible_moves[move_index]);
+  eval = minimax_alpha_beta_search(alpha, beta, depth - 1, false);
+  if (eval > max_eval) {
+    max_eval = eval;
+    best_move_index = move_index;
+  }
+  max_eval = std::max(max_eval, eval);
+  alpha = std::max(eval, alpha);
+  board_state.undo_move();
+}
+
+void BestMoveFinder::min_search(int &alpha, int &beta, int &min_eval, int &eval,
+                                int &depth, int &best_move_index,
+                                int &move_index,
+                                std::vector<Move> &possible_moves) {
+  board_state.apply_move(possible_moves[move_index]);
+  eval = minimax_alpha_beta_search(alpha, beta, depth - 1, true);
+  if (eval < min_eval) {
+    min_eval = eval;
+    best_move_index = move_index;
+  }
+  beta = std::min(eval, beta);
+  board_state.undo_move();
+}
+
 // PUBLIC FUNCTIONS
 BestMoveFinder::BestMoveFinder(BoardState &board_state)
     : board_state(board_state),
       position_evaluator(PositionEvaluator(board_state)),
-      transposition_table(1000000) {} // Initialize with a max size
+      transposition_table(10000000) {} // Initialize with a max size
 
 std::vector<Move> BestMoveFinder::calculate_possible_moves() {
   std::vector<Move> possible_moves;
@@ -155,35 +163,33 @@ Move BestMoveFinder::find_best_move(int max_search_depth) {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
-  iterative_depth_search = 4;
-  int first_search_depth = max_search_depth >= 4 ? 4 : max_search_depth;
-
-  // Search to depth 4 to get initial move scores, then sort.
-  for (Move move : possible_moves) {
-    board_state.apply_move(move);
-    move_scores.push_back(
-        {move, minimax_alpha_beta_search(-INF, INF, first_search_depth, !maximising)});
-    board_state.undo_move();
-  }
-  sort_moves(move_scores);
-
-  // Prune to 8 moves.
-  std::vector<std::pair<Move, int>> pruned_move_scores(move_scores.begin(),
-                                                       move_scores.begin() + 8);
 
   // Search to max_search_depth with iterative deepening.
-  for (int iterative_depth = 5; iterative_depth <= max_search_depth;
+  for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth) {
     iterative_depth_search = iterative_depth;
-    for (int move_index = 0; move_index < 8; ++move_index) {
-      Move &move = pruned_move_scores[move_index].first;
+    auto start_time = std::chrono::high_resolution_clock::now();
+    for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
+      Move &move = possible_moves[move_index];
       board_state.apply_move(move);
-      pruned_move_scores[move_index].second =
-          minimax_alpha_beta_search(-INF, INF, iterative_depth, !maximising);
+      move_scores.push_back(
+          {move, minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
+                                           !maximising)});
       board_state.undo_move();
     }
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        end_time - start_time)
+                        .count();
+    printf("Depth: %d, Time: %ldms\n", iterative_depth, duration);
+    printf("Nodes Visited %d\n", nodes_visited);
+    printf("Leaf Nodes Visited %d\n", leaf_nodes_visited);
+    printf("TT Size: %d\n", transposition_table.get_size());
+    nodes_visited = 0;
+    leaf_nodes_visited = 0;
   }
-  sort_moves(pruned_move_scores);
+  transposition_table.clear();
+  sort_moves(move_scores);
 
-  return pruned_move_scores[0].first;
+  return move_scores[0].first;
 }

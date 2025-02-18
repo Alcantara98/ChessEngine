@@ -1,7 +1,7 @@
 #include "transposition_table.h"
 
-void TranspositionTable::store(uint64_t &hash, int depth,
-                               int value, int flag, int best_move_index) {
+void TranspositionTable::store(uint64_t &hash, int depth, int value, int flag,
+                               int best_move_index) {
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -24,8 +24,8 @@ void TranspositionTable::store(uint64_t &hash, int depth,
   table[hash].lru_position = lru_list.begin();
 }
 
-bool TranspositionTable::retrieve(uint64_t &hash, int &depth,
-                                  int &value, int &flag, int &best_move_index) {
+bool TranspositionTable::retrieve(uint64_t &hash, int &depth, int &value,
+                                  int &flag, int &best_move_index) {
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -49,4 +49,11 @@ void TranspositionTable::trim() {
   uint64_t lru_hash = lru_list.back();
   lru_list.pop_back();
   table.erase(lru_hash);
+}
+
+int TranspositionTable::get_size() { return table.size(); }
+
+void TranspositionTable::clear() {
+  table.clear();
+  lru_list.clear();
 }

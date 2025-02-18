@@ -55,6 +55,16 @@ public:
    */
   bool retrieve(uint64_t &hash, int &depth, int &value, int &flag,
                 int &best_move_index);
+  /**
+   * @brief Get the size of the transposition table.
+   * @return int The size of the transposition table.
+   */
+  int get_size();
+
+  /**
+   * @brief Clear the transposition table.
+   */
+  void clear();
 };
 
 #endif // TRANSPOSITION_TABLE_H
