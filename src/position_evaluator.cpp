@@ -73,12 +73,12 @@ void PositionEvaluator::evaluate_knight(int x, int y, Piece &piece, int &eval) {
   if (piece.color == PieceColor::WHITE) {
     eval += 150;
     if (!piece.moved) {
-      eval -= 20;
+      eval -= 30;
     }
   } else {
     eval -= 150;
     if (!piece.moved) {
-      eval += 20;
+      eval += 30;
     }
   }
 
@@ -103,12 +103,12 @@ void PositionEvaluator::evaluate_bishop(int x, int y, Piece &piece, int &eval) {
   if (piece.color == PieceColor::WHITE) {
     eval += 170;
     if (!piece.moved) {
-      eval -= 20;
+      eval -= 30;
     }
   } else {
     eval -= 170;
     if (!piece.moved) {
-      eval += 20;
+      eval += 30;
     }
   }
 
