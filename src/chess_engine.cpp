@@ -17,8 +17,15 @@ void ChessEngine::start_game() {
   std::cin >> engine_depth;
 
   bool show_performance;
-  std::cout << "Show Performance (1 = Yes, 0 = No):";
-  std::cin >> show_performance;
+  char show_performance_char;
+  std::cout << "Show Performance (y = Yes, n = No):";
+  std::cin >> show_performance_char;
+
+  if (show_performance_char == 'y') {
+    show_performance = true;
+  } else {
+    show_performance = false;
+  }
 
   if (user_color == 'w') {
     player_color = PieceColor::WHITE;
