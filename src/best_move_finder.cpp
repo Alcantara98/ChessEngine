@@ -3,6 +3,91 @@
 
 #include <chrono>
 
+// CONSTRUCTORS
+BestMoveFinder::BestMoveFinder(BoardState &board_state)
+    : board_state(board_state),
+      position_evaluator(PositionEvaluator(board_state)),
+      transposition_table(10000000) {} // Initialize with a max size
+
+// PUBLIC FUNCTIONS
+std::vector<Move> BestMoveFinder::calculate_possible_moves() {
+  std::vector<Move> possible_moves;
+  for (int y = 0; y < 8; ++y) {
+    for (int x = 0; x < 8; ++x) {
+      Piece *current_piece = board_state.chess_board[x][y];
+      PieceType &piece_type = current_piece->type;
+
+      if (current_piece->color == board_state.move_color) {
+        switch (piece_type) {
+        case PieceType::PAWN:
+          MoveGenerator::generate_pawn_move(board_state, x, y, possible_moves);
+          break;
+        case PieceType::ROOK:
+          MoveGenerator::generate_rook_move(board_state, x, y, possible_moves);
+          break;
+        case PieceType::KNIGHT:
+          MoveGenerator::generate_knight_move(board_state, x, y,
+                                              possible_moves);
+          break;
+        case PieceType::BISHOP:
+          MoveGenerator::generate_bishop_move(board_state, x, y,
+                                              possible_moves);
+          break;
+        case PieceType::QUEEN:
+          MoveGenerator::generate_queen_move(board_state, x, y, possible_moves);
+          break;
+        case PieceType::KING:
+          MoveGenerator::generate_king_move(board_state, x, y, possible_moves);
+          break;
+        default:
+          // Empty square.
+          break;
+        }
+      }
+    }
+  }
+  return std::move(possible_moves);
+}
+
+Move BestMoveFinder::find_best_move(int max_search_depth,
+                                    bool show_performance) {
+  std::vector<Move> possible_moves = calculate_possible_moves();
+  std::vector<std::pair<Move, int>> move_scores;
+  bool maximising = engine_color == PieceColor::WHITE;
+
+  // Search to max_search_depth with iterative deepening.
+  for (int iterative_depth = 1; iterative_depth <= max_search_depth;
+       ++iterative_depth) {
+    move_scores.clear();
+    iterative_depth_search = iterative_depth;
+    auto start_time = std::chrono::high_resolution_clock::now();
+    for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
+      Move &move = possible_moves[move_index];
+      board_state.apply_move(move);
+      int eval = minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
+                                           !maximising);
+      move_scores.push_back({move, eval});
+      board_state.undo_move();
+    }
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        end_time - start_time)
+                        .count();
+    if (show_performance) {
+      printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
+      printf("Nodes Visited %d\n", nodes_visited);
+      printf("Leaf Nodes Visited %d\n", leaf_nodes_visited);
+      printf("TT Size: %d\n", transposition_table.get_size());
+    }
+    nodes_visited = 0;
+    leaf_nodes_visited = 0;
+  }
+  transposition_table.clear();
+  sort_moves(move_scores);
+
+  return move_scores[0].first;
+}
+
 // PRIVATE FUNCTIONS
 int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
                                               bool maximise) {
@@ -112,88 +197,4 @@ void BestMoveFinder::min_search(int &alpha, int &beta, int &min_eval, int &eval,
   }
   beta = std::min(eval, beta);
   board_state.undo_move();
-}
-
-// PUBLIC FUNCTIONS
-BestMoveFinder::BestMoveFinder(BoardState &board_state)
-    : board_state(board_state),
-      position_evaluator(PositionEvaluator(board_state)),
-      transposition_table(10000000) {} // Initialize with a max size
-
-std::vector<Move> BestMoveFinder::calculate_possible_moves() {
-  std::vector<Move> possible_moves;
-  for (int y = 0; y < 8; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      Piece *current_piece = board_state.chess_board[x][y];
-      PieceType &piece_type = current_piece->type;
-
-      if (current_piece->color == board_state.move_color) {
-        switch (piece_type) {
-        case PieceType::PAWN:
-          MoveGenerator::generate_pawn_move(board_state, x, y, possible_moves);
-          break;
-        case PieceType::ROOK:
-          MoveGenerator::generate_rook_move(board_state, x, y, possible_moves);
-          break;
-        case PieceType::KNIGHT:
-          MoveGenerator::generate_knight_move(board_state, x, y,
-                                              possible_moves);
-          break;
-        case PieceType::BISHOP:
-          MoveGenerator::generate_bishop_move(board_state, x, y,
-                                              possible_moves);
-          break;
-        case PieceType::QUEEN:
-          MoveGenerator::generate_queen_move(board_state, x, y, possible_moves);
-          break;
-        case PieceType::KING:
-          MoveGenerator::generate_king_move(board_state, x, y, possible_moves);
-          break;
-        default:
-          // Empty square.
-          break;
-        }
-      }
-    }
-  }
-  return std::move(possible_moves);
-}
-
-Move BestMoveFinder::find_best_move(int max_search_depth,
-                                    bool show_performance) {
-  std::vector<Move> possible_moves = calculate_possible_moves();
-  std::vector<std::pair<Move, int>> move_scores;
-  bool maximising = engine_color == PieceColor::WHITE;
-
-  // Search to max_search_depth with iterative deepening.
-  for (int iterative_depth = 1; iterative_depth <= max_search_depth;
-       ++iterative_depth) {
-    move_scores.clear();
-    iterative_depth_search = iterative_depth;
-    auto start_time = std::chrono::high_resolution_clock::now();
-    for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
-      Move &move = possible_moves[move_index];
-      board_state.apply_move(move);
-      int eval = minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
-                                           !maximising);
-      move_scores.push_back({move, eval});
-      board_state.undo_move();
-    }
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        end_time - start_time)
-                        .count();
-    if (show_performance) {
-      printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
-      printf("Nodes Visited %d\n", nodes_visited);
-      printf("Leaf Nodes Visited %d\n", leaf_nodes_visited);
-      printf("TT Size: %d\n", transposition_table.get_size());
-    }
-    nodes_visited = 0;
-    leaf_nodes_visited = 0;
-  }
-  transposition_table.clear();
-  sort_moves(move_scores);
-
-  return move_scores[0].first;
 }

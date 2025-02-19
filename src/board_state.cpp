@@ -1,30 +1,18 @@
 #include "board_state.h"
-// PRIVATE FUNCTIONS
-void BoardState::initialize_zobrist_keys() {
-  std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
-  std::uniform_int_distribution<size_t> dist;
 
-  for (int square = 0; square < 64; ++square) {
-    for (int piece = 0; piece < 6; ++piece) {
-      zobrist_keys[square][piece][0] = dist(rng); // White piece
-      zobrist_keys[square][piece][1] = dist(rng); // Black piece
-    }
-  }
-  zobrist_side_to_move = dist(rng);
-}
-// PUBLIC FUNCTIONS
-BoardState::BoardState(PieceColor move_color, PieceColor engine_color)
-    : move_color(move_color) {
+// CONSTUCTORS
+BoardState::BoardState(PieceColor move_color) : move_color(move_color) {
   initialize_zobrist_keys();
   reset_board();
 }
 
 BoardState::BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
-                       PieceColor move_color, PieceColor engine_color)
+                       PieceColor move_color)
     : chess_board(input_chess_board), move_color(move_color) {
   initialize_zobrist_keys();
 }
 
+// PUBLIC FUNCTIONS
 void BoardState::reset_board() {
   // Set empty squares.
   for (int y = 2; y < 6; ++y) {
@@ -319,4 +307,18 @@ size_t BoardState::compute_zobrist_hash() const {
   }
 
   return hash;
+}
+
+// PRIVATE FUNCTIONS
+void BoardState::initialize_zobrist_keys() {
+  std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
+  std::uniform_int_distribution<size_t> dist;
+
+  for (int square = 0; square < 64; ++square) {
+    for (int piece = 0; piece < 6; ++piece) {
+      zobrist_keys[square][piece][0] = dist(rng); // White piece
+      zobrist_keys[square][piece][1] = dist(rng); // Black piece
+    }
+  }
+  zobrist_side_to_move = dist(rng);
 }
