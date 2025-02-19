@@ -1,8 +1,47 @@
 #include "position_evaluator.h"
 
+// CONSTRUCTORS
 PositionEvaluator::PositionEvaluator(BoardState &board_state)
     : board_state(board_state) {}
 
+// PUBLIC FUNCTIONS
+int PositionEvaluator::evaluate_position() {
+  int eval = 0;
+
+  for (int y = 0; y < 8; ++y) {
+    for (int x = 0; x < 8; ++x) {
+      Piece &piece = *board_state.chess_board[x][y];
+      PieceType &piece_type = piece.type;
+
+      switch (piece_type) {
+      case PieceType::PAWN:
+        evaluate_pawn(x, y, piece, eval);
+        break;
+      case PieceType::ROOK:
+        evaluate_rook(x, y, piece, eval);
+        break;
+      case PieceType::KNIGHT:
+        evaluate_knight(x, y, piece, eval);
+        break;
+      case PieceType::BISHOP:
+        evaluate_bishop(x, y, piece, eval);
+        break;
+      case PieceType::QUEEN:
+        evaluate_queen(x, y, piece, eval);
+        break;
+      case PieceType::KING:
+        evaluate_king(x, y, piece, eval);
+        break;
+      default:
+        // Empty square.
+        break;
+      }
+    }
+  }
+  return eval;
+}
+
+// PRIVATE FUNCTIONS
 void PositionEvaluator::evaluate_pawn(int x, int y, Piece &piece, int &eval) {
   // Position value - x coordinate.
   switch (x) {
@@ -229,40 +268,4 @@ void PositionEvaluator::evaluate_king(int x, int y, Piece &piece, int &eval) {
   default:
     break;
   }
-}
-
-int PositionEvaluator::evaluate_position() {
-  int eval = 0;
-
-  for (int y = 0; y < 8; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      Piece &piece = *board_state.chess_board[x][y];
-      PieceType &piece_type = piece.type;
-
-      switch (piece_type) {
-      case PieceType::PAWN:
-        evaluate_pawn(x, y, piece, eval);
-        break;
-      case PieceType::ROOK:
-        evaluate_rook(x, y, piece, eval);
-        break;
-      case PieceType::KNIGHT:
-        evaluate_knight(x, y, piece, eval);
-        break;
-      case PieceType::BISHOP:
-        evaluate_bishop(x, y, piece, eval);
-        break;
-      case PieceType::QUEEN:
-        evaluate_queen(x, y, piece, eval);
-        break;
-      case PieceType::KING:
-        evaluate_king(x, y, piece, eval);
-        break;
-      default:
-        // Empty square.
-        break;
-      }
-    }
-  }
-  return eval;
 }

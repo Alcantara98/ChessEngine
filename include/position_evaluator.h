@@ -4,10 +4,20 @@
 #include "board_state.h"
 
 class PositionEvaluator {
-private:
-  // See BoardState.
-  BoardState &board_state;
+public:
+  /**
+   * @brief Default Constructor - takes a chess board state.
+   * @param board_state BoardState object.
+   */
+  PositionEvaluator(BoardState &board_state);
 
+  /**
+   * @brief Evaluates current position using chess heuristics.
+   * @return Score of the given position.
+   */
+  int evaluate_position();
+
+private:
   // Directions for the queen.
   const std::array<std::array<int, 2>, 8> queen_directions = {
       {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
@@ -23,6 +33,9 @@ private:
   // Directions for the rook.
   const std::array<std::array<int, 2>, 4> rook_directions = {
       {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
+
+  // See BoardState.
+  BoardState &board_state;
 
   /**
    * @brief Evaluates pawn at given position.
@@ -65,19 +78,6 @@ private:
    * @param eval Evaluation score.
    */
   void evaluate_king(int x, int y, Piece &piece, int &eval);
-
-public:
-  /**
-   * @brief Default Constructor - takes a chess board state.
-   * @param board_state BoardState object.
-   */
-  PositionEvaluator(BoardState &board_state);
-
-  /**
-   * @brief Evaluates current position using chess heuristics.
-   * @return Score of the given position.
-   */
-  int evaluate_position();
 };
 
 #endif
