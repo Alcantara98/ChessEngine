@@ -36,6 +36,17 @@ public:
                                  std::vector<Move> &possible_moves);
 
   /**
+   * @brief Generates all possible moves for a given king.
+   *
+   * @param board_state Reference of the current board state.
+   * @param x, y The coordinate of the king.
+   * @param possible_moves Reference to the list of possible moves of current
+   * board_state.
+   */
+  static void generate_king_move(BoardState &board_state, int x, int y,
+                                 std::vector<Move> &possible_moves);
+
+  /**
    * @brief Generates all possible moves for a given knight.
    *
    * @param board_state Reference of the current board state.
@@ -78,17 +89,6 @@ public:
    */
   static void generate_queen_move(BoardState &board_state, int x, int y,
                                   std::vector<Move> &possible_moves);
-
-  /**
-   * @brief Generates all possible moves for a given king.
-   *
-   * @param board_state Reference of the current board state.
-   * @param x, y The coordinate of the king.
-   * @param possible_moves Reference to the list of possible moves of current
-   * board_state.
-   */
-  static void generate_king_move(BoardState &board_state, int x, int y,
-                                 std::vector<Move> &possible_moves);
 };
 
 #endif // MOVE_GENERATOR_H

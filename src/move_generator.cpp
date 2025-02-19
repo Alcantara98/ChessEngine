@@ -1,32 +1,5 @@
 #include "move_generator.h"
 
-// PRIVATE FUNCTIONS
-void MoveGenerator::rook_bishop_move_helper(BoardState &board_state, int x,
-                                            int y, int x_direction,
-                                            int y_direction,
-                                            std::vector<Move> &possible_moves) {
-  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
-  Piece *moving_piece = board[x][y];
-  bool first_move = !moving_piece->moved;
-
-  int new_x = x + x_direction;
-  int new_y = y + y_direction;
-  for (; new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8;
-       new_x += x_direction, new_y += y_direction) {
-    Piece *target_piece = board[new_x][new_y];
-    if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, moving_piece, first_move));
-    } else if (target_piece->color != moving_piece->color) {
-      possible_moves.push_back(
-          Move(x, y, new_x, new_y, moving_piece, target_piece, first_move));
-      break;
-    } else {
-      break;
-    }
-  }
-}
-
 //  PUBLIC FUNCTIONS
 void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
                                        std::vector<Move> &possible_moves) {
@@ -287,4 +260,31 @@ void MoveGenerator::generate_queen_move(BoardState &board_state, int x, int y,
   // Queen moves are a combination of rook and bishop moves.
   generate_rook_move(board_state, x, y, possible_moves);
   generate_bishop_move(board_state, x, y, possible_moves);
+}
+
+// PRIVATE FUNCTIONS
+void MoveGenerator::rook_bishop_move_helper(BoardState &board_state, int x,
+                                            int y, int x_direction,
+                                            int y_direction,
+                                            std::vector<Move> &possible_moves) {
+  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
+  Piece *moving_piece = board[x][y];
+  bool first_move = !moving_piece->moved;
+
+  int new_x = x + x_direction;
+  int new_y = y + y_direction;
+  for (; new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8;
+       new_x += x_direction, new_y += y_direction) {
+    Piece *target_piece = board[new_x][new_y];
+    if (target_piece->type == PieceType::EMPTY) {
+      possible_moves.push_back(
+          Move(x, y, new_x, new_y, moving_piece, first_move));
+    } else if (target_piece->color != moving_piece->color) {
+      possible_moves.push_back(
+          Move(x, y, new_x, new_y, moving_piece, target_piece, first_move));
+      break;
+    } else {
+      break;
+    }
+  }
 }
