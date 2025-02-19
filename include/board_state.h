@@ -78,7 +78,7 @@ public:
   /**
    * @brief Prints the board.
    */
-  void print_board();
+  void print_board(PieceColor color);
 
   /**
    * @brief Will apply the given move unto board_state;

@@ -37,7 +37,7 @@ void testing_one() {
     Move move = my_interface.input_to_move(my_engine.calculate_possible_moves(),
                                            move_strings[i]);
     my_board.apply_move(move);
-    my_board.print_board();
+    my_board.print_board(PieceColor::WHITE);
     printf("\n");
 
     // Wait for user to press Enter
@@ -50,7 +50,7 @@ void testing_one() {
     printf("Undo Move: %d\n", i);
 
     my_board.undo_move();
-    my_board.print_board();
+    my_board.print_board(PieceColor::WHITE);
     printf("\n");
     std::cin.get();
   }

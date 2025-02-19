@@ -12,6 +12,7 @@ private:
   BestMoveFinder search_engine;
   MoveInterface move_interface;
   PositionEvaluator position_evaluator;
+  PieceColor player_color;
 
   /**
    * @brief Main game loop.

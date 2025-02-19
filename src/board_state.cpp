@@ -62,18 +62,32 @@ void BoardState::reset_board() {
   chess_board[4][7] = new Piece(PieceType::KING, PieceColor::BLACK);
 }
 
-void BoardState::print_board() {
-  for (int y = 7; y >= 0; --y) {
-    for (int x = 0; x < 8; ++x) {
-      Piece *piece = chess_board[x][y];
-      char piece_char = (piece->color == PieceColor::WHITE)
-                            ? w_piece_to_char.at(piece->type)
-                            : b_piece_to_char.at(piece->type);
-      printf("%c ", piece_char);
+void BoardState::print_board(PieceColor color) {
+  if (color == PieceColor::WHITE) {
+    for (int y = 7; y >= 0; --y) {
+      for (int x = 0; x < 8; ++x) {
+        Piece *piece = chess_board[x][y];
+        char piece_char = (piece->color == PieceColor::WHITE)
+                              ? w_piece_to_char.at(piece->type)
+                              : b_piece_to_char.at(piece->type);
+        printf("%c ", piece_char);
+      }
+      printf("\n");
+    }
+    printf("\n");
+  } else {
+    for (int y = 0; y < 8; ++y) {
+      for (int x = 7; x >= 0; --x) {
+        Piece *piece = chess_board[x][y];
+        char piece_char = (piece->color == PieceColor::WHITE)
+                              ? w_piece_to_char.at(piece->type)
+                              : b_piece_to_char.at(piece->type);
+        printf("%c ", piece_char);
+      }
+      printf("\n");
     }
     printf("\n");
   }
-  printf("\n");
 }
 
 void BoardState::apply_move(Move &move) {
