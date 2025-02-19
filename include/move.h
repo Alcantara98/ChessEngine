@@ -4,13 +4,28 @@
 #include "piece.h"
 
 struct Move {
+  // The piece that is moving.
   Piece *moving_piece;
+
+  // The piece that is captured.
   Piece *captured_piece;
+
+  // The piece type to promote to.
   PieceType promotion_piece_type;
+
+  // Coordinates of the move.
   int from_x, from_y;
+
+  // Coordinates of the move.
   int to_x, to_y;
+
+  // True if move captures another piece.
   bool is_en_passant;
+
+  // Specifies whether this is the piece's first move.
   bool first_move;
+
+  // Specifies whether a pawn moved two squares forward.
   bool pawn_moved_two;
 
   // Coordinates of the pawn that moved two.
@@ -55,17 +70,6 @@ struct Move {
        int pmt_y = -1);
 
   /**
-   * @brief Constructor for pawn promotion through normal move.
-   *
-   * @param from_x, from_y Initial coordinates of moving piece.
-   * @param to_x, to_y Final coordinates of moving piece.
-   * @param moving_piece The piece to move.
-   * @param promotion_piece_type Promote piece to this piece type.
-   */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-       PieceType promotion_piece_type);
-
-  /**
    * @brief Constructor for captures.
    *
    * @param from_x, from_y Initial coordinates of moving piece.
@@ -78,6 +82,17 @@ struct Move {
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
        Piece *captured_piece, bool first_move = false,
        bool is_en_passant = false);
+
+  /**
+   * @brief Constructor for pawn promotion through normal move.
+   *
+   * @param from_x, from_y Initial coordinates of moving piece.
+   * @param to_x, to_y Final coordinates of moving piece.
+   * @param moving_piece The piece to move.
+   * @param promotion_piece_type Promote piece to this piece type.
+   */
+  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
+       PieceType promotion_piece_type);
 
   /**
    * @brief Constructor for pawn promotion through captures.
