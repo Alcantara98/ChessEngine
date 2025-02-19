@@ -184,7 +184,7 @@ Move BestMoveFinder::find_best_move(int max_search_depth,
                         end_time - start_time)
                         .count();
     if (show_performance) {
-      printf("Depth: %d, Time: %ldms\n", iterative_depth, duration);
+      printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
       printf("Nodes Visited %d\n", nodes_visited);
       printf("Leaf Nodes Visited %d\n", leaf_nodes_visited);
       printf("TT Size: %d\n", transposition_table.get_size());
