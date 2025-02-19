@@ -1,5 +1,39 @@
 #include "chess_engine.h"
 
+// CONSTRUCTORS
+ChessEngine::ChessEngine()
+    : board_state(BoardState()), search_engine(BestMoveFinder(board_state)),
+      move_interface(MoveInterface(board_state)),
+      position_evaluator(PositionEvaluator(board_state)) {}
+
+// PUBLIC FUNCTIONS
+void ChessEngine::start_game() {
+  char user_color;
+  std::cout << "Please Enter Player Color (w = White, b = Black):";
+  std::cin >> user_color;
+
+  int engine_depth;
+  std::cout << "Please Enter Engine Depth:";
+  std::cin >> engine_depth;
+
+  bool show_performance;
+  std::cout << "Show Performance (1 = Yes, 0 = No):";
+  std::cin >> show_performance;
+
+  if (user_color == 'w') {
+    player_color = PieceColor::WHITE;
+    Move user_move =
+        move_interface.input_to_move(search_engine.calculate_possible_moves());
+    board_state.apply_move(user_move);
+    printf("eval: %d\n", position_evaluator.evaluate_position());
+    board_state.print_board(player_color);
+    search_engine.engine_color = PieceColor::BLACK;
+  } else {
+    search_engine.engine_color = PieceColor::WHITE;
+  }
+  game_loop(engine_depth, show_performance);
+}
+
 // PRIVATE FUNCTIONS
 void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
   while (true) {
@@ -32,39 +66,6 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
     printf("eval: %d\n", position_evaluator.evaluate_position());
     board_state.print_board(player_color);
   }
-}
-
-// PUBLIC FUNCTIONS
-ChessEngine::ChessEngine()
-    : board_state(BoardState()), search_engine(BestMoveFinder(board_state)),
-      move_interface(MoveInterface(board_state)),
-      position_evaluator(PositionEvaluator(board_state)) {}
-
-void ChessEngine::start_game() {
-  char user_color;
-  std::cout << "Please Enter Player Color (w = White, b = Black):";
-  std::cin >> user_color;
-
-  int engine_depth;
-  std::cout << "Please Enter Engine Depth:";
-  std::cin >> engine_depth;
-
-  bool show_performance;
-  std::cout << "Show Performance (1 = Yes, 0 = No):";
-  std::cin >> show_performance;
-
-  if (user_color == 'w') {
-    player_color = PieceColor::WHITE;
-    Move user_move =
-        move_interface.input_to_move(search_engine.calculate_possible_moves());
-    board_state.apply_move(user_move);
-    printf("eval: %d\n", position_evaluator.evaluate_position());
-    board_state.print_board(player_color);
-    search_engine.engine_color = PieceColor::BLACK;
-  } else {
-    search_engine.engine_color = PieceColor::WHITE;
-  }
-  game_loop(engine_depth, show_performance);
 }
 
 bool ChessEngine::is_checkmate() {
