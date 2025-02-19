@@ -4,17 +4,6 @@ PositionEvaluator::PositionEvaluator(BoardState &board_state)
     : board_state(board_state) {}
 
 void PositionEvaluator::evaluate_pawn(int x, int y, Piece &piece, int &eval) {
-  // Piece value.
-
-  // Position value - y coordinate.
-  if (piece.color == PieceColor::WHITE) {
-    eval += 50;
-    eval += (y * y);
-  } else {
-    eval -= 50;
-    eval -= ((7 - y) * (7 - y));
-  }
-
   // Position value - x coordinate.
   switch (x) {
   case 0:
@@ -83,13 +72,28 @@ void PositionEvaluator::evaluate_knight(int x, int y, Piece &piece, int &eval) {
   // Piece value.
   if (piece.color == PieceColor::WHITE) {
     eval += 150;
-    if(!piece.moved){
+    if (!piece.moved) {
       eval -= 20;
     }
   } else {
     eval -= 150;
-    if(!piece.moved){
+    if (!piece.moved) {
       eval += 20;
+    }
+  }
+
+  // The more moves a knight has, the better.
+  int new_x, new_y;
+  for (auto &move : knight_moves) {
+    new_x = x + move[0];
+    new_y = y + move[1];
+    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      // Increase evaluation based on the number of moves.
+      if (piece.color == PieceColor::WHITE) {
+        eval += 5;
+      } else {
+        eval -= 5;
+      }
     }
   }
 }
@@ -98,13 +102,30 @@ void PositionEvaluator::evaluate_bishop(int x, int y, Piece &piece, int &eval) {
   // Piece value.
   if (piece.color == PieceColor::WHITE) {
     eval += 170;
-    if(!piece.moved){
+    if (!piece.moved) {
       eval -= 20;
     }
   } else {
     eval -= 170;
-    if(!piece.moved){
+    if (!piece.moved) {
       eval += 20;
+    }
+  }
+
+  // The more moves a bishop has, the better.
+  int new_x, new_y;
+  for (auto &direction : bishop_directions) {
+    new_x = x + direction[0];
+    new_y = y + direction[1];
+    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      // Increase evaluation based on the number of moves.
+      if (piece.color == PieceColor::WHITE) {
+        eval += 5;
+      } else {
+        eval -= 5;
+      }
+      new_x += direction[0];
+      new_y += direction[1];
     }
   }
 }
@@ -116,6 +137,23 @@ void PositionEvaluator::evaluate_rook(int x, int y, Piece &piece, int &eval) {
   } else {
     eval -= 400;
   }
+
+  // The more moves a rook has, the better.
+  int new_x, new_y;
+  for (auto &direction : rook_directions) {
+    new_x = x + direction[0];
+    new_y = y + direction[1];
+    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      // Increase evaluation based on the number of moves.
+      if (piece.color == PieceColor::WHITE) {
+        eval += 5;
+      } else {
+        eval -= 5;
+      }
+      new_x += direction[0];
+      new_y += direction[1];
+    }
+  }
 }
 
 void PositionEvaluator::evaluate_queen(int x, int y, Piece &piece, int &eval) {
@@ -125,6 +163,23 @@ void PositionEvaluator::evaluate_queen(int x, int y, Piece &piece, int &eval) {
   } else {
     eval -= 1000;
   }
+
+  // The more moves a queen has, the better.
+  int new_x, new_y;
+  for (auto &direction : queen_directions) {
+    new_x = x + direction[0];
+    new_y = y + direction[1];
+    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
+      // Increase evaluation based on the number of moves.
+      if (piece.color == PieceColor::WHITE) {
+        eval += 5;
+      } else {
+        eval -= 5;
+      }
+      new_x += direction[0];
+      new_y += direction[1];
+    }
+  }
 }
 
 void PositionEvaluator::evaluate_king(int x, int y, Piece &piece, int &eval) {
@@ -133,6 +188,46 @@ void PositionEvaluator::evaluate_king(int x, int y, Piece &piece, int &eval) {
     eval += 20000;
   } else {
     eval -= 20000;
+  }
+  // King is safer in the sides.
+  switch (x) {
+  case 0:
+    if (piece.color == PieceColor::WHITE) {
+      eval += 5;
+    } else {
+      eval -= 5;
+    }
+    break;
+  case 1:
+    if (piece.color == PieceColor::WHITE) {
+      eval += 10;
+    } else {
+      eval -= 10;
+    }
+    break;
+  case 2:
+    if (piece.color == PieceColor::WHITE) {
+      eval += 8;
+    } else {
+      eval -= 8;
+    }
+    break;
+  case 7:
+    if (piece.color == PieceColor::WHITE) {
+      eval += 5;
+    } else {
+      eval -= 5;
+    }
+    break;
+  case 6:
+    if (piece.color == PieceColor::WHITE) {
+      eval += 10;
+    } else {
+      eval -= 10;
+    }
+    break;
+  default:
+    break;
   }
 }
 

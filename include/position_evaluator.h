@@ -5,7 +5,25 @@
 
 class PositionEvaluator {
 private:
+  // See BoardState.
   BoardState &board_state;
+
+  // Directions for the queen.
+  const std::array<std::array<int, 2>, 8> queen_directions = {
+      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
+
+  // Directions for the bishop.
+  const std::array<std::array<int, 2>, 4> bishop_directions = {
+      {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
+
+  // Directions for the knight.
+  const std::array<std::array<int, 2>, 8> knight_moves = {
+      {{1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1}}};
+
+  // Directions for the rook.
+  const std::array<std::array<int, 2>, 4> rook_directions = {
+      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
+
   /**
    * @brief Evaluates pawn at given position.
    * @param x, y Position of the pawn.
