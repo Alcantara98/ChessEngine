@@ -15,9 +15,16 @@ enum class PieceColor { NONE, WHITE, BLACK };
  * @brief A structure to represent chess pieces.
  */
 struct Piece {
+  // Type of piece.
   PieceType type;
+
+  // Color of piece.
   PieceColor color;
+
+  // Whether the piece has moved.
   bool moved;
+
+  // Whether the pawn's last move is two squares forward.
   bool pawn_moved_two;
 
   /**
