@@ -14,26 +14,11 @@ struct TranspositionTableEntry {
 };
 
 class TranspositionTable {
-private:
-  // Maximum size of the transposition table.
-  uint64_t max_size;
-
-  // Hash table to store entries.
-  std::unordered_map<uint64_t, TranspositionTableEntry> table;
-
-  // List of hash values in least recently used order.
-  std::list<uint64_t> lru_list;
-
-  /**
-   * @brief Remove the least recently used entry from the table.
-   */
-  void trim();
-
 public:
   /**
    * @brief Construct a new Transposition Table object
    */
-  TranspositionTable(uint64_t max_size) : max_size(max_size) {}
+  TranspositionTable(uint64_t max_size);
 
   /**
    * @brief Store a new entry in the transposition table.
@@ -65,6 +50,21 @@ public:
    * @brief Clear the transposition table.
    */
   void clear();
+
+private:
+  // Maximum size of the transposition table.
+  uint64_t max_size;
+
+  // Hash table to store entries.
+  std::unordered_map<uint64_t, TranspositionTableEntry> table;
+
+  // List of hash values in least recently used order.
+  std::list<uint64_t> lru_list;
+
+  /**
+   * @brief Remove the least recently used entry from the table.
+   */
+  void trim();
 };
 
 #endif // TRANSPOSITION_TABLE_H

@@ -1,5 +1,9 @@
 #include "transposition_table.h"
+// CONSTRUCTORS
+TranspositionTable::TranspositionTable(uint64_t max_size)
+    : max_size(max_size) {}
 
+// PUBLIC FUNCTIONS
 void TranspositionTable::store(uint64_t &hash, int depth, int value, int flag,
                                int best_move_index) {
   auto it = table.find(hash);
@@ -44,16 +48,17 @@ bool TranspositionTable::retrieve(uint64_t &hash, int &depth, int &value,
   return false;
 }
 
-void TranspositionTable::trim() {
-  // Remove the least recently used entry
-  uint64_t lru_hash = lru_list.back();
-  lru_list.pop_back();
-  table.erase(lru_hash);
-}
-
 int TranspositionTable::get_size() { return table.size(); }
 
 void TranspositionTable::clear() {
   table.clear();
   lru_list.clear();
+}
+
+// PRIVATE FUNCTIONS
+void TranspositionTable::trim() {
+  // Remove the least recently used entry
+  uint64_t lru_hash = lru_list.back();
+  lru_list.pop_back();
+  table.erase(lru_hash);
 }
