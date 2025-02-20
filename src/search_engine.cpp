@@ -65,7 +65,7 @@ Move SearchEngine::find_best_move(int max_search_depth, bool show_performance) {
       board_state.apply_move(move);
       int eval = minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
                                            !maximising);
-      move_scores.push_back({move, eval});
+      move_scores.emplace_back(move, eval);
       board_state.undo_move();
     }
     auto end_time = std::chrono::high_resolution_clock::now();

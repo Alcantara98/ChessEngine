@@ -24,31 +24,31 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
   if (y_plus_pd != promotion_tile) {
     // Normal one square move forward.
     if (board[x][y_plus_pd]->type == PieceType::EMPTY) {
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, x, y_plus_pd, pawn_piece, first_move));
     }
     // Normal two square move forward.
     if (first_move && board[x][y_plus_pd]->type == PieceType::EMPTY &&
         board[x][y + (2 * pawn_direction)]->type == PieceType::EMPTY) {
-      possible_moves.push_back(Move(x, y, x, y + (2 * pawn_direction),
-                                    pawn_piece, true, true, x,
-                                    y + (2 * pawn_direction)));
+      possible_moves.emplace_back(Move(x, y, x, y + (2 * pawn_direction),
+                                       pawn_piece, true, true, x,
+                                       y + (2 * pawn_direction)));
     }
     // Normal capture.
     if (x > 0) {
       Piece *capture_left = board[x_minus_1][y_plus_pd];
       if (capture_left->type != PieceType::EMPTY &&
           capture_left->color != pawn_piece->color) {
-        possible_moves.push_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
-                                      capture_left, first_move));
+        possible_moves.emplace_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
+                                         capture_left, first_move));
       }
     }
     if (x < 7) {
       Piece *capture_right = board[x_plus_1][y_plus_pd];
       if (capture_right->type != PieceType::EMPTY &&
           capture_right->color != pawn_piece->color) {
-        possible_moves.push_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
-                                      capture_right, first_move));
+        possible_moves.emplace_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
+                                         capture_right, first_move));
       }
     }
     // En-passant captures.
@@ -62,9 +62,9 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
           if (left_piece->color != pawn_piece->color &&
               left_piece->pawn_moved_two) {
             if (board[x_minus_1][y_plus_pd]->type == PieceType::EMPTY) {
-              possible_moves.push_back(Move(x, y, x_minus_1, y_plus_pd,
-                                            pawn_piece, left_piece, first_move,
-                                            true));
+              possible_moves.emplace_back(Move(x, y, x_minus_1, y_plus_pd,
+                                               pawn_piece, left_piece,
+                                               first_move, true));
             }
           }
         }
@@ -76,9 +76,9 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
           if (right_piece->color != pawn_piece->color &&
               right_piece->pawn_moved_two) {
             if (board[x_plus_1][y_plus_pd]->type == PieceType::EMPTY) {
-              possible_moves.push_back(Move(x, y, x_plus_1, y_plus_pd,
-                                            pawn_piece, right_piece, first_move,
-                                            true));
+              possible_moves.emplace_back(Move(x, y, x_plus_1, y_plus_pd,
+                                               pawn_piece, right_piece,
+                                               first_move, true));
             }
           }
         }
@@ -90,13 +90,13 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
     int new_x, new_y;
     // Promotion through normal one square move forward.
     if (board[x][y_plus_pd]->type == PieceType::EMPTY) {
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, x, y_plus_pd, pawn_piece, PieceType::QUEEN));
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, x, y_plus_pd, pawn_piece, PieceType::BISHOP));
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, x, y_plus_pd, pawn_piece, PieceType::KNIGHT));
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, x, y_plus_pd, pawn_piece, PieceType::ROOK));
     }
     // Promotion through capture.
@@ -104,28 +104,28 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
       Piece *capture_left = board[x_minus_1][y_plus_pd];
       if (capture_left->type != PieceType::EMPTY &&
           capture_left->color != pawn_piece->color) {
-        possible_moves.push_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
-                                      capture_left, PieceType::QUEEN));
-        possible_moves.push_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
-                                      capture_left, PieceType::BISHOP));
-        possible_moves.push_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
-                                      capture_left, PieceType::KNIGHT));
-        possible_moves.push_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
-                                      capture_left, PieceType::ROOK));
+        possible_moves.emplace_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
+                                         capture_left, PieceType::QUEEN));
+        possible_moves.emplace_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
+                                         capture_left, PieceType::BISHOP));
+        possible_moves.emplace_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
+                                         capture_left, PieceType::KNIGHT));
+        possible_moves.emplace_back(Move(x, y, x_minus_1, y_plus_pd, pawn_piece,
+                                         capture_left, PieceType::ROOK));
       }
     }
     if (x < 7) { // Check if x_plus_1 is within bounds
       Piece *capture_right = board[x_plus_1][y_plus_pd];
       if (capture_right->type != PieceType::EMPTY &&
           capture_right->color != pawn_piece->color) {
-        possible_moves.push_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
-                                      capture_right, PieceType::QUEEN));
-        possible_moves.push_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
-                                      capture_right, PieceType::BISHOP));
-        possible_moves.push_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
-                                      capture_right, PieceType::KNIGHT));
-        possible_moves.push_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
-                                      capture_right, PieceType::ROOK));
+        possible_moves.emplace_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
+                                         capture_right, PieceType::QUEEN));
+        possible_moves.emplace_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
+                                         capture_right, PieceType::BISHOP));
+        possible_moves.emplace_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
+                                         capture_right, PieceType::KNIGHT));
+        possible_moves.emplace_back(Move(x, y, x_plus_1, y_plus_pd, pawn_piece,
+                                         capture_right, PieceType::ROOK));
       }
     }
   }
@@ -154,12 +154,12 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
       Piece *target_piece = board[new_x][new_y];
       // Normal move.
       if (target_piece->type == PieceType::EMPTY) {
-        possible_moves.push_back(
+        possible_moves.emplace_back(
             Move(x, y, new_x, new_y, king_piece, first_move));
       }
       // Capture move.
       else if (target_piece->color != king_piece->color) {
-        possible_moves.push_back(
+        possible_moves.emplace_back(
             Move(x, y, new_x, new_y, king_piece, target_piece, first_move));
       }
     }
@@ -173,7 +173,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
           board[x + 2][y]->type == PieceType::EMPTY) {
         if (!board_state.square_is_attacked(x_plus_1, y, king_piece->color) &&
             !board_state.square_is_attacked(x + 2, y, king_piece->color)) {
-          possible_moves.push_back(
+          possible_moves.emplace_back(
               Move(x, y, x + 2, y, king_piece, first_move, false));
         }
       }
@@ -187,7 +187,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
         if (!board_state.square_is_attacked(x_minus_1, y, king_piece->color) &&
             !board_state.square_is_attacked(x - 2, y, king_piece->color) &&
             !board_state.square_is_attacked(x - 3, y, king_piece->color)) {
-          possible_moves.push_back(
+          possible_moves.emplace_back(
               Move(x, y, x - 2, y, king_piece, first_move, true));
         }
       }
@@ -216,12 +216,12 @@ void MoveGenerator::generate_knight_move(BoardState &board_state, int x, int y,
     Piece *target_piece = board[new_x][new_y];
     // Normal move.
     if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, new_x, new_y, knight_piece, first_move));
     }
     // Capture move.
     else if (target_piece->color != knight_piece->color) {
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, new_x, new_y, knight_piece, target_piece, first_move));
     }
   }
@@ -277,10 +277,10 @@ void MoveGenerator::rook_bishop_move_helper(BoardState &board_state, int x,
        new_x += x_direction, new_y += y_direction) {
     Piece *target_piece = board[new_x][new_y];
     if (target_piece->type == PieceType::EMPTY) {
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, new_x, new_y, moving_piece, first_move));
     } else if (target_piece->color != moving_piece->color) {
-      possible_moves.push_back(
+      possible_moves.emplace_back(
           Move(x, y, new_x, new_y, moving_piece, target_piece, first_move));
       break;
     } else {
