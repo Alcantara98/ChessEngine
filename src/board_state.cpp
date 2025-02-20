@@ -52,6 +52,7 @@ void BoardState::reset_board() {
 
 void BoardState::print_board(PieceColor color) {
   if (color == PieceColor::WHITE) {
+    // Print board from white's perspective. (White at bottom)
     for (int y = 7; y >= 0; --y) {
       for (int x = 0; x < 8; ++x) {
         Piece *piece = chess_board[x][y];
@@ -64,6 +65,7 @@ void BoardState::print_board(PieceColor color) {
     }
     printf("\n");
   } else {
+    // Print board from black perspective. (Black at bottom)
     for (int y = 0; y < 8; ++y) {
       for (int x = 7; x >= 0; --x) {
         Piece *piece = chess_board[x][y];
@@ -90,7 +92,7 @@ void BoardState::apply_move(Move &move) {
                              : move.to_y + 1;
     chess_board[move.to_x][captured_y_pos] = &empty_piece;
   } else if (move.moving_piece->type == PieceType::KING) {
-    // Move Rook.
+    // Castle move if king moved two squares.
     switch (move.to_x - move.from_x) {
     case 2:
       // King Side Castle.
@@ -107,18 +109,19 @@ void BoardState::apply_move(Move &move) {
     }
   }
 
+  // Move moving piece to new square.
   std::swap(chess_board[move.from_x][move.from_y],
             chess_board[move.to_x][move.to_y]);
 
   if (move.promotion_piece_type != PieceType::EMPTY) {
-    // If pawn is promoting, moving piece will become promotion piece.
+    // If pawn is promoting, moving piece will become promotion piece type.
     chess_board[move.to_x][move.to_y] =
         new Piece(move.promotion_piece_type, move.moving_piece->color);
   }
 
   if (move.captured_piece != nullptr && move.is_en_passant == false) {
     // If capturing, original square will not be empty after swap.
-    // Empty here.
+    // Clear old square (point to empty_piece).
     chess_board[move.from_x][move.from_y] = &empty_piece;
   }
 
@@ -126,9 +129,11 @@ void BoardState::apply_move(Move &move) {
     move.moving_piece->moved = true;
   }
 
+  // Update move color, it is now the other player's turn.
   move_color =
       (move_color == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
 
+  // Store move in previous moves stack for undoing moves.
   previous_moves.push(move);
 }
 
@@ -145,7 +150,7 @@ void BoardState::undo_move() {
                              : move.to_y + 1;
     chess_board[move.to_x][captured_y_pos] = move.captured_piece;
   } else if (move.moving_piece->type == PieceType::KING) {
-    // Move Rook.
+    // Castle move if king moved two squares.
     switch (move.to_x - move.from_x) {
     case 2:
       // King Side Castle.
@@ -174,6 +179,7 @@ void BoardState::undo_move() {
     chess_board[move.from_x][move.from_y] = move.captured_piece;
   }
 
+  // Move piece back to original square.
   std::swap(chess_board[move.from_x][move.from_y],
             chess_board[move.to_x][move.to_y]);
 
@@ -181,8 +187,11 @@ void BoardState::undo_move() {
     move.moving_piece->moved = false;
   }
 
+  // Update move color, it is now the other player's turn.
   move_color =
       (move_color == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+
+  // Remove move from moves stack, move is undone.
   previous_moves.pop();
 }
 
