@@ -1,0 +1,32 @@
+name: Build Chess Engine
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up C++ environment
+        run: choco install mingw
+
+      - name: Set up CMake
+        uses: lukka/get-cmake@v3
+
+      - name: Configure CMake
+        run: cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build
+
+      - name: Build the program
+        run: cmake --build build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: chess_engine
+          path: build/chess_engine.exe
