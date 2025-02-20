@@ -1,16 +1,16 @@
-#include "best_move_finder.h"
+#include "search_engine.h"
 #include "transposition_table.h"
 
 #include <chrono>
 
 // CONSTRUCTORS
-BestMoveFinder::BestMoveFinder(BoardState &board_state)
+SearchEngine::SearchEngine(BoardState &board_state)
     : board_state(board_state),
       position_evaluator(PositionEvaluator(board_state)),
       transposition_table(10000000) {} // Initialize with a max size
 
 // PUBLIC FUNCTIONS
-std::vector<Move> BestMoveFinder::calculate_possible_moves() {
+std::vector<Move> SearchEngine::calculate_possible_moves() {
   std::vector<Move> possible_moves;
   for (int y = 0; y < 8; ++y) {
     for (int x = 0; x < 8; ++x) {
@@ -49,7 +49,7 @@ std::vector<Move> BestMoveFinder::calculate_possible_moves() {
   return std::move(possible_moves);
 }
 
-Move BestMoveFinder::find_best_move(int max_search_depth,
+Move SearchEngine::find_best_move(int max_search_depth,
                                     bool show_performance) {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<std::pair<Move, int>> move_scores;
@@ -89,7 +89,7 @@ Move BestMoveFinder::find_best_move(int max_search_depth,
 }
 
 // PRIVATE FUNCTIONS
-int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
+int SearchEngine::minimax_alpha_beta_search(int alpha, int beta, int depth,
                                               bool maximise) {
   nodes_visited++;
   int tt_value, tt_flag, entry_depth;
@@ -153,7 +153,7 @@ int BestMoveFinder::minimax_alpha_beta_search(int alpha, int beta, int depth,
   }
 }
 
-void BestMoveFinder::sort_moves(
+void SearchEngine::sort_moves(
     std::vector<std::pair<Move, int>> &move_scores) {
   if (engine_color == PieceColor::WHITE) {
     // Sort by descending order.
@@ -170,7 +170,7 @@ void BestMoveFinder::sort_moves(
   }
 }
 
-void BestMoveFinder::max_search(int &alpha, int &beta, int &max_eval, int &eval,
+void SearchEngine::max_search(int &alpha, int &beta, int &max_eval, int &eval,
                                 int &depth, int &best_move_index,
                                 int &move_index,
                                 std::vector<Move> &possible_moves) {
@@ -185,7 +185,7 @@ void BestMoveFinder::max_search(int &alpha, int &beta, int &max_eval, int &eval,
   board_state.undo_move();
 }
 
-void BestMoveFinder::min_search(int &alpha, int &beta, int &min_eval, int &eval,
+void SearchEngine::min_search(int &alpha, int &beta, int &min_eval, int &eval,
                                 int &depth, int &best_move_index,
                                 int &move_index,
                                 std::vector<Move> &possible_moves) {

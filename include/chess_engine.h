@@ -1,7 +1,7 @@
 #ifndef CHESS_ENGINE
 #define CHESS_ENGINE
 
-#include "best_move_finder.h"
+#include "search_engine.h"
 #include "board_state.h"
 #include "move_interface.h"
 #include "position_evaluator.h"
@@ -26,7 +26,7 @@ private:
   BoardState board_state;
 
   // Best move finder object.
-  BestMoveFinder search_engine;
+  SearchEngine search_engine;
 
   // Move interface object.
   MoveInterface move_interface;

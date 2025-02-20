@@ -2,7 +2,7 @@
 
 // CONSTRUCTORS
 ChessEngine::ChessEngine()
-    : board_state(BoardState()), search_engine(BestMoveFinder(board_state)),
+    : board_state(BoardState()), search_engine(SearchEngine(board_state)),
       move_interface(MoveInterface(board_state)),
       position_evaluator(PositionEvaluator(board_state)) {}
 

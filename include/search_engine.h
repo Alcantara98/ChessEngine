@@ -1,5 +1,5 @@
-#ifndef BEST_MOVE_FINDER_H
-#define BEST_MOVE_FINDER_H
+#ifndef SEARCH_ENGINE_H
+#define SEARCH_ENGINE_H
 
 #include "board_state.h"
 #include "move_generator.h"
@@ -12,7 +12,7 @@
 /**
  * @brief Class to find the best move for the current board state.
  */
-class BestMoveFinder {
+class SearchEngine {
 
 public:
   // Determines which color to maximise for.
@@ -22,7 +22,7 @@ public:
    * @brief Default Constructor - takes a chess board state.
    * @param board_state BoardState object.
    */
-  BestMoveFinder(BoardState &board_state);
+  SearchEngine(BoardState &board_state);
 
   /**
    * @brief Calculates all possible moves of current board state.
@@ -107,4 +107,4 @@ private:
                   std::vector<Move> &possible_moves);
 };
 
-#endif
+#endif // SEARCH_ENGINE_H

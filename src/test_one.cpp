@@ -1,5 +1,5 @@
 #include "test_one.h"
-#include "best_move_finder.h"
+#include "search_engine.h"
 #include "move_interface.h"
 
 #include <iostream>
@@ -9,7 +9,7 @@
 
 void testing_one() {
   BoardState my_board = BoardState();
-  BestMoveFinder my_engine = BestMoveFinder(my_board);
+  SearchEngine my_engine = SearchEngine(my_board);
   MoveInterface my_interface = MoveInterface(my_board);
 
   std::vector<std::string> move_strings{
