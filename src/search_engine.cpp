@@ -49,8 +49,7 @@ std::vector<Move> SearchEngine::calculate_possible_moves() {
   return std::move(possible_moves);
 }
 
-Move SearchEngine::find_best_move(int max_search_depth,
-                                    bool show_performance) {
+Move SearchEngine::find_best_move(int max_search_depth, bool show_performance) {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
@@ -90,7 +89,7 @@ Move SearchEngine::find_best_move(int max_search_depth,
 
 // PRIVATE FUNCTIONS
 int SearchEngine::minimax_alpha_beta_search(int alpha, int beta, int depth,
-                                              bool maximise) {
+                                            bool maximise) {
   nodes_visited++;
   int tt_value, tt_flag, entry_depth;
   int entry_best_move = -1;
@@ -153,8 +152,7 @@ int SearchEngine::minimax_alpha_beta_search(int alpha, int beta, int depth,
   }
 }
 
-void SearchEngine::sort_moves(
-    std::vector<std::pair<Move, int>> &move_scores) {
+void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores) {
   if (engine_color == PieceColor::WHITE) {
     // Sort by descending order.
     sort(move_scores.begin(), move_scores.end(),
@@ -171,9 +169,8 @@ void SearchEngine::sort_moves(
 }
 
 void SearchEngine::max_search(int &alpha, int &beta, int &max_eval, int &eval,
-                                int &depth, int &best_move_index,
-                                int &move_index,
-                                std::vector<Move> &possible_moves) {
+                              int &depth, int &best_move_index, int &move_index,
+                              std::vector<Move> &possible_moves) {
   board_state.apply_move(possible_moves[move_index]);
   eval = minimax_alpha_beta_search(alpha, beta, depth - 1, false);
   if (eval > max_eval) {
@@ -186,9 +183,8 @@ void SearchEngine::max_search(int &alpha, int &beta, int &max_eval, int &eval,
 }
 
 void SearchEngine::min_search(int &alpha, int &beta, int &min_eval, int &eval,
-                                int &depth, int &best_move_index,
-                                int &move_index,
-                                std::vector<Move> &possible_moves) {
+                              int &depth, int &best_move_index, int &move_index,
+                              std::vector<Move> &possible_moves) {
   board_state.apply_move(possible_moves[move_index]);
   eval = minimax_alpha_beta_search(alpha, beta, depth - 1, true);
   if (eval < min_eval) {

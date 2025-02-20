@@ -1,10 +1,10 @@
 #ifndef CHESS_ENGINE
 #define CHESS_ENGINE
 
-#include "search_engine.h"
 #include "board_state.h"
 #include "move_interface.h"
 #include "position_evaluator.h"
+#include "search_engine.h"
 
 /**
  * @brief Class that combineas all the components of the chess engine.

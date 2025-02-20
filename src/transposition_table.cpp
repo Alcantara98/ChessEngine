@@ -4,8 +4,8 @@ TranspositionTable::TranspositionTable(uint64_t max_size)
     : max_size(max_size) {}
 
 // PUBLIC FUNCTIONS
-void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score, int flag,
-                               int best_move_index) {
+void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
+                               int flag, int best_move_index) {
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -20,7 +20,8 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score, in
     if (table.size() >= max_size) {
       trim();
     }
-    table[hash] = {max_depth, eval_score, flag, lru_list.end(), best_move_index};
+    table[hash] = {max_depth, eval_score, flag, lru_list.end(),
+                   best_move_index};
   }
 
   // Update LRU list
@@ -28,8 +29,9 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score, in
   table[hash].lru_position = lru_list.begin();
 }
 
-bool TranspositionTable::retrieve(uint64_t &hash, int &max_depth, int &eval_score,
-                                  int &flag, int &best_move_index) {
+bool TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
+                                  int &eval_score, int &flag,
+                                  int &best_move_index) {
   auto it = table.find(hash);
 
   if (it != table.end()) {

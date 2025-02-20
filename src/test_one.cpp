@@ -1,6 +1,6 @@
 #include "test_one.h"
-#include "search_engine.h"
 #include "move_interface.h"
+#include "search_engine.h"
 
 #include <iostream>
 #include <random>
