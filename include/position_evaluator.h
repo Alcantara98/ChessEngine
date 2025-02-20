@@ -3,6 +3,9 @@
 
 #include "board_state.h"
 
+/**
+ * @brief Class to evaluate the current position of the chess board.
+ */
 class PositionEvaluator {
 public:
   /**

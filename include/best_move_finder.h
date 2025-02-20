@@ -9,6 +9,9 @@
 #include <algorithm>
 #include <limits>
 
+/**
+ * @brief Class to find the best move for the current board state.
+ */
 class BestMoveFinder {
 
 public:

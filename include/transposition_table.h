@@ -5,11 +5,23 @@
 #include <list>
 #include <unordered_map>
 
+/**
+ * @brief Entry in the transposition table.
+ */
 struct TranspositionTableEntry {
-  int depth;
-  int value;
+  // Maximum depth of the search.
+  int max_depth;
+
+  // Value of the board state.
+  int eval_score;
+
+  // Flag of the value. 0 = exact, 1 = lower bound, 2 = upper bound.
   int flag;
+
+  // Least recently used position in the LRU list.
   std::list<uint64_t>::iterator lru_position;
+
+  // Index of the best move in the board state.
   int best_move_index;
 };
 
@@ -23,22 +35,22 @@ public:
   /**
    * @brief Store a new entry in the transposition table.
    * @param board_state Board state to store.
-   * @param depth Depth of the search.
-   * @param value Value of the board state.
+   * @param max_depth Maximum depth of the search.
+   * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    */
-  void store(uint64_t &hash, int depth, int value, int flag,
+  void store(uint64_t &hash, int max_depth, int eval_score, int flag,
              int best_move_index);
 
   /**
    * @brief Retrieve an entry from the transposition table.
    * @param board_state Board state to retrieve.
-   * @param depth Depth of the search.
-   * @param value Value of the board state.
+   * @param max_depth Maximum depth of the search.
+   * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    * @return true if the entry was found, false otherwise.
    */
-  bool retrieve(uint64_t &hash, int &depth, int &value, int &flag,
+  bool retrieve(uint64_t &hash, int &depth, int &eval_score, int &flag,
                 int &best_move_index);
   /**
    * @brief Get the size of the transposition table.

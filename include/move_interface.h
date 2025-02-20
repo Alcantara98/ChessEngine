@@ -8,6 +8,9 @@
 #include <regex>
 #include <string>
 
+/**
+ * @brief Class to convert user input into a Move and vice versa.
+ */
 class MoveInterface {
 private:
   // Map to convert algebraic coordinates to int.
@@ -45,7 +48,8 @@ public:
    * @brief Use to convert command line input into a Move.
    * @return Returns the converted Move.
    */
-  Move input_to_move(std::vector<Move> possible_moves, std::string string_move = "");
+  Move input_to_move(std::vector<Move> possible_moves,
+                     std::string string_move = "");
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).

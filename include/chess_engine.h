@@ -6,6 +6,9 @@
 #include "move_interface.h"
 #include "position_evaluator.h"
 
+/**
+ * @brief Class that combineas all the components of the chess engine.
+ */
 class ChessEngine {
 public:
   /**

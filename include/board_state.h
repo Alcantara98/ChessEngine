@@ -11,6 +11,9 @@
 #include <unordered_map>
 #include <vector>
 
+/**
+ * @brief Class to represent the current state of the chess board.
+ */
 class BoardState {
 public:
   // 8 x 8 array to represent a chess board.

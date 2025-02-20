@@ -8,6 +8,10 @@
 #include <array>
 #include <vector>
 
+/**
+ * @brief Class to generate all possible moves for a given piece given the
+ * current board state.
+ */
 class MoveGenerator {
 private:
   /**
