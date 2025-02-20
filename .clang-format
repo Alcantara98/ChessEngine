@@ -1,0 +1,11 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach 
+AllowShortIfStatementsOnASingleLine: false
+ColumnLimit: 80
+SortIncludes: false
+IncludeBlocks: Preserve
+SpaceBeforeParens: ControlStatements
+SeparateDefinitionBlocks: Always

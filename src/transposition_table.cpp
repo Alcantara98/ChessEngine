@@ -1,4 +1,5 @@
 #include "transposition_table.h"
+
 // CONSTRUCTORS
 TranspositionTable::TranspositionTable(uint64_t max_size)
     : max_size(max_size) {}
