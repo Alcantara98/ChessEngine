@@ -19,11 +19,17 @@ jobs:
       - name: Set up CMake
         uses: lukka/get-cmake@v3
 
-      - name: Configure CMake
-        run: cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build
+      - name: Install clang-format
+        run: choco install llvm
 
-      - name: Build the program
-        run: cmake --build build
+      - name: Run clang-format check
+        run: |
+          clang-format --version
+          clang-format -i src/**/*.cpp src/**/*.h
+          git diff --exit-code
+
+      - name: Configure and Build CMake
+        run: cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build && cmake --build build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v2
