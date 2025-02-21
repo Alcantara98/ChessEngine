@@ -1,7 +1,10 @@
-# ChessEngine
- ### Elby's Chess Engine that can beat any human (hopefully... eventually).
+# **ChessEngine**
+ ### **Elby's Chess Engine that can beat any human (hopefully... eventually).**
 
- Search Engine Features:
+---
+
+Search Engine Features
+-
 - Min Max Search
 - Alpha Beta Pruning
 - Transposition Table (TT)
@@ -11,6 +14,8 @@
 Current Branching Factor: 13-14 ((branching_factor)^(search_depth) = leaf_nodes_visited)
 Current Performance: 1000kn/s (1,000,000 nodes per second)
 
+----
+
 How to Run
 -
 1. Run chess_engine.exe
@@ -19,10 +24,12 @@ How to Run
 4. Enter if you want the engine to print performance matrix
 5. Enter move and play
 
+---
+
 Moves
-  -
-  I will not explain the rules of chess here. Learn how to play before continuing.
-  - Coordinates will be given in modern algebraic chess coordinates. See 'Algebraic Chess Coordinates'.
+-
+  I will not explain the rules of chess here. Learn how to play before continuing
+  - Coordinates will be given in modern algebraic chess coordinates. See 'Algebraic Chess Coordinates'
   - Normal Moves - 'pe2e4'
     - first char 'p': piece type:
       - 'k' = King
@@ -31,17 +38,54 @@ Moves
       - 'n' =  Knight
       - 'r' = Rook
       - 'p' = Pawn
-    - next two chars 'e2': Original coordinates of the piece. 
-    - last two chars 'e4': New coordinates of the piece.
-    - Pawn will move from the e2 square to e4 square.
+    - next two chars 'e2': Original coordinates of the piece
+    - last two chars 'e4': New coordinates of the piece
+    - Pawn will move from the e2 square to e4 square
   - Capture Moves - 'bg5xf6'
-     - Everything is the same as a normal move except there has to be an 'x' between the orignal and new coordinates.
-     - In this example, there has to be an enemy piece on the f6 square.
-     - Same format is used for enpassant captures, in which case, the new coordinates will be an empty square.
+     - Everything is the same as a normal move except there has to be an 'x' between the orignal and new coordinates
+     - In this example, there has to be an enemy piece on the f6 square
+     - Same format is used for enpassant captures, in which case, the new coordinates will be an empty square
    - Castle Moves
      - King Side Castle: 'O-O'
      - Queen Side Castle: 'O-O-O'
    - Promotion Moves - 'pe7e8=q'
-     - Add '=' + piece letter (see Normal Moves above) at the end of a Normal Move.
+     - Add '=' + piece letter (see Normal Moves above) at the end of a Normal Move
+<br/><br/>
+<br/><br/>
+
+---
+## **Development Environment Setup**
+
+---
+
+Install Dependencies
+-
+   - Install a C++ compiler (e.g., GCC, Clang, MSVC).
+   - Install CMake for build configuration.
+   - Install `clang-format` and `clang-tidy` for code formatting and static analysis. You can also install `llvm` which will have both.
+
+Hooks
+-
+   - Copy hooks/pre-commit to .git/hooks/pre-commit
+    ```bash
+    cp hooks/pre-commit .git/hooks/pre-commit
+    ```
+
+Linting
+-
+   - Run on terminal:
+    ```bash
+    clang-format -i src/*.cpp include/*.h
+    ```
+
+Static Analysis
+-
+   - Run on terminal:
+   ```bash
+   clang-tidy --fix -p build/ src/*.cpp include/*.h
+   ```
+
+
+
 
 
