@@ -49,8 +49,8 @@ auto SearchEngine::calculate_possible_moves() -> std::vector<Move> {
   return std::move(possible_moves);
 }
 
-auto SearchEngine::find_best_move(int max_search_depth, bool show_performance)
-    -> Move {
+auto SearchEngine::find_best_move(int max_search_depth,
+                                  bool show_performance) -> Move {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;

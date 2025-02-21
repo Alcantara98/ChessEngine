@@ -68,8 +68,8 @@ private:
    * score.
    * @return Evaluation score from search branch.
    */
-  auto minimax_alpha_beta_search(int alpha, int beta, int depth, bool maximise)
-      -> int;
+  auto minimax_alpha_beta_search(int alpha, int beta, int depth,
+                                 bool maximise) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
