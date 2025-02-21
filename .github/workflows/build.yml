@@ -19,6 +19,9 @@ jobs:
       - name: Set up CMake
         uses: lukka/get-cmake@latest
 
+      - name: Install LLVM
+        run: choco install llvm --force
+
       - name: Run clang-format check
         run: |
           clang-format --version
