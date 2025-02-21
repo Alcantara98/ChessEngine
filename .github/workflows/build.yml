@@ -19,7 +19,7 @@ jobs:
       - name: Set up CMake
         uses: lukka/get-cmake@v3
 
-      - name: Install clang-format
+      - name: Install clang-format and clang-tidy
         run: choco install llvm
 
       - name: Run clang-format check
@@ -27,6 +27,12 @@ jobs:
           clang-format --version
           clang-format -i src/**/*.cpp src/**/*.h
           git diff --exit-code
+
+      - name: Run clang-tidy check
+        run: |
+          cmake -G "MinGW Makefiles" -B build
+          clang-tidy --version
+          clang-tidy -p build src/**/*.cpp include/**/*.h
 
       - name: Configure and Build CMake
         run: cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build && cmake --build build
