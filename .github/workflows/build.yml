@@ -3,7 +3,7 @@ name: Build Chess Engine
 on:
   push:
     branches:
-      - "main"
+      - "*"
 
 jobs:
   build:
@@ -12,9 +12,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Set up C++ environment
-        run: choco install mingw
 
       - name: Set up CMake
         uses: lukka/get-cmake@latest
