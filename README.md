@@ -80,6 +80,7 @@ Linting
 
 Static Analysis
 -
+   - Run CMake on a build dir first which will create compile_commands.json
    - Run on terminal:
    ```bash
    clang-tidy --fix -p build/ src/*.cpp include/*.h
