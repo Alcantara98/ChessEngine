@@ -6,7 +6,7 @@ on:
       - "*"
 
 jobs:
-  build:
+  Linting:
     runs-on: windows-latest
 
     steps:
@@ -28,7 +28,21 @@ jobs:
           clang-tidy --version
           clang-tidy -p build src/*.cpp include/*.h
 
-      - name: Build CMake
+  Build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Create Makefiles
+        run: |
+          cmake -G "MinGW Makefiles" -B build
+
+      - name: Build Chess Engine
         run: cmake --build build
 
       - name: Upload build artifacts
