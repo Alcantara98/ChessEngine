@@ -40,7 +40,7 @@ jobs:
 
       - name: Create Makefiles
         run: |
-          cmake -G "MinGW Makefiles" -B build
+          cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build
 
       - name: Build Chess Engine
         run: cmake --build build
