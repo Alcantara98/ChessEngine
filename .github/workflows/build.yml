@@ -19,23 +19,20 @@ jobs:
       - name: Set up CMake
         uses: lukka/get-cmake@latest
 
-      - name: Install clang-format and clang-tidy
-        run: choco install llvm
-
       - name: Run clang-format check
         run: |
           clang-format --version
-          clang-format -i src/**/*.cpp src/**/*.h
+          clang-format -i src/*.cpp include/*.h
           git diff --exit-code
 
       - name: Run clang-tidy check
         run: |
           cmake -G "MinGW Makefiles" -B build
           clang-tidy --version
-          clang-tidy -p build src/**/*.cpp include/**/*.h
+          clang-tidy -p build src/*.cpp include/*.h
 
-      - name: Configure and Build CMake
-        run: cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build && cmake --build build
+      - name: Build CMake
+        run: cmake --build build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
