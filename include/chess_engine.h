@@ -45,12 +45,12 @@ private:
   /**
    * @brief Checks if the current player is in checkmate.
    */
-  bool is_checkmate();
+  auto is_checkmate() -> bool;
 
   /**
    * @brief Checks if the current player is in stalemate.
    */
-  bool is_stalemate();
+  auto is_stalemate() -> bool;
 };
 
 #endif

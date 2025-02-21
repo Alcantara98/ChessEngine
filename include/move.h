@@ -38,7 +38,7 @@ struct Move {
    * @brief Overloaded operator to compare two moves.
    * @return True if the two moves are the same.
    */
-  bool operator==(const Move &other) const;
+  auto operator==(const Move &other) const -> bool;
 
   /**
    * @brief Constructor with all parameters.

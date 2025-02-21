@@ -48,8 +48,8 @@ public:
    * @brief Use to convert command line input into a Move.
    * @return Returns the converted Move.
    */
-  Move input_to_move(std::vector<Move> possible_moves,
-                     std::string string_move = "");
+  auto input_to_move(std::vector<Move> possible_moves,
+                     std::string string_move = "") -> Move;
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).
@@ -57,7 +57,7 @@ public:
    * @param board_state Chess board to help conversion.
    * @return Returns a string reprsenting the move.
    */
-  std::string move_to_string(Move &move);
+  auto move_to_string(Move &move) -> std::string;
 };
 
 #endif

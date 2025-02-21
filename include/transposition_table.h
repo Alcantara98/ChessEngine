@@ -50,13 +50,13 @@ public:
    * @param flag Flag of the value.
    * @return true if the entry was found, false otherwise.
    */
-  bool retrieve(uint64_t &hash, int &depth, int &eval_score, int &flag,
-                int &best_move_index);
+  auto retrieve(uint64_t &hash, int &depth, int &eval_score, int &flag,
+                int &best_move_index) -> bool;
   /**
    * @brief Get the size of the transposition table.
    * @return int The size of the transposition table.
    */
-  int get_size();
+  auto get_size() -> int;
 
   /**
    * @brief Clear the transposition table.

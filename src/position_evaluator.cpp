@@ -5,7 +5,7 @@ PositionEvaluator::PositionEvaluator(BoardState &board_state)
     : board_state(board_state) {}
 
 // PUBLIC FUNCTIONS
-int PositionEvaluator::evaluate_position() {
+auto PositionEvaluator::evaluate_position() -> int {
   int eval = 0;
 
   for (int y = 0; y < 8; ++y) {

@@ -30,9 +30,9 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
   table[hash].lru_position = lru_list.begin();
 }
 
-bool TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
+auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
                                   int &eval_score, int &flag,
-                                  int &best_move_index) {
+                                  int &best_move_index) -> bool {
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -51,7 +51,7 @@ bool TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
   return false;
 }
 
-int TranspositionTable::get_size() { return table.size(); }
+auto TranspositionTable::get_size() -> int { return table.size(); }
 
 void TranspositionTable::clear() {
   table.clear();

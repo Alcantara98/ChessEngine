@@ -195,7 +195,7 @@ void BoardState::undo_move() {
   previous_moves.pop();
 }
 
-bool BoardState::square_is_attacked(int x, int y, PieceColor color) {
+auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
   // Check for pawn attacks
   int pawn_direction = (color == PieceColor::WHITE) ? 1 : -1;
   if (x > 0 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
@@ -285,7 +285,7 @@ bool BoardState::square_is_attacked(int x, int y, PieceColor color) {
   return false;
 }
 
-bool BoardState::king_is_checked(PieceColor color) {
+auto BoardState::king_is_checked(PieceColor color) -> bool {
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       Piece *test_piece = chess_board[x][y];
@@ -297,7 +297,7 @@ bool BoardState::king_is_checked(PieceColor color) {
   return false;
 }
 
-size_t BoardState::compute_zobrist_hash() const {
+auto BoardState::compute_zobrist_hash() const -> size_t {
   size_t hash = 0;
 
   for (int y = 0; y < 8; ++y) {

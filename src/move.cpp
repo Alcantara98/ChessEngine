@@ -1,6 +1,6 @@
 #include "move.h"
 
-bool Move::operator==(const Move &other) const {
+auto Move::operator==(const Move &other) const -> bool {
   return from_x == other.from_x && from_y == other.from_y &&
          to_x == other.to_x && to_y == other.to_y &&
          moving_piece == other.moving_piece &&

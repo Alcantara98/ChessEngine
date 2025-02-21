@@ -2,10 +2,10 @@
 #include "move_interface.h"
 #include "search_engine.h"
 
+#include <cstdio>
 #include <iostream>
 #include <random>
 #include <stack>
-#include <stdio.h>
 
 void testing_one() {
   BoardState my_board = BoardState();

@@ -18,7 +18,7 @@ public:
    * @brief Evaluates current position using chess heuristics.
    * @return Score of the given position.
    */
-  int evaluate_position();
+  auto evaluate_position() -> int;
 
 private:
   // Directions for the queen.

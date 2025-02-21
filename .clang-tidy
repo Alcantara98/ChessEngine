@@ -1,4 +1,3 @@
 Checks: "modernize-*"
 WarningsAsErrors: "*"
-HeaderFilterRegex: "src/.*"
 FormatStyle: file

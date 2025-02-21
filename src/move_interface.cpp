@@ -3,8 +3,8 @@
 MoveInterface::MoveInterface(BoardState &board_state)
     : board_state(board_state) {}
 
-Move MoveInterface::input_to_move(std::vector<Move> possible_moves,
-                                  std::string string_move) {
+auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
+                                  std::string string_move) -> Move {
   Piece *moving_piece;
   Piece *captured_piece = nullptr;
   PieceType promotion_piece_type = PieceType::EMPTY;
@@ -122,7 +122,16 @@ Move MoveInterface::input_to_move(std::vector<Move> possible_moves,
     // Move is valid, exit loop.
     break;
   }
-  return Move(from_x, from_y, to_x, to_y, moving_piece, captured_piece,
-              promotion_piece_type, is_en_passant, first_move, pawn_moved_two,
-              pmt_x, pmt_y);
+  return {from_x,
+          from_y,
+          to_x,
+          to_y,
+          moving_piece,
+          captured_piece,
+          promotion_piece_type,
+          is_en_passant,
+          first_move,
+          pawn_moved_two,
+          pmt_x,
+          pmt_y};
 }

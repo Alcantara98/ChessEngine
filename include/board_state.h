@@ -71,18 +71,18 @@ public:
    * @param color The color of the attacked pieces.
    * @return True if the square is attacked, false otherwise.
    */
-  bool square_is_attacked(int x, int y, PieceColor color);
+  auto square_is_attacked(int x, int y, PieceColor color) -> bool;
 
   /**
    * @brief Checks if the king of the given color is checked.
    */
-  bool king_is_checked(PieceColor color);
+  auto king_is_checked(PieceColor color) -> bool;
 
   /**
    * @brief Computes the Zobrist hash for the current board state.
    * @return The Zobrist hash value.
    */
-  size_t compute_zobrist_hash() const;
+  [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
 
 private:
   // Char to represent white pieces.

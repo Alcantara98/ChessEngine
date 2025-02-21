@@ -10,7 +10,7 @@ SearchEngine::SearchEngine(BoardState &board_state)
       transposition_table(10000000) {} // Initialize with a max size
 
 // PUBLIC FUNCTIONS
-std::vector<Move> SearchEngine::calculate_possible_moves() {
+auto SearchEngine::calculate_possible_moves() -> std::vector<Move> {
   std::vector<Move> possible_moves;
   for (int y = 0; y < 8; ++y) {
     for (int x = 0; x < 8; ++x) {
@@ -49,7 +49,8 @@ std::vector<Move> SearchEngine::calculate_possible_moves() {
   return std::move(possible_moves);
 }
 
-Move SearchEngine::find_best_move(int max_search_depth, bool show_performance) {
+auto SearchEngine::find_best_move(int max_search_depth, bool show_performance)
+    -> Move {
   std::vector<Move> possible_moves = calculate_possible_moves();
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
@@ -60,8 +61,7 @@ Move SearchEngine::find_best_move(int max_search_depth, bool show_performance) {
     move_scores.clear();
     iterative_depth_search = iterative_depth;
     auto start_time = std::chrono::high_resolution_clock::now();
-    for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
-      Move &move = possible_moves[move_index];
+    for (auto &move : possible_moves) {
       board_state.apply_move(move);
       int eval = minimax_alpha_beta_search(-INF, INF, iterative_depth - 1,
                                            !maximising);
@@ -90,8 +90,8 @@ Move SearchEngine::find_best_move(int max_search_depth, bool show_performance) {
 }
 
 // PRIVATE FUNCTIONS
-int SearchEngine::minimax_alpha_beta_search(int alpha, int beta, int depth,
-                                            bool maximise) {
+auto SearchEngine::minimax_alpha_beta_search(int alpha, int beta, int depth,
+                                             bool maximise) -> int {
   nodes_visited++;
   int tt_value, tt_flag, entry_depth;
   int entry_best_move = -1;

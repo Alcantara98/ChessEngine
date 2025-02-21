@@ -27,13 +27,13 @@ public:
   /**
    * @brief Calculates all possible moves of current board state.
    */
-  std::vector<Move> calculate_possible_moves();
+  auto calculate_possible_moves() -> std::vector<Move>;
 
   /**
    * @brief Finds the best move with the given current state of the board.
    * @param max_search_depth Max depth to search.
    */
-  Move find_best_move(int max_search_depth, bool show_performance);
+  auto find_best_move(int max_search_depth, bool show_performance) -> Move;
 
 private:
   // Use for starting values of alpha and beta;
@@ -68,7 +68,8 @@ private:
    * score.
    * @return Evaluation score from search branch.
    */
-  int minimax_alpha_beta_search(int alpha, int beta, int depth, bool maximise);
+  auto minimax_alpha_beta_search(int alpha, int beta, int depth, bool maximise)
+      -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
