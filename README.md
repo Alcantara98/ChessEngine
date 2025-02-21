@@ -59,9 +59,9 @@ Current Performance: 1000kn/s (1,000,000 nodes per second)
 
 ### Install Dependencies
 
-   - Install a C++ compiler (e.g., GCC, Clang, MSVC).
-   - Install CMake for build configuration.
-   - Install `clang-format` and `clang-tidy` for code formatting and static analysis. Use llvm version 18.1.8
+   - Install a C++ compiler (e.g., GCC, Clang, MSVC)
+   - Install CMake for build configuration
+   - Use `clang-format` and `clang-tidy` for code formatting and static analysis. Install llvm version 18.1.8
 
 ### Hooks
   - Copy hooks/pre-commit to .git/hooks/pre-commit
@@ -77,11 +77,16 @@ Current Performance: 1000kn/s (1,000,000 nodes per second)
 
 ### Static Analysis
 
-  - Run CMake on a build dir first which will create compile_commands.json
+  - Run CMake on a build dir to create compile_commands.json
   - Run on terminal:
     ```bash
     clang-tidy --fix -p build/ src/*.cpp include/*.h
     ```
+
+### CI/CD Jobs
+  - Linting: Will use clang-format and clang-tidy, both at v18.1.8. This job must pass before branch can be pushed to main
+  - Build: Will build the project using CMake. This job must pass before branch can be pushed to main
+  - chess_engine.exe artifact will be uploaded when Build is run on main branch.
 
 
 
