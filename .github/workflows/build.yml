@@ -17,7 +17,7 @@ jobs:
         run: choco install mingw
 
       - name: Set up CMake
-        uses: lukka/get-cmake@v2
+        uses: lukka/get-cmake@v4
 
       - name: Install clang-format and clang-tidy
         run: choco install llvm
