@@ -231,7 +231,6 @@ void MoveGenerator::generate_bishop_move(BoardState &board_state, int x, int y,
                                          std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *bishop_piece = board[x][y];
-  bool first_move = !bishop_piece->moved;
 
   // Each respective pair of x and y directions represent a diagonal.
   rook_bishop_move_helper(board_state, x, y, 1, 1, possible_moves);
@@ -244,7 +243,6 @@ void MoveGenerator::generate_rook_move(BoardState &board_state, int x, int y,
                                        std::vector<Move> &possible_moves) {
   std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
   Piece *rook_piece = board[x][y];
-  bool first_move = !rook_piece->moved;
 
   // Each respective pair of x and y directions represent horizontal or
   // vertical moves.
