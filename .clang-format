@@ -5,7 +5,7 @@ UseTab: Never
 BreakBeforeBraces: Attach 
 AllowShortIfStatementsOnASingleLine: false
 ColumnLimit: 80
-SortIncludes: false
+SortIncludes: true
 IncludeBlocks: Preserve
 SpaceBeforeParens: ControlStatements
 SeparateDefinitionBlocks: Always
