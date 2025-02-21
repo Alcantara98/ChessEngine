@@ -1,5 +1,5 @@
 # ChessEngine
- Elby's Chess Engine that can beat any human (hopefully... eventually).
+ ### Elby's Chess Engine that can beat any human (hopefully... eventually).
 
  Search Engine Features:
 - Min Max Search
