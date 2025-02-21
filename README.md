@@ -62,7 +62,7 @@ Install Dependencies
 -
    - Install a C++ compiler (e.g., GCC, Clang, MSVC).
    - Install CMake for build configuration.
-   - Install `clang-format` and `clang-tidy` for code formatting and static analysis. You can also install `llvm` which will have both.
+   - Install `clang-format` and `clang-tidy` for code formatting and static analysis. Use llvm version 18.1.8
 
 Hooks
 -
