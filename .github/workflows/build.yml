@@ -17,7 +17,7 @@ jobs:
         run: choco install mingw
 
       - name: Set up CMake
-        uses: lukka/get-cmake@v4
+        uses: lukka/get-cmake@v3
 
       - name: Install clang-format and clang-tidy
         run: choco install llvm
@@ -38,7 +38,7 @@ jobs:
         run: cmake -DASAN=OFF -DOPTIMIZE=ON -G "MinGW Makefiles" -B build && cmake --build build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: chess_engine
           path: build/chess_engine.exe
