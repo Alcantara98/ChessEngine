@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Get the list of changed files
+changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(cpp|h)$')
+
+# Check if there are any changed files
+if [ -z "$changed_files" ]; then
+    exit 0
+fi
+
+# Run clang-format on changed files
+clang-format -i $changed_files
+clang_format_status=$?
+
+# Run clang-tidy on changed files
+clang-tidy --fix -p ./build/ $changed_files
+clang_tidy_status=$?
+
+# Check if clang-format or clang-tidy failed
+if [ $clang_format_status -ne 0 ] || [ $clang_tidy_status -ne 0 ]; then
+    echo "Code formatting or static analysis failed. Please fix the issues before committing."
+    exit 1
+fi
+
+exit 0
