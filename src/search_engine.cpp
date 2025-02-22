@@ -103,6 +103,9 @@ auto SearchEngine::find_best_move(int max_search_depth,
   }
   transposition_table.clear();
   sort_moves(move_scores);
+  for (auto move_score : move_scores) {
+    printf("Score: %d\n", move_score.second);
+  }
 
   return move_scores[0].first;
 }
