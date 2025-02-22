@@ -1,7 +1,7 @@
 #include "move_interface.h"
 
 MoveInterface::MoveInterface(BoardState &board_state)
-    : board_state(board_state) {}
+    : game_board_state(board_state) {}
 
 auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
                                   std::string string_move) -> Move {
@@ -35,7 +35,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
         } else {
           to_x = 2;
         }
-        if (board_state.move_color == PieceColor::WHITE) {
+        if (game_board_state.move_color == PieceColor::WHITE) {
           from_y = 0;
           to_y = 0;
         } else {
@@ -53,11 +53,12 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
         to_y = matches[5].str().at(1) - '0' - 1;
         if (matches[4].matched) {
           if (piece_type == 'p' &&
-              board_state.chess_board[to_x][to_y]->type == PieceType::EMPTY) {
+              game_board_state.chess_board[to_x][to_y]->type ==
+                  PieceType::EMPTY) {
             is_en_passant = true;
-            captured_piece = board_state.chess_board[to_x][from_y];
+            captured_piece = game_board_state.chess_board[to_x][from_y];
           } else {
-            captured_piece = board_state.chess_board[to_x][to_y];
+            captured_piece = game_board_state.chess_board[to_x][to_y];
           }
         }
         if (piece_type == 'p' && (to_y - from_y == 2 || from_y - to_y == 2)) {
@@ -74,7 +75,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
       printf("Invalid Move - Regex Match Failure\n");
       continue;
     }
-    moving_piece = board_state.chess_board[from_x][from_y];
+    moving_piece = game_board_state.chess_board[from_x][from_y];
     if (moving_piece->type == PieceType::EMPTY) {
       printf("Invalid Move - Empty Square\n");
       continue;
@@ -110,10 +111,10 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
     }
 
     // Check if move puts king in check.
-    PieceColor current_color = board_state.move_color;
-    board_state.apply_move(next_move);
-    bool king_is_checked = board_state.king_is_checked(current_color);
-    board_state.undo_move();
+    PieceColor current_color = game_board_state.move_color;
+    game_board_state.apply_move(next_move);
+    bool king_is_checked = game_board_state.king_is_checked(current_color);
+    game_board_state.undo_move();
     if (king_is_checked) {
       printf("King is checked - Choose a different move\n");
       continue;

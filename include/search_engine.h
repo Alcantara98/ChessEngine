@@ -7,7 +7,9 @@
 #include "transposition_table.h"
 
 #include <algorithm>
+#include <future>
 #include <limits>
+#include <thread>
 
 /**
  * @brief Class to find the best move for the current board state.
@@ -27,7 +29,7 @@ public:
   /**
    * @brief Calculates all possible moves of current board state.
    */
-  auto calculate_possible_moves() -> std::vector<Move>;
+  auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
 
   /**
    * @brief Finds the best move with the given current state of the board.
@@ -49,7 +51,7 @@ private:
   int nodes_visited = 0;
 
   // See BoardState.
-  BoardState &board_state;
+  BoardState &game_board_state;
 
   // Position Evaluator object.
   PositionEvaluator position_evaluator;
@@ -68,8 +70,8 @@ private:
    * score.
    * @return Evaluation score from search branch.
    */
-  auto minimax_alpha_beta_search(int alpha, int beta, int depth,
-                                 bool maximise) -> int;
+  auto minimax_alpha_beta_search(BoardState &thread_board_state, int alpha,
+                                 int beta, int depth, bool maximise) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -88,9 +90,9 @@ private:
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
    */
-  void max_search(int &alpha, int &beta, int &max_eval, int &eval, int &depth,
-                  int &best_move_index, int &move_index,
-                  std::vector<Move> &possible_moves);
+  void max_search(BoardState &thread_board_state, int &alpha, int &beta,
+                  int &max_eval, int &eval, int &depth, int &best_move_index,
+                  int &move_index, std::vector<Move> &possible_moves);
 
   /**
    * @brief Min search procedure for each possible move.
@@ -103,9 +105,9 @@ private:
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
    */
-  void min_search(int &alpha, int &beta, int &min_eval, int &eval, int &depth,
-                  int &best_move_index, int &move_index,
-                  std::vector<Move> &possible_moves);
+  void min_search(BoardState &thread_board_state, int &alpha, int &beta,
+                  int &min_eval, int &eval, int &depth, int &best_move_index,
+                  int &move_index, std::vector<Move> &possible_moves);
 };
 
 #endif // SEARCH_ENGINE_H

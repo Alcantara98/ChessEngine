@@ -7,6 +7,8 @@ TranspositionTable::TranspositionTable(uint64_t max_size)
 // PUBLIC FUNCTIONS
 void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
                                int flag, int best_move_index) {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(table_mutex);
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -33,6 +35,8 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
 auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
                                   int &eval_score, int &flag,
                                   int &best_move_index) -> bool {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(table_mutex);
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -51,15 +55,26 @@ auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
   return false;
 }
 
-auto TranspositionTable::get_size() -> int { return table.size(); }
+auto TranspositionTable::get_size() -> int {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(table_mutex);
+
+  return table.size();
+}
 
 void TranspositionTable::clear() {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(table_mutex);
+
   table.clear();
   lru_list.clear();
 }
 
 // PRIVATE FUNCTIONS
 void TranspositionTable::trim() {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(table_mutex);
+
   // Remove the least recently used entry
   uint64_t lru_hash = lru_list.back();
   lru_list.pop_back();

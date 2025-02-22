@@ -34,8 +34,8 @@ void testing_one() {
     }
     printf("Move(%s): %d - %s\n", move_color.c_str(), i,
            move_strings[i].c_str());
-    Move move = my_interface.input_to_move(my_engine.calculate_possible_moves(),
-                                           move_strings[i]);
+    Move move = my_interface.input_to_move(
+        my_engine.calculate_possible_moves(my_board), move_strings[i]);
     my_board.apply_move(move);
     my_board.print_board(PieceColor::WHITE);
     printf("\n");

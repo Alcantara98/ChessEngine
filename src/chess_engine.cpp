@@ -2,9 +2,10 @@
 
 // CONSTRUCTORS
 ChessEngine::ChessEngine()
-    : board_state(BoardState()), search_engine(SearchEngine(board_state)),
-      move_interface(MoveInterface(board_state)),
-      position_evaluator(PositionEvaluator(board_state)) {}
+    : game_board_state(BoardState()),
+      search_engine(SearchEngine(game_board_state)),
+      move_interface(MoveInterface(game_board_state)),
+      position_evaluator(PositionEvaluator(game_board_state)) {}
 
 // PUBLIC FUNCTIONS
 void ChessEngine::start_game() {
@@ -29,11 +30,11 @@ void ChessEngine::start_game() {
 
   if (user_color == 'w') {
     player_color = PieceColor::WHITE;
-    Move user_move =
-        move_interface.input_to_move(search_engine.calculate_possible_moves());
-    board_state.apply_move(user_move);
+    Move user_move = move_interface.input_to_move(
+        search_engine.calculate_possible_moves(game_board_state));
+    game_board_state.apply_move(user_move);
     printf("eval: %d\n", position_evaluator.evaluate_position());
-    board_state.print_board(player_color);
+    game_board_state.print_board(player_color);
     search_engine.engine_color = PieceColor::BLACK;
   } else {
     search_engine.engine_color = PieceColor::WHITE;
@@ -55,9 +56,9 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
 
     Move engine_move =
         search_engine.find_best_move(max_search_depth, show_performance);
-    board_state.apply_move(engine_move);
+    game_board_state.apply_move(engine_move);
     printf("eval: %d\n", position_evaluator.evaluate_position());
-    board_state.print_board(player_color);
+    game_board_state.print_board(player_color);
 
     if (is_checkmate()) {
       printf("Checkmate, You LOSE!\n");
@@ -67,27 +68,28 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
       printf("Stalemate, It's a draw!\n");
       break;
     }
-    Move user_move =
-        move_interface.input_to_move(search_engine.calculate_possible_moves());
-    board_state.apply_move(user_move);
+    Move user_move = move_interface.input_to_move(
+        search_engine.calculate_possible_moves(game_board_state));
+    game_board_state.apply_move(user_move);
     printf("eval: %d\n", position_evaluator.evaluate_position());
-    board_state.print_board(player_color);
+    game_board_state.print_board(player_color);
   }
 }
 
 auto ChessEngine::is_checkmate() -> bool {
-  PieceColor current_color = board_state.move_color;
+  PieceColor current_color = game_board_state.move_color;
   // If the king is checked and all possible moves result in a checked king, it
   // is a checkmate.
-  if (board_state.king_is_checked(current_color)) {
-    std::vector<Move> possible_moves = search_engine.calculate_possible_moves();
+  if (game_board_state.king_is_checked(current_color)) {
+    std::vector<Move> possible_moves =
+        search_engine.calculate_possible_moves(game_board_state);
     for (Move move : possible_moves) {
-      board_state.apply_move(move);
-      if (!board_state.king_is_checked(current_color)) {
-        board_state.undo_move();
+      game_board_state.apply_move(move);
+      if (!game_board_state.king_is_checked(current_color)) {
+        game_board_state.undo_move();
         return false;
       }
-      board_state.undo_move();
+      game_board_state.undo_move();
     }
     return true;
   }
@@ -95,18 +97,19 @@ auto ChessEngine::is_checkmate() -> bool {
 }
 
 auto ChessEngine::is_stalemate() -> bool {
-  PieceColor current_color = board_state.move_color;
+  PieceColor current_color = game_board_state.move_color;
   // If the king is not checked and all possible moves result in a checked king,
   // it is a stalemate.
-  if (!board_state.king_is_checked(current_color)) {
-    std::vector<Move> possible_moves = search_engine.calculate_possible_moves();
+  if (!game_board_state.king_is_checked(current_color)) {
+    std::vector<Move> possible_moves =
+        search_engine.calculate_possible_moves(game_board_state);
     for (Move move : possible_moves) {
-      board_state.apply_move(move);
-      if (!board_state.king_is_checked(current_color)) {
-        board_state.undo_move();
+      game_board_state.apply_move(move);
+      if (!game_board_state.king_is_checked(current_color)) {
+        game_board_state.undo_move();
         return false;
       }
-      board_state.undo_move();
+      game_board_state.undo_move();
     }
     return true;
   }

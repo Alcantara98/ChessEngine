@@ -23,7 +23,7 @@ public:
 
 private:
   // Board state object.
-  BoardState board_state;
+  BoardState game_board_state;
 
   // Best move finder object.
   SearchEngine search_engine;

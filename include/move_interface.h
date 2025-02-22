@@ -36,7 +36,7 @@ private:
       {PieceType::KNIGHT, 'n'}, {PieceType::PAWN, 'p'}};
 
   // Reference of the board state;
-  BoardState &board_state;
+  BoardState &game_board_state;
 
 public:
   /**
