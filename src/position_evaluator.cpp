@@ -1,11 +1,7 @@
 #include "position_evaluator.h"
 
-// CONSTRUCTORS
-PositionEvaluator::PositionEvaluator(BoardState &board_state)
-    : board_state(board_state) {}
-
 // PUBLIC FUNCTIONS
-auto PositionEvaluator::evaluate_position() -> int {
+auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int {
   int eval = 0;
 
   for (int y = 0; y < 8; ++y) {

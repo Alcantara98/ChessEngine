@@ -1,12 +1,10 @@
 #include "search_engine.h"
-#include "transposition_table.h"
 
 #include <chrono>
 
 // CONSTRUCTORS
 SearchEngine::SearchEngine(BoardState &board_state)
-    : game_board_state(board_state),
-      position_evaluator(PositionEvaluator(board_state)),
+    : game_board_state(board_state), position_evaluator(PositionEvaluator()),
       transposition_table(10000000) {} // Initialize with a max size
 
 // PUBLIC FUNCTIONS
@@ -65,7 +63,7 @@ auto SearchEngine::find_best_move(int max_search_depth,
     std::vector<std::promise<int>> promises(possible_moves.size());
     std::vector<std::future<int>> futures;
     std::vector<BoardState> thread_board_states(possible_moves.size(),
-                                                game_board_state);
+                                                BoardState(game_board_state));
 
     auto start_time = std::chrono::high_resolution_clock::now();
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
@@ -74,13 +72,10 @@ auto SearchEngine::find_best_move(int max_search_depth,
       search_threads.push_back(
           std::thread([this, &promises, move_index, maximising, iterative_depth,
                        &thread_board_states] {
-            // printf("Thread %d\n", move_index);
             int count = 0;
             int eval = minimax_alpha_beta_search(
                 count, thread_board_states[move_index], -INF, INF,
                 iterative_depth - 1, !maximising);
-            // printf("Eval %d\n", eval);
-            // printf("Nodes Visited %d\n", count);
             promises[move_index].set_value(eval);
           }));
     }
@@ -107,9 +102,9 @@ auto SearchEngine::find_best_move(int max_search_depth,
   }
   transposition_table.clear();
   sort_moves(move_scores);
-  for (auto move_score : move_scores) {
-    printf("Score: %d\n", move_score.second);
-  }
+  // for (auto move_score : move_scores) {
+  //   printf("Score: %d\n", move_score.second);
+  // }
 
   return move_scores[0].first;
 }
@@ -127,18 +122,20 @@ auto SearchEngine::minimax_alpha_beta_search(int &nodes_vis,
   if (transposition_table.retrieve(hash, entry_depth, tt_value, tt_flag,
                                    entry_best_move)) {
     if (entry_depth == iterative_depth_search && tt_flag == 0) {
+      // printf("TT Hit 1\n");
       return tt_value;
     }
     if (entry_depth == iterative_depth_search) {
       if ((tt_flag == -1 && tt_value <= alpha) ||
           (tt_flag == 1 && tt_value >= beta)) {
+        // printf("TT Hit 2\n");
         return tt_value;
       }
     }
   }
 
   if (depth == 0) {
-    int eval = position_evaluator.evaluate_position();
+    int eval = position_evaluator.evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
     return eval;
   }

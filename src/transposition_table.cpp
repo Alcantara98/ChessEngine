@@ -56,16 +56,10 @@ auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
 }
 
 auto TranspositionTable::get_size() -> int {
-  // Lock the table.
-  std::lock_guard<std::mutex> lock(table_mutex);
-
   return table.size();
 }
 
 void TranspositionTable::clear() {
-  // Lock the table.
-  std::lock_guard<std::mutex> lock(table_mutex);
-
   table.clear();
   lru_list.clear();
 }

@@ -44,6 +44,12 @@ public:
   BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
              PieceColor move_color = PieceColor::WHITE);
 
+  // Deep copy constructor
+  BoardState(const BoardState &other);
+
+  // Destructor
+  ~BoardState();
+
   /**
    * @brief Resets chess board to default starting piece positions.
    */
