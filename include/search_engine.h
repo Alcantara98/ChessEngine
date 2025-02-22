@@ -7,6 +7,7 @@
 #include "transposition_table.h"
 
 #include <algorithm>
+#include <atomic>
 #include <future>
 #include <limits>
 #include <thread>
@@ -45,10 +46,10 @@ private:
   int iterative_depth_search = 0;
 
   // Number of leaf nodes visited.
-  int leaf_nodes_visited = 0;
+  std::atomic<int> leaf_nodes_visited = 0;
 
   // Number of nodes visited.
-  int nodes_visited = 0;
+  std::atomic<int> nodes_visited = 0;
 
   // See BoardState.
   BoardState &game_board_state;
