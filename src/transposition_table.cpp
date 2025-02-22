@@ -72,9 +72,6 @@ void TranspositionTable::clear() {
 
 // PRIVATE FUNCTIONS
 void TranspositionTable::trim() {
-  // Lock the table.
-  std::lock_guard<std::mutex> lock(table_mutex);
-
   // Remove the least recently used entry
   uint64_t lru_hash = lru_list.back();
   lru_list.pop_back();
