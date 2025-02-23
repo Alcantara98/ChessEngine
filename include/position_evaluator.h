@@ -9,16 +9,11 @@
 class PositionEvaluator {
 public:
   /**
-   * @brief Default Constructor - takes a chess board state.
-   * @param board_state BoardState object.
-   */
-  PositionEvaluator(BoardState &board_state);
-
-  /**
    * @brief Evaluates current position using chess heuristics.
+   * @param board_state BoardState object to evaluate.
    * @return Score of the given position.
    */
-  auto evaluate_position() -> int;
+  auto evaluate_position(BoardState &board_state) -> int;
 
 private:
   // Directions for the queen.
@@ -36,9 +31,6 @@ private:
   // Directions for the rook.
   const std::array<std::array<int, 2>, 4> rook_directions = {
       {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
-
-  // See BoardState.
-  BoardState &board_state;
 
   /**
    * @brief Evaluates pawn at given position.

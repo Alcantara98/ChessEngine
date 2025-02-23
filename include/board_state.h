@@ -44,6 +44,12 @@ public:
   BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
              PieceColor move_color = PieceColor::WHITE);
 
+  // Deep copy constructor
+  BoardState(const BoardState &other);
+
+  // Destructor
+  ~BoardState();
+
   /**
    * @brief Resets chess board to default starting piece positions.
    */
@@ -85,14 +91,14 @@ public:
   [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
 
 private:
-  // Char to represent white pieces.
+  // PieceType to Char mapping for white pieces.
   const std::unordered_map<PieceType, char> w_piece_to_char = {
       {PieceType::EMPTY, '-'},  {PieceType::KING, 'K'},
       {PieceType::QUEEN, 'Q'},  {PieceType::ROOK, 'R'},
       {PieceType::BISHOP, 'B'}, {PieceType::KNIGHT, 'N'},
       {PieceType::PAWN, 'P'}};
 
-  // Char to represent black pieces.
+  // PieceType to Char mapping for black pieces.
   const std::unordered_map<PieceType, char> b_piece_to_char = {
       {PieceType::EMPTY, '-'},  {PieceType::KING, 'k'},
       {PieceType::QUEEN, 'q'},  {PieceType::ROOK, 'r'},

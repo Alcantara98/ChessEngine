@@ -12,6 +12,34 @@ BoardState::BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
   initialize_zobrist_keys();
 }
 
+// Deep copy constructor
+BoardState::BoardState(const BoardState &other)
+    : move_color(other.move_color), previous_moves(other.previous_moves),
+      zobrist_keys(other.zobrist_keys),
+      zobrist_side_to_move(other.zobrist_side_to_move) {
+  for (int x = 0; x < 8; ++x) {
+    for (int y = 0; y < 8; ++y) {
+      if (other.chess_board[x][y] != nullptr) {
+        chess_board[x][y] = new Piece(*other.chess_board[x][y]);
+      } else {
+        chess_board[x][y] = nullptr;
+      }
+    }
+  }
+}
+
+// Destructor
+BoardState::~BoardState() {
+  for (int x = 0; x < 8; ++x) {
+    for (int y = 0; y < 8; ++y) {
+      if (chess_board[x][y] != nullptr && chess_board[x][y] != &empty_piece) {
+        delete chess_board[x][y];
+        chess_board[x][y] = nullptr;
+      }
+    }
+  }
+}
+
 // PUBLIC FUNCTIONS
 void BoardState::reset_board() {
   // Set empty squares.

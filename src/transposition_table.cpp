@@ -7,6 +7,8 @@ TranspositionTable::TranspositionTable(uint64_t max_size)
 // PUBLIC FUNCTIONS
 void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
                                int flag, int best_move_index) {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(mutex);
   auto it = table.find(hash);
 
   if (it != table.end()) {
@@ -33,6 +35,8 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
 auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
                                   int &eval_score, int &flag,
                                   int &best_move_index) -> bool {
+  // Lock the table.
+  std::lock_guard<std::mutex> lock(mutex);
   auto it = table.find(hash);
 
   if (it != table.end()) {
