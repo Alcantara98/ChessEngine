@@ -33,7 +33,8 @@ void ChessEngine::start_game() {
     Move user_move = move_interface.input_to_move(
         search_engine.calculate_possible_moves(game_board_state));
     game_board_state.apply_move(user_move);
-    printf("eval: %d\n", position_evaluator.evaluate_position(game_board_state));
+    printf("eval: %d\n",
+           position_evaluator.evaluate_position(game_board_state));
     game_board_state.print_board(player_color);
     search_engine.engine_color = PieceColor::BLACK;
   } else {
@@ -57,7 +58,8 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
     Move engine_move =
         search_engine.find_best_move(max_search_depth, show_performance);
     game_board_state.apply_move(engine_move);
-    printf("eval: %d\n", position_evaluator.evaluate_position(game_board_state));
+    printf("eval: %d\n",
+           position_evaluator.evaluate_position(game_board_state));
     game_board_state.print_board(player_color);
 
     if (is_checkmate()) {
@@ -71,7 +73,8 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
     Move user_move = move_interface.input_to_move(
         search_engine.calculate_possible_moves(game_board_state));
     game_board_state.apply_move(user_move);
-    printf("eval: %d\n", position_evaluator.evaluate_position(game_board_state));
+    printf("eval: %d\n",
+           position_evaluator.evaluate_position(game_board_state));
     game_board_state.print_board(player_color);
   }
 }

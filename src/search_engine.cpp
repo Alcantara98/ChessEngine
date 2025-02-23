@@ -69,14 +69,13 @@ auto SearchEngine::find_best_move(int max_search_depth,
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
       thread_board_states[move_index].apply_move(possible_moves[move_index]);
       futures.push_back(promises[move_index].get_future());
-      search_threads.push_back(
-          std::thread([this, &promises, move_index, maximising, iterative_depth,
-                       &thread_board_states] {
-            int eval = minimax_alpha_beta_search(
-                thread_board_states[move_index], -INF, INF,
-                iterative_depth - 1, !maximising);
-            promises[move_index].set_value(eval);
-          }));
+      search_threads.emplace_back([this, &promises, move_index, maximising,
+                                   iterative_depth, &thread_board_states] {
+        int eval =
+            minimax_alpha_beta_search(thread_board_states[move_index], -INF,
+                                      INF, iterative_depth - 1, !maximising);
+        promises[move_index].set_value(eval);
+      });
     }
     for (auto &thread : search_threads) {
       thread.join();
@@ -89,7 +88,7 @@ auto SearchEngine::find_best_move(int max_search_depth,
                         end_time - start_time)
                         .count();
     if (show_performance) {
-      printf("Depth: %d, Time: %ldms\n", iterative_depth, duration);
+      printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
       printf("Nodes Visited %d\n", nodes_visited.load());
       printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
       printf("TT Size: %d\n", transposition_table.get_size());
@@ -190,13 +189,12 @@ void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores) {
   }
 }
 
-void SearchEngine::max_search(BoardState &board_state,
-                              int &alpha, int &beta, int &max_eval, int &eval,
-                              int &depth, int &best_move_index, int &move_index,
+void SearchEngine::max_search(BoardState &board_state, int &alpha, int &beta,
+                              int &max_eval, int &eval, int &depth,
+                              int &best_move_index, int &move_index,
                               std::vector<Move> &possible_moves) {
   board_state.apply_move(possible_moves[move_index]);
-  eval = minimax_alpha_beta_search(board_state, alpha, beta,
-                                   depth - 1, false);
+  eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 1, false);
   if (eval > max_eval) {
     max_eval = eval;
     best_move_index = move_index;
@@ -206,13 +204,12 @@ void SearchEngine::max_search(BoardState &board_state,
   board_state.undo_move();
 }
 
-void SearchEngine::min_search(BoardState &board_state,
-                              int &alpha, int &beta, int &min_eval, int &eval,
-                              int &depth, int &best_move_index, int &move_index,
+void SearchEngine::min_search(BoardState &board_state, int &alpha, int &beta,
+                              int &min_eval, int &eval, int &depth,
+                              int &best_move_index, int &move_index,
                               std::vector<Move> &possible_moves) {
   board_state.apply_move(possible_moves[move_index]);
-  eval = minimax_alpha_beta_search(board_state, alpha, beta,
-                                   depth - 1, true);
+  eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 1, true);
   if (eval < min_eval) {
     min_eval = eval;
     best_move_index = move_index;

@@ -3,6 +3,7 @@
 
 #include "board_state.h"
 #include <list>
+#include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
 
@@ -75,7 +76,8 @@ private:
   std::list<uint64_t> lru_list;
 
   // Mutex to protect the table.
-  std::shared_mutex table_mutex;
+  // std::shared_mutex table_mutex;
+  std::mutex mutex;
 
   /**
    * @brief Remove the least recently used entry from the table.

@@ -72,9 +72,8 @@ private:
    * score.
    * @return Evaluation score from search branch.
    */
-  auto minimax_alpha_beta_search(BoardState &board_state,
-                                 int alpha, int beta, int depth,
-                                 bool maximise) -> int;
+  auto minimax_alpha_beta_search(BoardState &board_state, int alpha, int beta,
+                                 int depth, bool maximise) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -94,9 +93,8 @@ private:
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
    */
-  void max_search(BoardState &board_state, int &alpha,
-                  int &beta, int &max_eval, int &eval, int &depth,
-                  int &best_move_index, int &move_index,
+  void max_search(BoardState &board_state, int &alpha, int &beta, int &max_eval,
+                  int &eval, int &depth, int &best_move_index, int &move_index,
                   std::vector<Move> &possible_moves);
 
   /**
@@ -111,9 +109,8 @@ private:
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
    */
-  void min_search(BoardState &board_state, int &alpha,
-                  int &beta, int &min_eval, int &eval, int &depth,
-                  int &best_move_index, int &move_index,
+  void min_search(BoardState &board_state, int &alpha, int &beta, int &min_eval,
+                  int &eval, int &depth, int &best_move_index, int &move_index,
                   std::vector<Move> &possible_moves);
 };
 
