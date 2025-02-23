@@ -76,7 +76,6 @@ private:
   std::list<uint64_t> lru_list;
 
   // Mutex to protect the table.
-  // std::shared_mutex table_mutex;
   std::mutex mutex;
 
   /**

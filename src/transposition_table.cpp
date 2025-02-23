@@ -8,7 +8,6 @@ TranspositionTable::TranspositionTable(uint64_t max_size)
 void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
                                int flag, int best_move_index) {
   // Lock the table.
-  // std::unique_lock lock(table_mutex);
   std::lock_guard<std::mutex> lock(mutex);
   auto it = table.find(hash);
 
@@ -18,7 +17,7 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
     it->second.eval_score = eval_score;
     it->second.flag = flag;
     it->second.best_move_index = best_move_index;
-    // lru_list.erase(it->second.lru_position);
+    lru_list.erase(it->second.lru_position);
   } else {
     // Insert new entry
     if (table.size() >= max_size) {
@@ -29,15 +28,14 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
   }
 
   // Update LRU list
-  // lru_list.push_front(hash);
-  // table[hash].lru_position = lru_list.begin();
+  lru_list.push_front(hash);
+  table[hash].lru_position = lru_list.begin();
 }
 
 auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
                                   int &eval_score, int &flag,
                                   int &best_move_index) -> bool {
   // Lock the table.
-  // std::shared_lock lock(table_mutex);
   std::lock_guard<std::mutex> lock(mutex);
   auto it = table.find(hash);
 
@@ -48,9 +46,9 @@ auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
     best_move_index = it->second.best_move_index;
 
     // Update LRU list
-    // lru_list.erase(it->second.lru_position);
-    // lru_list.push_front(hash);
-    // it->second.lru_position = lru_list.begin();
+    lru_list.erase(it->second.lru_position);
+    lru_list.push_front(hash);
+    it->second.lru_position = lru_list.begin();
 
     return true;
   }
