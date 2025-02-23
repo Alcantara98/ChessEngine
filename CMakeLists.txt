@@ -46,3 +46,6 @@ endif()
 
 # Create the executable
 add_executable(chess_engine ${SOURCES})
+
+# Link pthread library to the executable
+target_link_libraries(chess_engine PRIVATE pthread)

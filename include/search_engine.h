@@ -29,6 +29,7 @@ public:
 
   /**
    * @brief Calculates all possible moves of current board state.
+   * @param board_state BoardState object to calculate moves from.
    */
   auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
 
@@ -63,7 +64,7 @@ private:
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
-   * @param move Move to explore.
+   * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
@@ -71,7 +72,7 @@ private:
    * score.
    * @return Evaluation score from search branch.
    */
-  auto minimax_alpha_beta_search(int &nodes_vis, BoardState &thread_board_state,
+  auto minimax_alpha_beta_search(BoardState &board_state,
                                  int alpha, int beta, int depth,
                                  bool maximise) -> int;
 
@@ -83,6 +84,7 @@ private:
 
   /**
    * @brief Max search procedure for each possible move.
+   * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param max_eval Current maximum evaluation score.
@@ -92,13 +94,14 @@ private:
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
    */
-  void max_search(int &nodes_vis, BoardState &thread_board_state, int &alpha,
+  void max_search(BoardState &board_state, int &alpha,
                   int &beta, int &max_eval, int &eval, int &depth,
                   int &best_move_index, int &move_index,
                   std::vector<Move> &possible_moves);
 
   /**
    * @brief Min search procedure for each possible move.
+   * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param min_eval Current minimum evaluation score.
@@ -108,7 +111,7 @@ private:
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
    */
-  void min_search(int &nodes_vis, BoardState &thread_board_state, int &alpha,
+  void min_search(BoardState &board_state, int &alpha,
                   int &beta, int &min_eval, int &eval, int &depth,
                   int &best_move_index, int &move_index,
                   std::vector<Move> &possible_moves);

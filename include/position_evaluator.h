@@ -10,6 +10,7 @@ class PositionEvaluator {
 public:
   /**
    * @brief Evaluates current position using chess heuristics.
+   * @param board_state BoardState object to evaluate.
    * @return Score of the given position.
    */
   auto evaluate_position(BoardState &board_state) -> int;
