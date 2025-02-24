@@ -6,14 +6,14 @@ MoveInterface::MoveInterface(BoardState &board_state)
 auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
                                   std::string string_move) -> Move {
   Piece *moving_piece;
-  Piece *captured_piece = nullptr;
-  PieceType promotion_piece_type = PieceType::EMPTY;
+  Piece *captured_piece;
+  PieceType promotion_piece_type;
   int from_x, from_y;
   int to_x, to_y;
-  bool is_en_passant = false;
+  bool is_en_passant;
   bool first_move;
-  bool pawn_moved_two = false;
-  int pmt_x = -1, pmt_y = -1;
+  bool pawn_moved_two;
+  int pmt_x, pmt_y;
 
   char piece_type;
   int i = 0;
