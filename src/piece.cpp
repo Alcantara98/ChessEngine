@@ -1,4 +1,7 @@
 #include "piece.h"
 
-Piece::Piece(PieceType type, PieceColor color, bool moved, bool pawn_moved_two)
-    : type(type), color(color), moved(moved), pawn_moved_two(pawn_moved_two) {}
+Piece::Piece(PieceType piece_type, PieceColor piece_color, bool piece_has_moved,
+             bool pawn_moved_two_squares)
+    : piece_type(piece_type), piece_color(piece_color),
+      piece_has_moved(piece_has_moved),
+      pawn_moved_two_squares(pawn_moved_two_squares) {}
