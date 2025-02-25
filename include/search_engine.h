@@ -50,9 +50,6 @@ private:
   // Use for starting values of alpha and beta;
   const int INF = std::numeric_limits<int>::max();
 
-  // Max depth to search at current iteration.
-  int iterative_depth_search = 0;
-
   // Number of leaf nodes visited.
   std::atomic<int> leaf_nodes_visited = 0;
 

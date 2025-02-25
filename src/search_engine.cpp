@@ -63,7 +63,8 @@ auto SearchEngine::find_best_move(int max_search_depth,
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth) {
     move_scores.clear();
-    iterative_depth_search = iterative_depth;
+
+    // Thread variables.
     std::vector<std::thread> search_threads;
     std::vector<std::promise<int>> promises(possible_moves.size());
     std::vector<std::future<int>> futures;
@@ -117,22 +118,22 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool maximise) -> int {
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
-  int tt_value, tt_flag, entry_depth;
+  int tt_value, tt_flag, entry_search_depth;
   int entry_best_move = -1;
   uint64_t hash = board_state.compute_zobrist_hash();
-  if (transposition_table.retrieve(hash, entry_depth, tt_value, tt_flag,
+  if (transposition_table.retrieve(hash, entry_search_depth, tt_value, tt_flag,
                                    entry_best_move)) {
-    if (entry_depth == iterative_depth_search && tt_flag == 0) {
-      return tt_value;
-    }
-    if (entry_depth == iterative_depth_search) {
+
+    // Check if tt_value can be used.
+    if (depth <= entry_search_depth) {
       if ((tt_flag == -1 && tt_value <= alpha) ||
-          (tt_flag == 1 && tt_value >= beta)) {
+          (tt_flag == 1 && tt_value >= beta) || tt_flag == 0) {
         return tt_value;
       }
     }
   }
 
+  // Evaluate leaf nodes.
   if (depth == 0) {
     int eval = position_evaluator.evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
@@ -155,8 +156,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
         break;
       }
     }
-    transposition_table.store(hash, iterative_depth_search, max_eval,
-                              (max_eval >= beta) ? 1 : 0, best_move_index);
+    transposition_table.store(hash, depth, max_eval, (max_eval >= beta) ? 1 : 0,
+                              best_move_index);
     return max_eval;
   } else {
     int min_eval = INF;
@@ -172,7 +173,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
         break;
       }
     }
-    transposition_table.store(hash, iterative_depth_search, min_eval,
+    transposition_table.store(hash, depth, min_eval,
                               (min_eval <= alpha) ? -1 : 0, best_move_index);
     return min_eval;
   }
