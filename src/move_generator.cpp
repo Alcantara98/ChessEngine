@@ -56,7 +56,8 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
       if (x > 0) {
         Piece *left_piece = board[x_minus_1][y];
         if (left_piece->piece_type == PieceType::PAWN &&
-            previous_move.pmt_x == (x_minus_1) && previous_move.pmt_y == y) {
+            previous_move.pawn_moved_two_squares_to_x == (x_minus_1) &&
+            previous_move.pawn_moved_two_squares_to_y == y) {
           if (left_piece->piece_color != pawn_piece->piece_color &&
               left_piece->pawn_moved_two_squares) {
             if (board[x_minus_1][y_plus_pd]->piece_type == PieceType::EMPTY) {
@@ -70,7 +71,8 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
       if (x < 7) {
         Piece *right_piece = board[x_plus_1][y];
         if (right_piece->piece_type == PieceType::PAWN &&
-            previous_move.pmt_x == (x_plus_1) && previous_move.pmt_y == y) {
+            previous_move.pawn_moved_two_squares_to_x == (x_plus_1) &&
+            previous_move.pawn_moved_two_squares_to_y == y) {
           if (right_piece->piece_color != pawn_piece->piece_color &&
               right_piece->pawn_moved_two_squares) {
             if (board[x_plus_1][y_plus_pd]->piece_type == PieceType::EMPTY) {
@@ -161,14 +163,17 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
     }
   }
   // Castle Moves
-  if (first_move && !board_state.square_is_attacked(x, y, king_piece->piece_color)) {
+  if (first_move &&
+      !board_state.square_is_attacked(x, y, king_piece->piece_color)) {
     // Castle king side.
     Piece *rook = board[7][y];
     if (rook->piece_type == PieceType::ROOK && rook->piece_has_moved == false) {
       if (board[x_plus_1][y]->piece_type == PieceType::EMPTY &&
           board[x + 2][y]->piece_type == PieceType::EMPTY) {
-        if (!board_state.square_is_attacked(x_plus_1, y, king_piece->piece_color) &&
-            !board_state.square_is_attacked(x + 2, y, king_piece->piece_color)) {
+        if (!board_state.square_is_attacked(x_plus_1, y,
+                                            king_piece->piece_color) &&
+            !board_state.square_is_attacked(x + 2, y,
+                                            king_piece->piece_color)) {
           possible_moves.emplace_back(x, y, x + 2, y, king_piece, first_move,
                                       false);
         }
@@ -180,9 +185,12 @@ void MoveGenerator::generate_king_move(BoardState &board_state, int x, int y,
       if (board[x_minus_1][y]->piece_type == PieceType::EMPTY &&
           board[x - 2][y]->piece_type == PieceType::EMPTY &&
           board[x - 3][y]->piece_type == PieceType::EMPTY) {
-        if (!board_state.square_is_attacked(x_minus_1, y, king_piece->piece_color) &&
-            !board_state.square_is_attacked(x - 2, y, king_piece->piece_color) &&
-            !board_state.square_is_attacked(x - 3, y, king_piece->piece_color)) {
+        if (!board_state.square_is_attacked(x_minus_1, y,
+                                            king_piece->piece_color) &&
+            !board_state.square_is_attacked(x - 2, y,
+                                            king_piece->piece_color) &&
+            !board_state.square_is_attacked(x - 3, y,
+                                            king_piece->piece_color)) {
           possible_moves.emplace_back(x, y, x - 2, y, king_piece, first_move,
                                       true);
         }

@@ -109,11 +109,11 @@ void BoardState::print_board(PieceColor color) {
 }
 
 void BoardState::apply_move(Move &move) {
-  if (move.pawn_moved_two) {
+  if (move.pawn_moved_two_squares) {
     move.moving_piece->pawn_moved_two_squares = true;
   }
 
-  if (move.is_en_passant) {
+  if (move.capture_is_en_passant) {
     // Remove captured pawn.
     int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
@@ -147,13 +147,13 @@ void BoardState::apply_move(Move &move) {
         new Piece(move.promotion_piece_type, move.moving_piece->piece_color);
   }
 
-  if (move.captured_piece != nullptr && move.is_en_passant == false) {
+  if (move.captured_piece != nullptr && move.capture_is_en_passant == false) {
     // If capturing, original square will not be empty after swap.
     // Clear old square (point to empty_piece).
     chess_board[move.from_x][move.from_y] = &empty_piece;
   }
 
-  if (move.first_move) {
+  if (move.first_move_of_moving_piece) {
     move.moving_piece->piece_has_moved = true;
   }
 
@@ -167,11 +167,11 @@ void BoardState::apply_move(Move &move) {
 
 void BoardState::undo_move() {
   Move &move = previous_moves.top();
-  if (move.pawn_moved_two) {
+  if (move.pawn_moved_two_squares) {
     move.moving_piece->pawn_moved_two_squares = false;
   }
 
-  if (move.is_en_passant) {
+  if (move.capture_is_en_passant) {
     // Add captured pawn.
     int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
@@ -202,7 +202,7 @@ void BoardState::undo_move() {
     chess_board[move.to_x][move.to_y] = move.moving_piece;
   }
 
-  if (move.captured_piece != nullptr && move.is_en_passant == false) {
+  if (move.captured_piece != nullptr && move.capture_is_en_passant == false) {
     // If a piece was captured, add the piece back.
     chess_board[move.from_x][move.from_y] = move.captured_piece;
   }
@@ -211,7 +211,7 @@ void BoardState::undo_move() {
   std::swap(chess_board[move.from_x][move.from_y],
             chess_board[move.to_x][move.to_y]);
 
-  if (move.first_move) {
+  if (move.first_move_of_moving_piece) {
     move.moving_piece->piece_has_moved = false;
   }
 
@@ -317,7 +317,8 @@ auto BoardState::king_is_checked(PieceColor color) -> bool {
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       Piece *test_piece = chess_board[x][y];
-      if (test_piece->piece_type == PieceType::KING && test_piece->piece_color == color) {
+      if (test_piece->piece_type == PieceType::KING &&
+          test_piece->piece_color == color) {
         return BoardState::square_is_attacked(x, y, color);
       }
     }

@@ -6,10 +6,11 @@ auto Move::operator==(const Move &other) const -> bool {
          moving_piece == other.moving_piece &&
          captured_piece == other.captured_piece &&
          promotion_piece_type == other.promotion_piece_type &&
-         is_en_passant == other.is_en_passant &&
-         first_move == other.first_move &&
-         pawn_moved_two == other.pawn_moved_two && pmt_x == other.pmt_x &&
-         pmt_y == other.pmt_y;
+         capture_is_en_passant == other.capture_is_en_passant &&
+         first_move_of_moving_piece == other.first_move_of_moving_piece &&
+         pawn_moved_two_squares == other.pawn_moved_two_squares &&
+         pawn_moved_two_squares_to_x == other.pawn_moved_two_squares_to_x &&
+         pawn_moved_two_squares_to_y == other.pawn_moved_two_squares_to_y;
 }
 
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
@@ -18,35 +19,42 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            int pmt_y)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
-      promotion_piece_type(promotion_piece_type), is_en_passant(is_en_passant),
-      first_move(first_move), pawn_moved_two(pawn_moved_two), pmt_x(pmt_x),
-      pmt_y(pmt_y) {}
+      promotion_piece_type(promotion_piece_type),
+      capture_is_en_passant(is_en_passant),
+      first_move_of_moving_piece(first_move),
+      pawn_moved_two_squares(pawn_moved_two),
+      pawn_moved_two_squares_to_x(pmt_x), pawn_moved_two_squares_to_y(pmt_y) {}
 
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            bool first_move, bool pawn_moved_two, int pmt_x, int pmt_y)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(nullptr),
-      promotion_piece_type(PieceType::EMPTY), is_en_passant(false),
-      first_move(first_move), pawn_moved_two(pawn_moved_two), pmt_x(pmt_x),
-      pmt_y(pmt_y) {}
+      promotion_piece_type(PieceType::EMPTY), capture_is_en_passant(false),
+      first_move_of_moving_piece(first_move),
+      pawn_moved_two_squares(pawn_moved_two),
+      pawn_moved_two_squares_to_x(pmt_x), pawn_moved_two_squares_to_y(pmt_y) {}
 
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            Piece *captured_piece, bool first_move, bool is_en_passant)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
-      promotion_piece_type(PieceType::EMPTY), is_en_passant(is_en_passant),
-      first_move(first_move), pawn_moved_two(false), pmt_x(-1), pmt_y(-1) {}
+      promotion_piece_type(PieceType::EMPTY),
+      capture_is_en_passant(is_en_passant),
+      first_move_of_moving_piece(first_move), pawn_moved_two_squares(false),
+      pawn_moved_two_squares_to_x(-1), pawn_moved_two_squares_to_y(-1) {}
 
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(nullptr),
-      promotion_piece_type(promotion_piece_type), is_en_passant(false),
-      first_move(false), pawn_moved_two(false), pmt_x(-1), pmt_y(-1) {}
+      promotion_piece_type(promotion_piece_type), capture_is_en_passant(false),
+      first_move_of_moving_piece(false), pawn_moved_two_squares(false),
+      pawn_moved_two_squares_to_x(-1), pawn_moved_two_squares_to_y(-1) {}
 
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            Piece *captured_piece, PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
-      promotion_piece_type(promotion_piece_type), is_en_passant(false),
-      first_move(false), pawn_moved_two(false), pmt_x(-1), pmt_y(-1) {}
+      promotion_piece_type(promotion_piece_type), capture_is_en_passant(false),
+      first_move_of_moving_piece(false), pawn_moved_two_squares(false),
+      pawn_moved_two_squares_to_x(-1), pawn_moved_two_squares_to_y(-1) {}
