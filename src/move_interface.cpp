@@ -43,7 +43,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
         } else {
           to_x = 2;
         }
-        if (game_board_state.move_color == PieceColor::WHITE) {
+        if (game_board_state.color_to_move == PieceColor::WHITE) {
           from_y = 0;
           to_y = 0;
         } else {
@@ -61,7 +61,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
         to_y = matches[5].str().at(1) - '0' - 1;
         if (matches[4].matched) {
           if (piece_type == 'p' &&
-              game_board_state.chess_board[to_x][to_y]->type ==
+              game_board_state.chess_board[to_x][to_y]->piece_type ==
                   PieceType::EMPTY) {
             is_en_passant = true;
             captured_piece = game_board_state.chess_board[to_x][from_y];
@@ -84,17 +84,17 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
       continue;
     }
     moving_piece = game_board_state.chess_board[from_x][from_y];
-    if (moving_piece->type == PieceType::EMPTY) {
+    if (moving_piece->piece_type == PieceType::EMPTY) {
       printf("Invalid Move - Empty Square\n");
       continue;
     }
-    if (string_to_piece_type.at(piece_type) != moving_piece->type) {
+    if (string_to_piece_type.at(piece_type) != moving_piece->piece_type) {
       printf("Given piece type: %c does not match square piece type: %c\n",
-             piece_type, piece_type_to_string.at(moving_piece->type));
+             piece_type, piece_type_to_string.at(moving_piece->piece_type));
       continue;
     }
 
-    if (moving_piece->moved) {
+    if (moving_piece->piece_has_moved) {
       first_move = false;
     } else {
       first_move = true;
@@ -119,7 +119,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
     }
 
     // Check if move puts king in check.
-    PieceColor current_color = game_board_state.move_color;
+    PieceColor current_color = game_board_state.color_to_move;
     game_board_state.apply_move(next_move);
     bool king_is_checked = game_board_state.king_is_checked(current_color);
     game_board_state.undo_move();

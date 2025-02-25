@@ -80,7 +80,7 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
 }
 
 auto ChessEngine::is_checkmate() -> bool {
-  PieceColor current_color = game_board_state.move_color;
+  PieceColor current_color = game_board_state.color_to_move;
   // If the king is checked and all possible moves result in a checked king, it
   // is a checkmate.
   if (game_board_state.king_is_checked(current_color)) {
@@ -100,7 +100,7 @@ auto ChessEngine::is_checkmate() -> bool {
 }
 
 auto ChessEngine::is_stalemate() -> bool {
-  PieceColor current_color = game_board_state.move_color;
+  PieceColor current_color = game_board_state.color_to_move;
   // If the king is not checked and all possible moves result in a checked king,
   // it is a stalemate.
   if (!game_board_state.king_is_checked(current_color)) {

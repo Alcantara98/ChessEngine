@@ -36,6 +36,7 @@ public:
 
   /**
    * @brief Store a new entry in the transposition table.
+   *
    * @param board_state Board state to store.
    * @param max_depth Maximum depth of the search.
    * @param eval_score Evaluation score of the board state.
@@ -46,16 +47,19 @@ public:
 
   /**
    * @brief Retrieve an entry from the transposition table.
+   *
    * @param board_state Board state to retrieve.
    * @param max_depth Maximum depth of the search.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
+   *
    * @return true if the entry was found, false otherwise.
    */
   auto retrieve(uint64_t &hash, int &depth, int &eval_score, int &flag,
                 int &best_move_index) -> bool;
   /**
    * @brief Get the size of the transposition table.
+   *
    * @return int The size of the transposition table.
    */
   auto get_size() -> int;

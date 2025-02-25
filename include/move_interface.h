@@ -46,6 +46,7 @@ public:
 
   /**
    * @brief Use to convert command line input into a Move.
+   *
    * @return Returns the converted Move.
    */
   auto input_to_move(std::vector<Move> possible_moves,

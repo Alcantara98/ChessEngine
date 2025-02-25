@@ -11,32 +11,37 @@ SearchEngine::SearchEngine(BoardState &board_state)
 auto SearchEngine::calculate_possible_moves(BoardState &board_state)
     -> std::vector<Move> {
   std::vector<Move> possible_moves;
-  for (int y = 0; y < 8; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      Piece *current_piece = board_state.chess_board[x][y];
-      PieceType &piece_type = current_piece->type;
+  for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+    for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+      Piece *current_piece =
+          board_state.chess_board[x_coordinate][y_coordinate];
+      PieceType &piece_type = current_piece->piece_type;
 
-      if (current_piece->color == board_state.move_color) {
+      if (current_piece->piece_color == board_state.color_to_move) {
         switch (piece_type) {
         case PieceType::PAWN:
-          MoveGenerator::generate_pawn_move(board_state, x, y, possible_moves);
+          MoveGenerator::generate_pawn_move(board_state, x_coordinate,
+                                            y_coordinate, possible_moves);
           break;
         case PieceType::ROOK:
-          MoveGenerator::generate_rook_move(board_state, x, y, possible_moves);
+          MoveGenerator::generate_rook_move(board_state, x_coordinate,
+                                            y_coordinate, possible_moves);
           break;
         case PieceType::KNIGHT:
-          MoveGenerator::generate_knight_move(board_state, x, y,
-                                              possible_moves);
+          MoveGenerator::generate_knight_move(board_state, x_coordinate,
+                                              y_coordinate, possible_moves);
           break;
         case PieceType::BISHOP:
-          MoveGenerator::generate_bishop_move(board_state, x, y,
-                                              possible_moves);
+          MoveGenerator::generate_bishop_move(board_state, x_coordinate,
+                                              y_coordinate, possible_moves);
           break;
         case PieceType::QUEEN:
-          MoveGenerator::generate_queen_move(board_state, x, y, possible_moves);
+          MoveGenerator::generate_queen_move(board_state, x_coordinate,
+                                             y_coordinate, possible_moves);
           break;
         case PieceType::KING:
-          MoveGenerator::generate_king_move(board_state, x, y, possible_moves);
+          MoveGenerator::generate_king_move(board_state, x_coordinate,
+                                            y_coordinate, possible_moves);
           break;
         default:
           // Empty square.

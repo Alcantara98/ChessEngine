@@ -16,25 +16,29 @@ enum class PieceColor { NONE, WHITE, BLACK };
  */
 struct Piece {
   // Type of piece.
-  PieceType type;
+  PieceType piece_type;
 
   // Color of piece.
-  PieceColor color;
+  PieceColor piece_color;
 
   // Whether the piece has moved.
-  bool moved;
+  bool piece_has_moved;
 
   // Whether the pawn's last move is two squares forward.
-  bool pawn_moved_two;
+  bool pawn_moved_two_squares;
 
   /**
-   * @param type Type of piece (Look at Enum PieceType).
-   * @param color Which color the piece is (Look at Enum PieceColor).
-   * @param moved Whether the piece has moved or not.
-   * @param pawn_moved_two Whether the pawn's last move is two squares forward.
+   * @brief Constructor with default values.
+   *
+   * @param piece_type Type of piece.
+   * @param piece_color Color of the piece.
+   * @param piece_has_moved Whether the piece has moved or not.
+   * @param pawn_moved_two_squares Whether the pawn's last move is two squares
+   * forward.
    */
-  Piece(PieceType type = PieceType::EMPTY, PieceColor color = PieceColor::NONE,
-        bool moved = false, bool pawn_moved_two = false);
+  Piece(PieceType piece_type = PieceType::EMPTY,
+        PieceColor piece_color = PieceColor::NONE, bool piece_has_moved = false,
+        bool pawn_moved_two_squares = false);
 };
 
 #endif

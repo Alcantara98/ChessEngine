@@ -23,19 +23,26 @@ public:
 
   /**
    * @brief Default Constructor - takes a chess board state.
+   *
    * @param board_state BoardState object.
    */
   SearchEngine(BoardState &board_state);
 
   /**
    * @brief Calculates all possible moves of current board state.
+   *
    * @param board_state BoardState object to calculate moves from.
+   *
+   * @return Vector of possible moves.
    */
   auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
 
   /**
    * @brief Finds the best move with the given current state of the board.
+   *
    * @param max_search_depth Max depth to search.
+   *
+   * @return Best move found.
    */
   auto find_best_move(int max_search_depth, bool show_performance) -> Move;
 
@@ -64,12 +71,14 @@ private:
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
+   *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
    * @param maximise Determines if the current turn will try to maximise
    * score.
+   *
    * @return Evaluation score from search branch.
    */
   auto minimax_alpha_beta_search(BoardState &board_state, int alpha, int beta,
@@ -77,12 +86,14 @@ private:
 
   /**
    * @brief Sorts the moves based on their scores.
+   *
    * @param move_scores Vector of moves and their scores.
    */
   void sort_moves(std::vector<std::pair<Move, int>> &move_scores);
 
   /**
    * @brief Max search procedure for each possible move.
+   *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
@@ -99,6 +110,7 @@ private:
 
   /**
    * @brief Min search procedure for each possible move.
+   *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
