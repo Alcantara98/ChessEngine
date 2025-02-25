@@ -43,7 +43,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
         } else {
           to_x = 2;
         }
-        if (game_board_state.move_color == PieceColor::WHITE) {
+        if (game_board_state.color_to_move == PieceColor::WHITE) {
           from_y = 0;
           to_y = 0;
         } else {
@@ -119,7 +119,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
     }
 
     // Check if move puts king in check.
-    PieceColor current_color = game_board_state.move_color;
+    PieceColor current_color = game_board_state.color_to_move;
     game_board_state.apply_move(next_move);
     bool king_is_checked = game_board_state.king_is_checked(current_color);
     game_board_state.undo_move();

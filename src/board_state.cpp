@@ -1,20 +1,22 @@
 #include "board_state.h"
 
 // CONSTUCTORS
-BoardState::BoardState(PieceColor move_color) : move_color(move_color) {
+BoardState::BoardState(PieceColor color_to_move)
+    : color_to_move(color_to_move) {
   initialize_zobrist_keys();
   reset_board();
 }
 
 BoardState::BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
-                       PieceColor move_color)
-    : chess_board(input_chess_board), move_color(move_color) {
+                       PieceColor color_to_move)
+    : chess_board(input_chess_board), color_to_move(color_to_move) {
   initialize_zobrist_keys();
 }
 
 // Deep copy constructor
 BoardState::BoardState(const BoardState &other)
-    : move_color(other.move_color), previous_moves(other.previous_moves),
+    : color_to_move(other.color_to_move),
+      previous_move_stack(other.previous_move_stack),
       zobrist_keys(other.zobrist_keys),
       zobrist_side_to_move(other.zobrist_side_to_move) {
   for (int x = 0; x < 8; ++x) {
@@ -85,8 +87,8 @@ void BoardState::print_board(PieceColor color) {
       for (int x = 0; x < 8; ++x) {
         Piece *piece = chess_board[x][y];
         char piece_char = (piece->piece_color == PieceColor::WHITE)
-                              ? w_piece_to_char.at(piece->piece_type)
-                              : b_piece_to_char.at(piece->piece_type);
+                              ? white_piece_to_char_map.at(piece->piece_type)
+                              : black_piece_to_char_map.at(piece->piece_type);
         printf("%c ", piece_char);
       }
       printf("\n");
@@ -98,8 +100,8 @@ void BoardState::print_board(PieceColor color) {
       for (int x = 7; x >= 0; --x) {
         Piece *piece = chess_board[x][y];
         char piece_char = (piece->piece_color == PieceColor::WHITE)
-                              ? w_piece_to_char.at(piece->piece_type)
-                              : b_piece_to_char.at(piece->piece_type);
+                              ? white_piece_to_char_map.at(piece->piece_type)
+                              : black_piece_to_char_map.at(piece->piece_type);
         printf("%c ", piece_char);
       }
       printf("\n");
@@ -158,15 +160,15 @@ void BoardState::apply_move(Move &move) {
   }
 
   // Update move color, it is now the other player's turn.
-  move_color =
-      (move_color == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+  color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
+                                                       : PieceColor::WHITE;
 
   // Store move in previous moves stack for undoing moves.
-  previous_moves.push(move);
+  previous_move_stack.push(move);
 }
 
 void BoardState::undo_move() {
-  Move &move = previous_moves.top();
+  Move &move = previous_move_stack.top();
   if (move.pawn_moved_two_squares) {
     move.moving_piece->pawn_moved_two_squares = false;
   }
@@ -216,25 +218,28 @@ void BoardState::undo_move() {
   }
 
   // Update move color, it is now the other player's turn.
-  move_color =
-      (move_color == PieceColor::WHITE) ? PieceColor::BLACK : PieceColor::WHITE;
+  color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
+                                                       : PieceColor::WHITE;
 
   // Remove move from moves stack, move is undone.
-  previous_moves.pop();
+  previous_move_stack.pop();
 }
 
-auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
+auto BoardState::square_is_attacked(int x, int y,
+                                    PieceColor color_being_attacked) -> bool {
   // Check for pawn attacks
-  int pawn_direction = (color == PieceColor::WHITE) ? 1 : -1;
+  int pawn_direction = (color_being_attacked == PieceColor::WHITE) ? 1 : -1;
   if (x > 0 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
     if (chess_board[x - 1][y + pawn_direction]->piece_type == PieceType::PAWN &&
-        chess_board[x - 1][y + pawn_direction]->piece_color != color) {
+        chess_board[x - 1][y + pawn_direction]->piece_color !=
+            color_being_attacked) {
       return true;
     }
   }
   if (x < 7 && y + pawn_direction >= 0 && y + pawn_direction < 8) {
     if (chess_board[x + 1][y + pawn_direction]->piece_type == PieceType::PAWN &&
-        chess_board[x + 1][y + pawn_direction]->piece_color != color) {
+        chess_board[x + 1][y + pawn_direction]->piece_color !=
+            color_being_attacked) {
       return true;
     }
   }
@@ -248,7 +253,7 @@ auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
     int new_y = move.second;
     if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       if (chess_board[new_x][new_y]->piece_type == PieceType::KNIGHT &&
-          chess_board[new_x][new_y]->piece_color != color) {
+          chess_board[new_x][new_y]->piece_color != color_being_attacked) {
         return true;
       }
     }
@@ -265,7 +270,7 @@ auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
       if (target_piece->piece_type != PieceType::EMPTY) {
         if ((target_piece->piece_type == PieceType::ROOK ||
              target_piece->piece_type == PieceType::QUEEN) &&
-            target_piece->piece_color != color) {
+            target_piece->piece_color != color_being_attacked) {
           return true;
         }
         break;
@@ -285,7 +290,7 @@ auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
       if (target_piece->piece_type != PieceType::EMPTY) {
         if ((target_piece->piece_type == PieceType::BISHOP ||
              target_piece->piece_type == PieceType::QUEEN) &&
-            target_piece->piece_color != color) {
+            target_piece->piece_color != color_being_attacked) {
           return true;
         }
         break;
@@ -304,7 +309,7 @@ auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
     int new_y = move.second;
     if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       if (chess_board[new_x][new_y]->piece_type == PieceType::KING &&
-          chess_board[new_x][new_y]->piece_color != color) {
+          chess_board[new_x][new_y]->piece_color != color_being_attacked) {
         return true;
       }
     }
@@ -313,13 +318,13 @@ auto BoardState::square_is_attacked(int x, int y, PieceColor color) -> bool {
   return false;
 }
 
-auto BoardState::king_is_checked(PieceColor color) -> bool {
+auto BoardState::king_is_checked(PieceColor color_of_king) -> bool {
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       Piece *test_piece = chess_board[x][y];
       if (test_piece->piece_type == PieceType::KING &&
-          test_piece->piece_color == color) {
-        return BoardState::square_is_attacked(x, y, color);
+          test_piece->piece_color == color_of_king) {
+        return BoardState::square_is_attacked(x, y, color_of_king);
       }
     }
   }
@@ -340,7 +345,7 @@ auto BoardState::compute_zobrist_hash() const -> size_t {
     }
   }
 
-  if (move_color == PieceColor::BLACK) {
+  if (color_to_move == PieceColor::BLACK) {
     hash ^= zobrist_side_to_move;
   }
 

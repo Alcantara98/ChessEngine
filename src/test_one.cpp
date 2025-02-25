@@ -26,13 +26,13 @@ void testing_one() {
   // Test Applying Moves.
   int i = 0;
   for (; i < move_strings.size(); ++i) {
-    std::string move_color;
-    if (my_board.move_color == PieceColor::WHITE) {
-      move_color = "White";
+    std::string color_to_move;
+    if (my_board.color_to_move == PieceColor::WHITE) {
+      color_to_move = "White";
     } else {
-      move_color = "Black";
+      color_to_move = "Black";
     }
-    printf("Move(%s): %d - %s\n", move_color.c_str(), i,
+    printf("Move(%s): %d - %s\n", color_to_move.c_str(), i,
            move_strings[i].c_str());
     Move move = my_interface.input_to_move(
         my_engine.calculate_possible_moves(my_board), move_strings[i]);

@@ -52,7 +52,7 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state, int x, int y,
     // En-passant captures.
     if ((y == 4 && pawn_piece->piece_color == PieceColor::WHITE) ||
         (y == 3 && pawn_piece->piece_color == PieceColor::BLACK)) {
-      Move &previous_move = board_state.previous_moves.top();
+      Move &previous_move = board_state.previous_move_stack.top();
       if (x > 0) {
         Piece *left_piece = board[x_minus_1][y];
         if (left_piece->piece_type == PieceType::PAWN &&

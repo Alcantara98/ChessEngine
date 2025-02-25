@@ -16,7 +16,7 @@ auto SearchEngine::calculate_possible_moves(BoardState &board_state)
       Piece *current_piece = board_state.chess_board[x][y];
       PieceType &piece_type = current_piece->piece_type;
 
-      if (current_piece->piece_color == board_state.move_color) {
+      if (current_piece->piece_color == board_state.color_to_move) {
         switch (piece_type) {
         case PieceType::PAWN:
           MoveGenerator::generate_pawn_move(board_state, x, y, possible_moves);
