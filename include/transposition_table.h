@@ -12,7 +12,7 @@
  */
 struct TranspositionTableEntry {
   // Maximum depth of the search.
-  int max_depth;
+  int search_depth;
 
   // Value of the board state.
   int eval_score;
@@ -38,24 +38,24 @@ public:
    * @brief Store a new entry in the transposition table.
    *
    * @param board_state Board state to store.
-   * @param max_depth Maximum depth of the search.
+   * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    */
-  void store(uint64_t &hash, int max_depth, int eval_score, int flag,
+  void store(uint64_t &hash, int search_depth, int eval_score, int flag,
              int best_move_index);
 
   /**
    * @brief Retrieve an entry from the transposition table.
    *
    * @param board_state Board state to retrieve.
-   * @param max_depth Maximum depth of the search.
+   * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    *
    * @return true if the entry was found, false otherwise.
    */
-  auto retrieve(uint64_t &hash, int &depth, int &eval_score, int &flag,
+  auto retrieve(uint64_t &hash, int &search_depth, int &eval_score, int &flag,
                 int &best_move_index) -> bool;
   /**
    * @brief Get the size of the transposition table.

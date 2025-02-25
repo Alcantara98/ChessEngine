@@ -5,7 +5,7 @@ TranspositionTable::TranspositionTable(uint64_t max_size)
     : max_size(max_size) {}
 
 // PUBLIC FUNCTIONS
-void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
+void TranspositionTable::store(uint64_t &hash, int search_depth, int eval_score,
                                int flag, int best_move_index) {
   // Lock the table.
   std::lock_guard<std::mutex> lock(mutex);
@@ -13,7 +13,7 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
 
   if (it != table.end()) {
     // Update existing entry
-    it->second.max_depth = max_depth;
+    it->second.search_depth = search_depth;
     it->second.eval_score = eval_score;
     it->second.flag = flag;
     it->second.best_move_index = best_move_index;
@@ -23,7 +23,7 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
     if (table.size() >= max_size) {
       trim();
     }
-    table[hash] = {max_depth, eval_score, flag, lru_list.end(),
+    table[hash] = {search_depth, eval_score, flag, lru_list.end(),
                    best_move_index};
   }
 
@@ -32,7 +32,7 @@ void TranspositionTable::store(uint64_t &hash, int max_depth, int eval_score,
   table[hash].lru_position = lru_list.begin();
 }
 
-auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
+auto TranspositionTable::retrieve(uint64_t &hash, int &search_depth,
                                   int &eval_score, int &flag,
                                   int &best_move_index) -> bool {
   // Lock the table.
@@ -42,7 +42,7 @@ auto TranspositionTable::retrieve(uint64_t &hash, int &max_depth,
   if (it != table.end()) {
     eval_score = it->second.eval_score;
     flag = it->second.flag;
-    max_depth = it->second.max_depth;
+    search_depth = it->second.search_depth;
     best_move_index = it->second.best_move_index;
 
     // Update LRU list
