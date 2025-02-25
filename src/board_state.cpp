@@ -19,12 +19,13 @@ BoardState::BoardState(const BoardState &other)
       previous_move_stack(other.previous_move_stack),
       zobrist_keys(other.zobrist_keys),
       zobrist_side_to_move(other.zobrist_side_to_move) {
-  for (int x = 0; x < 8; ++x) {
-    for (int y = 0; y < 8; ++y) {
-      if (other.chess_board[x][y] != nullptr) {
-        chess_board[x][y] = new Piece(*other.chess_board[x][y]);
+  for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+    for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+      if (other.chess_board[x_coordinate][x_coordinate] != nullptr) {
+        chess_board[x_coordinate][y_coordinate] =
+            new Piece(*other.chess_board[x_coordinate][y_coordinate]);
       } else {
-        chess_board[x][y] = nullptr;
+        chess_board[x_coordinate][y_coordinate] = nullptr;
       }
     }
   }
@@ -32,11 +33,12 @@ BoardState::BoardState(const BoardState &other)
 
 // Destructor
 BoardState::~BoardState() {
-  for (int x = 0; x < 8; ++x) {
-    for (int y = 0; y < 8; ++y) {
-      if (chess_board[x][y] != nullptr && chess_board[x][y] != &empty_piece) {
-        delete chess_board[x][y];
-        chess_board[x][y] = nullptr;
+  for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+    for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+      if (chess_board[x_coordinate][y_coordinate] != nullptr &&
+          chess_board[x_coordinate][y_coordinate] != &empty_piece) {
+        delete chess_board[x_coordinate][y_coordinate];
+        chess_board[x_coordinate][y_coordinate] = nullptr;
       }
     }
   }
@@ -45,17 +47,19 @@ BoardState::~BoardState() {
 // PUBLIC FUNCTIONS
 void BoardState::reset_board() {
   // Set empty squares.
-  for (int y = 2; y < 6; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      chess_board[x][y] = &empty_piece;
+  for (int y_coordinate = 2; y_coordinate < 6; ++y_coordinate) {
+    for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+      chess_board[x_coordinate][y_coordinate] = &empty_piece;
     }
   }
   // Set Pawns.
-  for (int x = 0; x < 8; ++x) {
-    chess_board[x][1] = new Piece(PieceType::PAWN, PieceColor::WHITE);
+  for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+    chess_board[x_coordinate][1] =
+        new Piece(PieceType::PAWN, PieceColor::WHITE);
   }
-  for (int x = 0; x < 8; ++x) {
-    chess_board[x][6] = new Piece(PieceType::PAWN, PieceColor::BLACK);
+  for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+    chess_board[x_coordinate][6] =
+        new Piece(PieceType::PAWN, PieceColor::BLACK);
   }
   // Set Rooks.
   chess_board[0][0] = new Piece(PieceType::ROOK, PieceColor::WHITE);
@@ -83,9 +87,9 @@ void BoardState::reset_board() {
 void BoardState::print_board(PieceColor color) {
   if (color == PieceColor::WHITE) {
     // Print board from white's perspective. (White at bottom)
-    for (int y = 7; y >= 0; --y) {
-      for (int x = 0; x < 8; ++x) {
-        Piece *piece = chess_board[x][y];
+    for (int y_coordinate = 7; y_coordinate >= 0; --y_coordinate) {
+      for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+        Piece *piece = chess_board[x_coordinate][y_coordinate];
         char piece_char = (piece->piece_color == PieceColor::WHITE)
                               ? white_piece_to_char_map.at(piece->piece_type)
                               : black_piece_to_char_map.at(piece->piece_type);
@@ -96,9 +100,9 @@ void BoardState::print_board(PieceColor color) {
     printf("\n");
   } else {
     // Print board from black perspective. (Black at bottom)
-    for (int y = 0; y < 8; ++y) {
-      for (int x = 7; x >= 0; --x) {
-        Piece *piece = chess_board[x][y];
+    for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+      for (int x_coordinate = 7; x_coordinate >= 0; --x_coordinate) {
+        Piece *piece = chess_board[x_coordinate][y_coordinate];
         char piece_char = (piece->piece_color == PieceColor::WHITE)
                               ? white_piece_to_char_map.at(piece->piece_type)
                               : black_piece_to_char_map.at(piece->piece_type);
@@ -319,12 +323,13 @@ auto BoardState::square_is_attacked(int x, int y,
 }
 
 auto BoardState::king_is_checked(PieceColor color_of_king) -> bool {
-  for (int x = 0; x < 8; ++x) {
-    for (int y = 0; y < 8; ++y) {
-      Piece *test_piece = chess_board[x][y];
+  for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+    for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+      Piece *test_piece = chess_board[x_coordinate][y_coordinate];
       if (test_piece->piece_type == PieceType::KING &&
           test_piece->piece_color == color_of_king) {
-        return BoardState::square_is_attacked(x, y, color_of_king);
+        return BoardState::square_is_attacked(x_coordinate, y_coordinate,
+                                              color_of_king);
       }
     }
   }
@@ -334,13 +339,14 @@ auto BoardState::king_is_checked(PieceColor color_of_king) -> bool {
 auto BoardState::compute_zobrist_hash() const -> size_t {
   size_t hash = 0;
 
-  for (int y = 0; y < 8; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      Piece *piece = chess_board[x][y];
+  for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+    for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+      Piece *piece = chess_board[x_coordinate][y_coordinate];
       if (piece->piece_type != PieceType::EMPTY) {
         int piece_index = static_cast<int>(piece->piece_type) - 1;
         int color_index = (piece->piece_color == PieceColor::WHITE) ? 0 : 1;
-        hash ^= zobrist_keys[y * 8 + x][piece_index][color_index];
+        hash ^= zobrist_keys[y_coordinate * 8 + x_coordinate][piece_index]
+                            [color_index];
       }
     }
   }
