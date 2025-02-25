@@ -34,6 +34,7 @@ private:
 
   /**
    * @brief Evaluates pawn at given position.
+   *
    * @param x, y Position of the pawn.
    * @param eval Evaluation score.
    */
@@ -41,6 +42,7 @@ private:
 
   /**
    * @brief Evaluates knight at given position.
+   *
    * @param x, y Position of the knight.
    * @param eval Evaluation score.
    */
@@ -48,6 +50,7 @@ private:
 
   /**
    * @brief Evaluates bishop at given position.
+   *
    * @param x, y Position of the bishop.
    * @param eval Evaluation score.
    */
@@ -55,6 +58,7 @@ private:
 
   /**
    * @brief Evaluates rook at given position.
+   *
    * @param x, y Position of the rook.
    * @param eval Evaluation score.
    */
@@ -62,6 +66,7 @@ private:
 
   /**
    * @brief Evaluates queen at given position.
+   *
    * @param x, y Position of the queen.
    * @param eval Evaluation score.
    */
@@ -69,6 +74,7 @@ private:
 
   /**
    * @brief Evaluates king at given position.
+   *
    * @param x, y Position of the king.
    * @param eval Evaluation score.
    */

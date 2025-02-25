@@ -28,6 +28,8 @@ struct Piece {
   bool pawn_moved_two_squares;
 
   /**
+   * @brief Constructor with default values.
+   *
    * @param piece_type Type of piece.
    * @param piece_color Color of the piece.
    * @param piece_has_moved Whether the piece has moved or not.
