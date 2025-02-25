@@ -4,29 +4,29 @@
 auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int {
   int eval = 0;
 
-  for (int y = 0; y < 8; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      Piece &piece = *board_state.chess_board[x][y];
+  for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate) {
+    for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate) {
+      Piece &piece = *board_state.chess_board[x_coordinate][y_coordinate];
       PieceType &piece_type = piece.piece_type;
 
       switch (piece_type) {
       case PieceType::PAWN:
-        evaluate_pawn(x, y, piece, eval);
+        evaluate_pawn(x_coordinate, y_coordinate, piece, eval);
         break;
       case PieceType::ROOK:
-        evaluate_rook(x, y, piece, eval);
+        evaluate_rook(x_coordinate, y_coordinate, piece, eval);
         break;
       case PieceType::KNIGHT:
-        evaluate_knight(x, y, piece, eval);
+        evaluate_knight(x_coordinate, y_coordinate, piece, eval);
         break;
       case PieceType::BISHOP:
-        evaluate_bishop(x, y, piece, eval);
+        evaluate_bishop(x_coordinate, y_coordinate, piece, eval);
         break;
       case PieceType::QUEEN:
-        evaluate_queen(x, y, piece, eval);
+        evaluate_queen(x_coordinate, y_coordinate, piece, eval);
         break;
       case PieceType::KING:
-        evaluate_king(x, y, piece, eval);
+        evaluate_king(x_coordinate, y_coordinate, piece, eval);
         break;
       default:
         // Empty square.
@@ -38,9 +38,10 @@ auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int {
 }
 
 // PRIVATE FUNCTIONS
-void PositionEvaluator::evaluate_pawn(int x, int y, Piece &piece, int &eval) {
+void PositionEvaluator::evaluate_pawn(int x_coordinate, int y_coordinate,
+                                      Piece &piece, int &eval) {
   // Position value - x coordinate.
-  switch (x) {
+  switch (x_coordinate) {
   case 0:
     if (piece.piece_color == PieceColor::WHITE) {
       eval += 5;
@@ -103,7 +104,8 @@ void PositionEvaluator::evaluate_pawn(int x, int y, Piece &piece, int &eval) {
   }
 }
 
-void PositionEvaluator::evaluate_knight(int x, int y, Piece &piece, int &eval) {
+void PositionEvaluator::evaluate_knight(int x_coordinate, int y_coordinate,
+                                        Piece &piece, int &eval) {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE) {
     eval += 150;
@@ -120,8 +122,8 @@ void PositionEvaluator::evaluate_knight(int x, int y, Piece &piece, int &eval) {
   // The more moves a knight has, the better.
   int new_x, new_y;
   for (auto &move : knight_moves) {
-    new_x = x + move[0];
-    new_y = y + move[1];
+    new_x = x_coordinate + move[0];
+    new_y = y_coordinate + move[1];
     if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE) {
@@ -133,7 +135,8 @@ void PositionEvaluator::evaluate_knight(int x, int y, Piece &piece, int &eval) {
   }
 }
 
-void PositionEvaluator::evaluate_bishop(int x, int y, Piece &piece, int &eval) {
+void PositionEvaluator::evaluate_bishop(int x_coordinate, int y_coordinate,
+                                        Piece &piece, int &eval) {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE) {
     eval += 170;
@@ -150,8 +153,8 @@ void PositionEvaluator::evaluate_bishop(int x, int y, Piece &piece, int &eval) {
   // The more moves a bishop has, the better.
   int new_x, new_y;
   for (auto &direction : bishop_directions) {
-    new_x = x + direction[0];
-    new_y = y + direction[1];
+    new_x = x_coordinate + direction[0];
+    new_y = y_coordinate + direction[1];
     while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE) {
@@ -165,7 +168,8 @@ void PositionEvaluator::evaluate_bishop(int x, int y, Piece &piece, int &eval) {
   }
 }
 
-void PositionEvaluator::evaluate_rook(int x, int y, Piece &piece, int &eval) {
+void PositionEvaluator::evaluate_rook(int x_coordinate, int y_coordinate,
+                                      Piece &piece, int &eval) {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE) {
     eval += 400;
@@ -176,8 +180,8 @@ void PositionEvaluator::evaluate_rook(int x, int y, Piece &piece, int &eval) {
   // The more moves a rook has, the better.
   int new_x, new_y;
   for (auto &direction : rook_directions) {
-    new_x = x + direction[0];
-    new_y = y + direction[1];
+    new_x = x_coordinate + direction[0];
+    new_y = y_coordinate + direction[1];
     while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE) {
@@ -191,7 +195,8 @@ void PositionEvaluator::evaluate_rook(int x, int y, Piece &piece, int &eval) {
   }
 }
 
-void PositionEvaluator::evaluate_queen(int x, int y, Piece &piece, int &eval) {
+void PositionEvaluator::evaluate_queen(int x_coordinate, int y_coordinate,
+                                       Piece &piece, int &eval) {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE) {
     eval += 1000;
@@ -202,8 +207,8 @@ void PositionEvaluator::evaluate_queen(int x, int y, Piece &piece, int &eval) {
   // The more moves a queen has, the better.
   int new_x, new_y;
   for (auto &direction : queen_directions) {
-    new_x = x + direction[0];
-    new_y = y + direction[1];
+    new_x = x_coordinate + direction[0];
+    new_y = y_coordinate + direction[1];
     while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE) {
@@ -217,7 +222,8 @@ void PositionEvaluator::evaluate_queen(int x, int y, Piece &piece, int &eval) {
   }
 }
 
-void PositionEvaluator::evaluate_king(int x, int y, Piece &piece, int &eval) {
+void PositionEvaluator::evaluate_king(int x_coordinate, int y_coordinate,
+                                      Piece &piece, int &eval) {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE) {
     eval += 20000;
@@ -225,7 +231,7 @@ void PositionEvaluator::evaluate_king(int x, int y, Piece &piece, int &eval) {
     eval -= 20000;
   }
   // King is safer in the sides.
-  switch (x) {
+  switch (x_coordinate) {
   case 0:
     if (piece.piece_color == PieceColor::WHITE) {
       eval += 5;
