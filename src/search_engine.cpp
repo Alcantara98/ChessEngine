@@ -62,6 +62,7 @@ auto SearchEngine::find_best_move(int max_search_depth,
   // Search to max_search_depth with iterative deepening.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth) {
+    max_iterative_search_depth = iterative_depth;
     move_scores.clear();
 
     // Thread variables.
@@ -106,17 +107,14 @@ auto SearchEngine::find_best_move(int max_search_depth,
   }
   transposition_table.clear();
   sort_moves(move_scores);
-  // for (auto move_score : move_scores) {
-  //   printf("Score: %d\n", move_score.second);
-  // }
 
   return move_scores[0].first;
 }
 
 // PRIVATE FUNCTIONS
-auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
-                                             int beta, int depth,
-                                             bool maximise) -> int {
+auto SearchEngine::minimax_alpha_beta_search(
+    BoardState &board_state, int alpha, int beta, int depth, bool maximise,
+    bool previous_move_is_null) -> int {
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
   int tt_value, tt_flag, entry_search_depth;
   int entry_best_move = -1;
@@ -134,10 +132,23 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   }
 
   // Evaluate leaf nodes.
-  if (depth == 0) {
+  if (depth <= 0) {
     int eval = position_evaluator.evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
     return eval;
+  }
+
+  // Try a null move.
+  if (!previous_move_is_null && (max_iterative_search_depth - depth) >= 3) {
+    // If previous move is a null move, skip this to prevent double null moves.
+    // This will prevent the search from being too shallow.
+    board_state.apply_null_move();
+    int eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 3,
+                                         !maximise, true);
+    board_state.undo_null_move();
+    if ((maximise && eval >= beta) || (!maximise && eval <= alpha)) {
+      return eval;
+    }
   }
 
   std::vector<Move> possible_moves = calculate_possible_moves(board_state);

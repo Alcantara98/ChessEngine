@@ -65,6 +65,9 @@ private:
   // Transposition Table object.
   TranspositionTable transposition_table;
 
+  // The max depth the current iterative search will reach.
+  int max_iterative_search_depth;
+
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
@@ -79,7 +82,8 @@ private:
    * @return Evaluation score from search branch.
    */
   auto minimax_alpha_beta_search(BoardState &board_state, int alpha, int beta,
-                                 int depth, bool maximise) -> int;
+                                 int depth, bool maximise,
+                                 bool previous_move_is_null = false) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.

@@ -75,6 +75,16 @@ public:
   void undo_move();
 
   /**
+   * @brief Will apply a null move unto board_state;
+   */
+  void apply_null_move();
+
+  /**
+   * @brief Will undo a null move unto board_state;
+   */
+  void undo_null_move();
+
+  /**
    * @brief Checks if the given square is attacked.
    *
    * @param x_coordinate, y_coordinate The coordinate of the square.

@@ -229,6 +229,18 @@ void BoardState::undo_move() {
   previous_move_stack.pop();
 }
 
+void BoardState::apply_null_move() {
+  // Update move color, it is now the other player's turn.
+  color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
+                                                       : PieceColor::WHITE;
+}
+
+void BoardState::undo_null_move() {
+  // Update move color, it is now the other player's turn.
+  color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
+                                                       : PieceColor::WHITE;
+}
+
 auto BoardState::square_is_attacked(int x, int y,
                                     PieceColor color_being_attacked) -> bool {
   // Check for pawn attacks
