@@ -127,12 +127,13 @@ auto SearchEngine::minimax_alpha_beta_search(
     BoardState &board_state, int alpha, int beta, int depth, bool maximise,
     bool previous_move_is_null) -> int {
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
   int tt_value, tt_flag, entry_search_depth;
   int entry_best_move = -1;
   uint64_t hash = board_state.compute_zobrist_hash();
+  // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, entry_search_depth, tt_value, tt_flag,
                                    entry_best_move)) {
-
     // Check if tt_value can be used.
     if (depth <= entry_search_depth) {
       if ((tt_flag == -1 && tt_value <= alpha) ||
@@ -164,6 +165,7 @@ auto SearchEngine::minimax_alpha_beta_search(
 
   std::vector<Move> possible_moves = calculate_possible_moves(board_state);
   int eval;
+  // Start minimax search.
   if (maximise) {
     int max_eval = -INF;
     int best_move_index = 0;
