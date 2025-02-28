@@ -58,7 +58,7 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance) {
 
     // Engine's turn.
     if (!search_engine.execute_best_move(max_search_depth, show_performance)) {
-      printf("No valid moves found, It's a draw!\n");
+      printf("Checkmate, You WIN!\n");
       break;
     }
     game_board_state.print_board(player_color);

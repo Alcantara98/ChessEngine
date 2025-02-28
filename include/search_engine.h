@@ -38,11 +38,12 @@ public:
   auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
 
   /**
-   * @brief Finds the best move with the given current state of the board.
+   * @brief Finds the best move for the engine and applies it to the board.
    *
    * @param max_search_depth Max depth to search.
+   * @param show_performance Show performance matrix of the search.
    *
-   * @return True if a move was found, false otherwise.
+   * @return True if a move is found where the king is not checked.
    */
   auto execute_best_move(int max_search_depth, bool show_performance) -> bool;
 
