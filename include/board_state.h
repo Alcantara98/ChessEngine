@@ -14,6 +14,10 @@
 
 namespace engine::parts
 {
+using double_array_board =
+    std::array<std::array<Piece *, constants::BOARD_HEIGHT>,
+               constants::BOARD_WIDTH>;
+
 /**
  * @brief Class to represent the current state of the chess board.
  */
@@ -21,7 +25,7 @@ class BoardState
 {
 public:
   // 8 x 8 array to represent a chess board.
-  std::array<std::array<Piece *, 8>, 8> chess_board;
+  double_array_board chess_board;
 
   // Stack to keep track of previous moves.
   std::stack<Move> previous_move_stack;
@@ -47,7 +51,7 @@ public:
    * starts the game.
    * @param engine_color Determines which color to maximise for.
    */
-  BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
+  BoardState(double_array_board &input_chess_board,
              PieceColor color_to_move = PieceColor::WHITE);
 
   // Deep copy constructor
