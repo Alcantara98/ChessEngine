@@ -122,7 +122,7 @@ void PositionEvaluator::evaluate_knight(int x_coordinate, int y_coordinate,
 
   // The more moves a knight has, the better.
   int new_x, new_y;
-  for (auto &move : knight_moves)
+  for (auto &move : constants::KNIGHT_MOVES)
   {
     new_x = x_coordinate + move[0];
     new_y = y_coordinate + move[1];
@@ -156,7 +156,7 @@ void PositionEvaluator::evaluate_bishop(int x_coordinate, int y_coordinate,
 
   // The more moves a bishop has, the better.
   int new_x, new_y;
-  for (auto &direction : bishop_directions)
+  for (auto &direction : constants::BISHOP_DIRECTIONS)
   {
     new_x = x_coordinate + direction[0];
     new_y = y_coordinate + direction[1];
@@ -185,7 +185,7 @@ void PositionEvaluator::evaluate_rook(int x_coordinate, int y_coordinate,
 
   // The more moves a rook has, the better.
   int new_x, new_y;
-  for (auto &direction : rook_directions)
+  for (auto &direction : constants::ROOK_DIRECTIONS)
   {
     new_x = x_coordinate + direction[0];
     new_y = y_coordinate + direction[1];
@@ -214,7 +214,7 @@ void PositionEvaluator::evaluate_queen(int x_coordinate, int y_coordinate,
 
   // The more moves a queen has, the better.
   int new_x, new_y;
-  for (auto &direction : queen_directions)
+  for (auto &direction : constants::QUEEN_DIRECTIONS)
   {
     new_x = x_coordinate + direction[0];
     new_y = y_coordinate + direction[1];
