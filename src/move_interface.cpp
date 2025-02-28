@@ -3,7 +3,7 @@
 MoveInterface::MoveInterface(BoardState &board_state)
     : game_board_state(board_state) {}
 
-auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
+auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
                                   std::string string_move) -> Move {
   Piece *moving_piece;
   Piece *captured_piece;
@@ -28,7 +28,7 @@ auto MoveInterface::input_to_move(std::vector<Move> possible_moves,
     // Get move from user.
     std::cout << "Enter move: ";
     std::cin >> string_move;
-    std::cout << std::endl;
+    std::cout << '\n';
 
     // Check if move is valid.
     std::smatch matches;

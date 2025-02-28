@@ -65,17 +65,18 @@ auto SearchEngine::find_best_move(int max_search_depth,
     max_iterative_search_depth = iterative_depth;
     move_scores.clear();
 
-    // Thread variables.
     std::vector<std::thread> search_threads;
     std::vector<std::promise<int>> promises(possible_moves.size());
     std::vector<std::future<int>> futures;
     std::vector<BoardState> thread_board_states(possible_moves.size(),
                                                 BoardState(game_board_state));
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    auto search_start_time = std::chrono::high_resolution_clock::now();
+    // Search each move in a separate thread.
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index) {
       thread_board_states[move_index].apply_move(possible_moves[move_index]);
       futures.push_back(promises[move_index].get_future());
+
       search_threads.emplace_back([this, &promises, move_index, maximising,
                                    iterative_depth, &thread_board_states] {
         int eval =
@@ -84,27 +85,37 @@ auto SearchEngine::find_best_move(int max_search_depth,
         promises[move_index].set_value(eval);
       });
     }
+
+    // Wait for all threads to finish.
     for (auto &thread : search_threads) {
       thread.join();
     }
+
+    // Get results from threads.
     for (int i = 0; i < possible_moves.size(); ++i) {
       move_scores.emplace_back(possible_moves[i], futures[i].get());
     }
-    auto end_time = std::chrono::high_resolution_clock::now();
+
+    auto search_end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        end_time - start_time)
+                        search_end_time - search_start_time)
                         .count();
+
+    // Print performance metrics.
     if (show_performance) {
       printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
       printf("Nodes Visited %d\n", nodes_visited.load());
       printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
       printf("TT Size: %d\n", transposition_table.get_size());
-      printf("Nodes per second: %d kN/s\n",
+      printf("Nodes per second: %d kN/s\n\n",
              static_cast<int>(nodes_visited / (duration / 1000.0) / 1000));
     }
+
+    // Reset performance metrics.
     nodes_visited = 0;
     leaf_nodes_visited = 0;
   }
+
   transposition_table.clear();
   sort_moves(move_scores);
 
@@ -116,12 +127,13 @@ auto SearchEngine::minimax_alpha_beta_search(
     BoardState &board_state, int alpha, int beta, int depth, bool maximise,
     bool previous_move_is_null) -> int {
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
   int tt_value, tt_flag, entry_search_depth;
   int entry_best_move = -1;
   uint64_t hash = board_state.compute_zobrist_hash();
+  // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, entry_search_depth, tt_value, tt_flag,
                                    entry_best_move)) {
-
     // Check if tt_value can be used.
     if (depth <= entry_search_depth) {
       if ((tt_flag == -1 && tt_value <= alpha) ||
@@ -153,6 +165,7 @@ auto SearchEngine::minimax_alpha_beta_search(
 
   std::vector<Move> possible_moves = calculate_possible_moves(board_state);
   int eval;
+  // Start minimax search.
   if (maximise) {
     int max_eval = -INF;
     int best_move_index = 0;

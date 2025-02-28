@@ -1,15 +1,25 @@
 #ifndef PIECE_BASE_H
 #define PIECE_BASE_H
 
+#include <cstdint>
+
 /**
  * @brief Enum to represent chess piece type.
  */
-enum class PieceType { EMPTY, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING };
+enum class PieceType : std::uint8_t {
+  EMPTY,
+  PAWN,
+  KNIGHT,
+  BISHOP,
+  ROOK,
+  QUEEN,
+  KING
+};
 
 /**
  * @brief Enum to represent piece color.
  */
-enum class PieceColor { NONE, WHITE, BLACK };
+enum class PieceColor : std::uint8_t { NONE, WHITE, BLACK };
 
 /**
  * @brief A structure to represent chess pieces.

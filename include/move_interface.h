@@ -49,7 +49,7 @@ public:
    *
    * @return Returns the converted Move.
    */
-  auto input_to_move(std::vector<Move> possible_moves,
+  auto input_to_move(const std::vector<Move> &possible_moves,
                      std::string string_move = "") -> Move;
 
   /**
