@@ -53,8 +53,8 @@ auto SearchEngine::calculate_possible_moves(BoardState &board_state)
   return std::move(possible_moves);
 }
 
-auto SearchEngine::find_best_move(int max_search_depth,
-                                  bool show_performance) -> Move {
+auto SearchEngine::execute_best_move(int max_search_depth,
+                                     bool show_performance) -> bool {
   std::vector<Move> possible_moves = calculate_possible_moves(game_board_state);
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
@@ -119,7 +119,18 @@ auto SearchEngine::find_best_move(int max_search_depth,
   transposition_table.clear();
   sort_moves(move_scores);
 
-  return move_scores[0].first;
+  // Check if there are any valid moves and apply the best move.
+  bool found_valid_move = false;
+  for (std::pair<Move, int> move_score : move_scores) {
+    game_board_state.apply_move(move_score.first);
+    if (!game_board_state.king_is_checked(game_board_state.color_to_move)) {
+      found_valid_move = true;
+      break;
+    }
+    game_board_state.undo_move();
+  }
+
+  return found_valid_move;
 }
 
 // PRIVATE FUNCTIONS

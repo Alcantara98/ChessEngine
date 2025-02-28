@@ -42,9 +42,9 @@ public:
    *
    * @param max_search_depth Max depth to search.
    *
-   * @return Best move found.
+   * @return True if a move was found, false otherwise.
    */
-  auto find_best_move(int max_search_depth, bool show_performance) -> Move;
+  auto execute_best_move(int max_search_depth, bool show_performance) -> bool;
 
 private:
   // Use for starting values of alpha and beta;
