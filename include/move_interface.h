@@ -8,6 +8,8 @@
 #include <regex>
 #include <string>
 
+namespace engine::parts
+{
 /**
  * @brief Class to convert user input into a Move and vice versa.
  */
@@ -61,5 +63,6 @@ public:
    */
   auto move_to_string(Move &move) -> std::string;
 };
+} // namespace engine::parts
 
 #endif

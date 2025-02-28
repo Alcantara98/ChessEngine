@@ -7,6 +7,8 @@
 #include <shared_mutex>
 #include <unordered_map>
 
+namespace engine::parts
+{
 /**
  * @brief Entry in the transposition table.
  */
@@ -89,5 +91,6 @@ private:
    */
   void trim();
 };
+} // namespace engine::parts
 
 #endif // TRANSPOSITION_TABLE_H

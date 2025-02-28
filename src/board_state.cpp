@@ -1,5 +1,7 @@
 #include "board_state.h"
 
+namespace engine::parts
+{
 // CONSTUCTORS
 BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
@@ -458,3 +460,4 @@ void BoardState::initialize_zobrist_keys()
   }
   zobrist_side_to_move = dist(rng);
 }
+} // namespace engine::parts

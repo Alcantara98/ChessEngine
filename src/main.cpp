@@ -2,7 +2,7 @@
 
 auto main(int argc, char **argv) -> int
 {
-  ChessEngine chess_engine = ChessEngine();
+  engine::ChessEngine chess_engine = engine::ChessEngine();
 
   chess_engine.start_game();
 }

@@ -1,6 +1,7 @@
 #ifndef BOARD_STATE_H
 #define BOARD_STATE_H
 
+#include "engine_constants.h"
 #include "move.h"
 #include "piece.h"
 
@@ -11,6 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace engine::parts
+{
 /**
  * @brief Class to represent the current state of the chess board.
  */
@@ -141,5 +144,6 @@ private:
    */
   void initialize_zobrist_keys();
 };
+} // namespace engine::parts
 
 #endif

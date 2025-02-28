@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+namespace engine::parts
+{
 /**
  * @brief Enum to represent chess piece type.
  */
@@ -57,5 +59,6 @@ struct Piece
         PieceColor piece_color = PieceColor::NONE, bool piece_has_moved = false,
         bool pawn_moved_two_squares = false);
 };
+} // namespace engine::parts
 
 #endif

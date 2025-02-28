@@ -1,5 +1,7 @@
 #include "move_generator.h"
 
+namespace engine::parts
+{
 //  PUBLIC FUNCTIONS
 void MoveGenerator::generate_pawn_move(BoardState &board_state,
                                        int x_coordinate, int y_coordinate,
@@ -374,3 +376,4 @@ void MoveGenerator::rook_bishop_move_helper(BoardState &board_state,
     }
   }
 }
+} // namespace engine::parts

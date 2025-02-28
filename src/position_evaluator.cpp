@@ -1,5 +1,7 @@
 #include "position_evaluator.h"
 
+namespace engine::parts
+{
 // PUBLIC FUNCTIONS
 auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int
 {
@@ -361,3 +363,4 @@ void PositionEvaluator::evaluate_king(int x_coordinate, int y_coordinate,
     break;
   }
 }
+} // namespace engine::parts

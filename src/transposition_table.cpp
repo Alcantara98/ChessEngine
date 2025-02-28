@@ -1,5 +1,7 @@
 #include "transposition_table.h"
 
+namespace engine::parts
+{
 // CONSTRUCTORS
 TranspositionTable::TranspositionTable(uint64_t max_size) : max_size(max_size)
 {
@@ -79,3 +81,4 @@ void TranspositionTable::trim()
   lru_list.pop_back();
   table.erase(lru_hash);
 }
+} // namespace engine::parts

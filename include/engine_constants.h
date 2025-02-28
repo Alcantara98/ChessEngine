@@ -1,7 +1,7 @@
 #ifndef ENGINE_CONSTANTS_H
 #define ENGINE_CONSTANTS_H
 
-namespace engine_constants
+namespace engine::constants
 {
 // Board dimensions
 const int BOARD_WIDTH = 8;
@@ -14,7 +14,6 @@ const int BISHOP_VALUE = 330;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
-
-} // namespace engine_constants
+} // namespace engine::constants
 
 #endif // ENGINE_CONSTANTS_H

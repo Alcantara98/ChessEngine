@@ -1,5 +1,8 @@
 #include "move_interface.h"
 
+namespace engine::parts
+{
+// CONSTRUCTORS
 MoveInterface::MoveInterface(BoardState &board_state)
     : game_board_state(board_state)
 {
@@ -169,3 +172,4 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
           pmt_x,
           pmt_y};
 }
+} // namespace engine::parts

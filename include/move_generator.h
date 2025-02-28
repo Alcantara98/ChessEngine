@@ -8,6 +8,8 @@
 #include <array>
 #include <vector>
 
+namespace engine::parts
+{
 /**
  * @brief Class to generate all possible moves for a given piece given the
  * current board state.
@@ -113,5 +115,6 @@ public:
                                   int y_coordinate,
                                   std::vector<Move> &possible_moves);
 };
+} // namespace engine::parts
 
 #endif // MOVE_GENERATOR_H

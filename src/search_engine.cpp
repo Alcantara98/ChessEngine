@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+namespace engine::parts
+{
 // CONSTRUCTORS
 SearchEngine::SearchEngine(BoardState &board_state)
     : game_board_state(board_state), position_evaluator(PositionEvaluator()),
@@ -186,8 +188,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   // Try a null move.
   if (!previous_move_is_null && (max_iterative_search_depth - depth) >= 3)
   {
-    // If previous move is a null move, skip this to prevent double null moves.
-    // This will prevent the search from being too shallow.
+    // If previous move is a null move, skip this to prevent double null
+    // moves. This will prevent the search from being too shallow.
     board_state.apply_null_move();
     int eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 3,
                                          !maximise, true);
@@ -297,3 +299,4 @@ void SearchEngine::min_search(BoardState &board_state, int &alpha, int &beta,
   beta = std::min(eval, beta);
   board_state.undo_move();
 }
+} // namespace engine::parts

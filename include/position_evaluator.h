@@ -3,6 +3,8 @@
 
 #include "board_state.h"
 
+namespace engine::parts
+{
 /**
  * @brief Class to evaluate the current position of the chess board.
  */
@@ -87,5 +89,6 @@ private:
   void evaluate_king(int x_coordinate, int y_coordinate, Piece &piece,
                      int &eval);
 };
+} // namespace engine::parts
 
 #endif

@@ -1,5 +1,7 @@
 #include "move.h"
 
+namespace engine::parts
+{
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            Piece *captured_piece, PieceType promotion_piece_type,
            bool is_en_passant, bool first_move, bool pawn_moved_two, int pmt_x,
@@ -69,3 +71,4 @@ auto Move::operator==(const Move &other) const -> bool
          pawn_moved_two_squares_to_x == other.pawn_moved_two_squares_to_x &&
          pawn_moved_two_squares_to_y == other.pawn_moved_two_squares_to_y;
 }
+} // namespace engine::parts

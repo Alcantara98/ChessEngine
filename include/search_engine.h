@@ -12,6 +12,8 @@
 #include <limits>
 #include <thread>
 
+namespace engine::parts
+{
 /**
  * @brief Class to find the best move for the current board state.
  */
@@ -128,5 +130,6 @@ private:
                   int &eval, int &depth, int &best_move_index, int &move_index,
                   std::vector<Move> &possible_moves);
 };
+} // namespace engine::parts
 
 #endif // SEARCH_ENGINE_H
