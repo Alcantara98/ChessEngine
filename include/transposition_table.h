@@ -10,7 +10,8 @@
 /**
  * @brief Entry in the transposition table.
  */
-struct TranspositionTableEntry {
+struct TranspositionTableEntry
+{
   // Maximum depth of the search.
   int search_depth;
 
@@ -27,7 +28,8 @@ struct TranspositionTableEntry {
   int best_move_index;
 };
 
-class TranspositionTable {
+class TranspositionTable
+{
 public:
   /**
    * @brief Construct a new Transposition Table object

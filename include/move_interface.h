@@ -11,7 +11,8 @@
 /**
  * @brief Class to convert user input into a Move and vice versa.
  */
-class MoveInterface {
+class MoveInterface
+{
 private:
   // Map to convert algebraic coordinates to int.
   const std::map<char, int> algebraic_to_int = {{'a', 0}, {'b', 1}, {'c', 2},

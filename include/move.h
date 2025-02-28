@@ -6,7 +6,8 @@
 /**
  * @brief Class to represent a move in chess.
  */
-struct Move {
+struct Move
+{
   // The piece that is moving.
   Piece *moving_piece;
 

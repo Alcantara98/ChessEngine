@@ -7,7 +7,8 @@
 #include <random>
 #include <stack>
 
-void testing_one() {
+void testing_one()
+{
   BoardState my_board = BoardState();
   SearchEngine my_engine = SearchEngine(my_board);
   MoveInterface my_interface = MoveInterface(my_board);
@@ -25,11 +26,15 @@ void testing_one() {
 
   // Test Applying Moves.
   int i = 0;
-  for (; i < move_strings.size(); ++i) {
+  for (; i < move_strings.size(); ++i)
+  {
     std::string color_to_move;
-    if (my_board.color_to_move == PieceColor::WHITE) {
+    if (my_board.color_to_move == PieceColor::WHITE)
+    {
       color_to_move = "White";
-    } else {
+    }
+    else
+    {
       color_to_move = "Black";
     }
     printf("Move(%s): %d - %s\n", color_to_move.c_str(), i,
@@ -45,7 +50,8 @@ void testing_one() {
   }
 
   // Test Undoing Moves.
-  while (i > 0) {
+  while (i > 0)
+  {
     --i;
     printf("Undo Move: %d\n", i);
 

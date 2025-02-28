@@ -15,7 +15,8 @@
 /**
  * @brief Class to find the best move for the current board state.
  */
-class SearchEngine {
+class SearchEngine
+{
 
 public:
   // Determines which color to maximise for.

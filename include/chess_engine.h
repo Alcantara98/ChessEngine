@@ -9,7 +9,8 @@
 /**
  * @brief Class that combineas all the components of the chess engine.
  */
-class ChessEngine {
+class ChessEngine
+{
 public:
   /**
    * @brief Default Constructor - Initialises the Chess Engine.

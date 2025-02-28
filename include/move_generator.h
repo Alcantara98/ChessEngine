@@ -12,7 +12,8 @@
  * @brief Class to generate all possible moves for a given piece given the
  * current board state.
  */
-class MoveGenerator {
+class MoveGenerator
+{
 private:
   /**
    * @brief Generates bishop and rook moves in one given direction.

@@ -6,7 +6,8 @@
 /**
  * @brief Class to evaluate the current position of the chess board.
  */
-class PositionEvaluator {
+class PositionEvaluator
+{
 public:
   /**
    * @brief Evaluates current position using chess heuristics.

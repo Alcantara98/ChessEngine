@@ -1,10 +1,13 @@
 #include "move_interface.h"
 
 MoveInterface::MoveInterface(BoardState &board_state)
-    : game_board_state(board_state) {}
+    : game_board_state(board_state)
+{
+}
 
 auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
-                                  std::string string_move) -> Move {
+                                  std::string string_move) -> Move
+{
   Piece *moving_piece;
   Piece *captured_piece;
   PieceType promotion_piece_type;
@@ -17,7 +20,8 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 
   char piece_type;
   int i = 0;
-  while (i == 0) {
+  while (i == 0)
+  {
     // Reset variables.
     captured_piece = nullptr;
     promotion_piece_type = PieceType::EMPTY;
@@ -34,21 +38,28 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
     std::smatch matches;
     std::regex moveRegex(
         R"(^(O-O(?:-O)?)|([kqrbnp])([a-h][1-8])(x)?([a-h][1-8])=?([qrbns])?([+#])?$)");
-    if (std::regex_match(string_move, matches, moveRegex)) {
-      if (matches[1].matched) {
+    if (std::regex_match(string_move, matches, moveRegex))
+    {
+      if (matches[1].matched)
+      {
         // Castle Move.
         from_x = 4;
         to_x = matches[1] == "O-O" ? 6 : 2; // King-side : Queen-side.
 
-        if (game_board_state.color_to_move == PieceColor::WHITE) {
+        if (game_board_state.color_to_move == PieceColor::WHITE)
+        {
           from_y = 0;
           to_y = 0;
-        } else {
+        }
+        else
+        {
           from_y = 7;
           to_y = 7;
         }
         piece_type = 'k';
-      } else {
+      }
+      else
+      {
         piece_type = matches[2].str().at(0);
 
         from_x = algebraic_to_int.at(matches[3].str().at(0));
@@ -56,44 +67,57 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 
         to_x = algebraic_to_int.at(matches[5].str().at(0));
         to_y = matches[5].str().at(1) - '0' - 1;
-        if (matches[4].matched) {
+        if (matches[4].matched)
+        {
           if (piece_type == 'p' &&
               game_board_state.chess_board[to_x][to_y]->piece_type ==
-                  PieceType::EMPTY) {
+                  PieceType::EMPTY)
+          {
             is_en_passant = true;
             captured_piece = game_board_state.chess_board[to_x][from_y];
-          } else {
+          }
+          else
+          {
             captured_piece = game_board_state.chess_board[to_x][to_y];
           }
         }
-        if (piece_type == 'p' && (to_y - from_y == 2 || from_y - to_y == 2)) {
+        if (piece_type == 'p' && (to_y - from_y == 2 || from_y - to_y == 2))
+        {
           pawn_moved_two = true;
           pmt_x = to_x;
           pmt_y = to_y;
         }
-        if (matches[6].matched) {
+        if (matches[6].matched)
+        {
           promotion_piece_type =
               string_to_piece_type.at(matches[6].str().at(0));
         }
       }
-    } else {
+    }
+    else
+    {
       printf("Invalid Move - Regex Match Failure\n");
       continue;
     }
     moving_piece = game_board_state.chess_board[from_x][from_y];
-    if (moving_piece->piece_type == PieceType::EMPTY) {
+    if (moving_piece->piece_type == PieceType::EMPTY)
+    {
       printf("Invalid Move - Empty Square\n");
       continue;
     }
-    if (string_to_piece_type.at(piece_type) != moving_piece->piece_type) {
+    if (string_to_piece_type.at(piece_type) != moving_piece->piece_type)
+    {
       printf("Given piece type: %c does not match square piece type: %c\n",
              piece_type, piece_type_to_string.at(moving_piece->piece_type));
       continue;
     }
 
-    if (moving_piece->piece_has_moved) {
+    if (moving_piece->piece_has_moved)
+    {
       first_move = false;
-    } else {
+    }
+    else
+    {
       first_move = true;
     }
 
@@ -104,13 +128,16 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 
     // Check if move is in generated possible moves.
     bool found_move = false;
-    for (auto &possible_move : possible_moves) {
-      if (possible_move == next_move) {
+    for (auto &possible_move : possible_moves)
+    {
+      if (possible_move == next_move)
+      {
         found_move = true;
         break;
       }
     }
-    if (!found_move) {
+    if (!found_move)
+    {
       printf("Invalid Move - Move not found in possible moves\n");
       continue;
     }
@@ -120,7 +147,8 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
     game_board_state.apply_move(next_move);
     bool king_is_checked = game_board_state.king_is_checked(current_color);
     game_board_state.undo_move();
-    if (king_is_checked) {
+    if (king_is_checked)
+    {
       printf("King is checked - Choose a different move\n");
       continue;
     }

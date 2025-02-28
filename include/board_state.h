@@ -14,7 +14,8 @@
 /**
  * @brief Class to represent the current state of the chess board.
  */
-class BoardState {
+class BoardState
+{
 public:
   // 8 x 8 array to represent a chess board.
   std::array<std::array<Piece *, 8>, 8> chess_board;

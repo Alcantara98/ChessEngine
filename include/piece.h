@@ -6,7 +6,8 @@
 /**
  * @brief Enum to represent chess piece type.
  */
-enum class PieceType : std::uint8_t {
+enum class PieceType : std::uint8_t
+{
   EMPTY,
   PAWN,
   KNIGHT,
@@ -19,12 +20,18 @@ enum class PieceType : std::uint8_t {
 /**
  * @brief Enum to represent piece color.
  */
-enum class PieceColor : std::uint8_t { NONE, WHITE, BLACK };
+enum class PieceColor : std::uint8_t
+{
+  NONE,
+  WHITE,
+  BLACK
+};
 
 /**
  * @brief A structure to represent chess pieces.
  */
-struct Piece {
+struct Piece
+{
   // Type of piece.
   PieceType piece_type;
 
