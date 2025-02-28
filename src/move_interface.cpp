@@ -38,11 +38,8 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
       if (matches[1].matched) {
         // Castle Move.
         from_x = 4;
-        if (matches[1] == "O-O") {
-          to_x = 6;
-        } else {
-          to_x = 2;
-        }
+        to_x = matches[1] == "O-O" ? 6 : 2; // King-side : Queen-side.
+
         if (game_board_state.color_to_move == PieceColor::WHITE) {
           from_y = 0;
           to_y = 0;
