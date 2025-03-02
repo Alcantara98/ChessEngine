@@ -46,6 +46,16 @@ const std::map<parts::PieceType, char> PIECE_TYPE_TO_STRING = {
     {parts::PieceType::KING, 'k'},   {parts::PieceType::QUEEN, 'q'},
     {parts::PieceType::ROOK, 'r'},   {parts::PieceType::BISHOP, 'b'},
     {parts::PieceType::KNIGHT, 'n'}, {parts::PieceType::PAWN, 'p'}};
+
+// Map to convert algebraic coordinates to int.
+const std::map<char, int> ALGEBRAIC_TO_INT = {{'a', 0}, {'b', 1}, {'c', 2},
+                                              {'d', 3}, {'e', 4}, {'f', 5},
+                                              {'g', 6}, {'h', 7}};
+
+// Map to convert int to algebraic coordinates.
+const std::map<int, char> INT_TO_ALGEBRAIC = {{0, 'a'}, {1, 'b'}, {2, 'c'},
+                                              {3, 'd'}, {4, 'e'}, {5, 'f'},
+                                              {6, 'g'}, {7, 'h'}};
 } // namespace engine::constants
 
 #endif // ENGINE_CONSTANTS_H

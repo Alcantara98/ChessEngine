@@ -16,16 +16,6 @@ namespace engine::parts
 class MoveInterface
 {
 private:
-  // Map to convert algebraic coordinates to int.
-  const std::map<char, int> algebraic_to_int = {{'a', 0}, {'b', 1}, {'c', 2},
-                                                {'d', 3}, {'e', 4}, {'f', 5},
-                                                {'g', 6}, {'h', 7}};
-
-  // Map to convert int to algebraic coordinates.
-  const std::map<int, char> int_to_algebraic = {{0, 'a'}, {1, 'b'}, {2, 'c'},
-                                                {3, 'd'}, {4, 'e'}, {5, 'f'},
-                                                {6, 'g'}, {7, 'h'}};
-
   // Reference of the board state;
   BoardState &game_board_state;
 

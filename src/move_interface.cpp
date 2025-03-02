@@ -56,10 +56,10 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
       {
         piece_type = matches[2].str().at(0);
 
-        from_x = algebraic_to_int.at(matches[3].str().at(0));
+        from_x = constants::ALGEBRAIC_TO_INT.at(matches[3].str().at(0));
         from_y = matches[3].str().at(1) - '0' - 1;
 
-        to_x = algebraic_to_int.at(matches[5].str().at(0));
+        to_x = constants::ALGEBRAIC_TO_INT.at(matches[5].str().at(0));
         to_y = matches[5].str().at(1) - '0' - 1;
         // Capture move.
         if (matches[4].matched)
