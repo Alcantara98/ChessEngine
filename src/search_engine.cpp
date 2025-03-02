@@ -136,20 +136,17 @@ auto SearchEngine::execute_best_move(int max_search_depth,
   transposition_table.clear();
   sort_moves(move_scores);
 
-  // Check if there are any valid moves and apply the best move.
-  bool found_valid_move = false;
+  // Check if move leaves king in check.
   for (std::pair<Move, int> move_score : move_scores)
   {
-    game_board_state.apply_move(move_score.first);
-    if (!game_board_state.king_is_checked(game_board_state.color_to_move))
+    if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
-      found_valid_move = true;
-      break;
+      game_board_state.apply_move(move_score.first);
+      return true;
     }
-    game_board_state.undo_move();
   }
-
-  return found_valid_move;
+  // No valid moves found.
+  return false;
 }
 
 // PRIVATE FUNCTIONS

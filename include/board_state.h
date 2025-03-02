@@ -119,6 +119,14 @@ public:
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
 
+  /**
+   * @brief Checks if the given move leaves the king in check.
+   * @param move The move to check.
+   *
+   * @return True if the move leaves the king in check, false otherwise.
+   */
+  auto move_leaves_king_in_check(Move &move) -> bool;
+
 private:
   // PieceType to Char mapping for white pieces.
   const std::unordered_map<PieceType, char> white_piece_to_char_map = {

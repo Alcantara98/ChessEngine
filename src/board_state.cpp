@@ -460,4 +460,13 @@ void BoardState::initialize_zobrist_keys()
   }
   zobrist_side_to_move = dist(rng);
 }
+
+auto BoardState::move_leaves_king_in_check(Move &move) -> bool
+{
+  apply_move(move);
+  bool king_is_checked_after_move =
+      king_is_checked(move.moving_piece->piece_color);
+  undo_move();
+  return king_is_checked_after_move;
+}
 } // namespace engine::parts
