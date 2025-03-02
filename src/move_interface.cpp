@@ -89,7 +89,7 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
         if (matches[6].matched)
         {
           promotion_piece_type =
-              string_to_piece_type.at(matches[6].str().at(0));
+              constants::STRING_TO_PIECE_TYPE.at(matches[6].str().at(0));
         }
       }
     }
@@ -104,10 +104,12 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
       printf("Invalid Move - Empty Square\n");
       continue;
     }
-    if (string_to_piece_type.at(piece_type) != moving_piece->piece_type)
+    if (constants::STRING_TO_PIECE_TYPE.at(piece_type) !=
+        moving_piece->piece_type)
     {
       printf("Given piece type: %c does not match square piece type: %c\n",
-             piece_type, piece_type_to_string.at(moving_piece->piece_type));
+             piece_type,
+             constants::PIECE_TYPE_TO_STRING.at(moving_piece->piece_type));
       continue;
     }
 

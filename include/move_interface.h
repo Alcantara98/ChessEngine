@@ -26,18 +26,6 @@ private:
                                                 {3, 'd'}, {4, 'e'}, {5, 'f'},
                                                 {6, 'g'}, {7, 'h'}};
 
-  // Map to convert string piece type to PieceType.
-  const std::map<char, PieceType> string_to_piece_type = {
-      {'k', PieceType::KING},   {'q', PieceType::QUEEN},
-      {'r', PieceType::ROOK},   {'b', PieceType::BISHOP},
-      {'n', PieceType::KNIGHT}, {'p', PieceType::PAWN}};
-
-  // Map to convert PieceType to string piece type.
-  const std::map<PieceType, char> piece_type_to_string = {
-      {PieceType::KING, 'k'},   {PieceType::QUEEN, 'q'},
-      {PieceType::ROOK, 'r'},   {PieceType::BISHOP, 'b'},
-      {PieceType::KNIGHT, 'n'}, {PieceType::PAWN, 'p'}};
-
   // Reference of the board state;
   BoardState &game_board_state;
 
