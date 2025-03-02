@@ -9,7 +9,7 @@ BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
   reset_board();
 }
 
-BoardState::BoardState(double_array_board &input_chess_board,
+BoardState::BoardState(chess_board_type &input_chess_board,
                        PieceColor color_to_move)
     : chess_board(input_chess_board), color_to_move(color_to_move)
 {

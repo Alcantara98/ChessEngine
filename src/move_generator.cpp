@@ -7,7 +7,7 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state,
                                        int x_coordinate, int y_coordinate,
                                        std::vector<Move> &possible_moves)
 {
-  double_array_board &board = board_state.chess_board;
+  chess_board_type &board = board_state.chess_board;
   Piece *pawn_piece = board[x_coordinate][y_coordinate];
   bool first_move = !pawn_piece->piece_has_moved;
 
@@ -179,7 +179,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state,
                                        int x_coordinate, int y_coordinate,
                                        std::vector<Move> &possible_moves)
 {
-  double_array_board &board = board_state.chess_board;
+  chess_board_type &board = board_state.chess_board;
   Piece *king_piece = board[x_coordinate][y_coordinate];
   bool first_move = !king_piece->piece_has_moved;
 
@@ -267,7 +267,7 @@ void MoveGenerator::generate_knight_move(BoardState &board_state,
                                          int x_coordinate, int y_coordinate,
                                          std::vector<Move> &possible_moves)
 {
-  double_array_board &board = board_state.chess_board;
+  chess_board_type &board = board_state.chess_board;
   Piece *knight_piece = board[x_coordinate][y_coordinate];
   bool first_move = !knight_piece->piece_has_moved;
 
@@ -349,7 +349,7 @@ void MoveGenerator::rook_bishop_move_helper(BoardState &board_state,
                                             int x_direction, int y_direction,
                                             std::vector<Move> &possible_moves)
 {
-  double_array_board &board = board_state.chess_board;
+  chess_board_type &board = board_state.chess_board;
   Piece *moving_piece = board[x_coordinate][y_coordinate];
   bool first_move = !moving_piece->piece_has_moved;
 
