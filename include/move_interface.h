@@ -15,10 +15,6 @@ namespace engine::parts
  */
 class MoveInterface
 {
-private:
-  // Reference of the board state;
-  BoardState &game_board_state;
-
 public:
   /**
    * @brief User to Engine move interface.
@@ -40,6 +36,10 @@ public:
    * @return Returns a string reprsenting the move.
    */
   auto move_to_string(Move &move) -> std::string;
+
+private:
+  // Reference of the board state;
+  BoardState &game_board_state;
 };
 } // namespace engine::parts
 

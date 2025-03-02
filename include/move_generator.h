@@ -16,20 +16,6 @@ namespace engine::parts
  */
 class MoveGenerator
 {
-private:
-  /**
-   * @brief Generates bishop and rook moves in one given direction.
-   *
-   * @param board_state Reference of the current board state.
-   * @param x_coordinate, y_coordinate The coordinate of the bishop or bishop.
-   * @param possible_moves Reference to the list of possible moves of current
-   * board_state.
-   */
-  static void rook_bishop_move_helper(BoardState &board_state, int x_coordinate,
-                                      int y_coordinate, int x_direction,
-                                      int y_direction,
-                                      std::vector<Move> &possible_moves);
-
 public:
   /**
    * @brief Generates all possible moves for a given pawn.
@@ -114,6 +100,20 @@ public:
   static void generate_queen_move(BoardState &board_state, int x_coordinate,
                                   int y_coordinate,
                                   std::vector<Move> &possible_moves);
+
+private:
+  /**
+   * @brief Generates bishop and rook moves in one given direction.
+   *
+   * @param board_state Reference of the current board state.
+   * @param x_coordinate, y_coordinate The coordinate of the bishop or bishop.
+   * @param possible_moves Reference to the list of possible moves of current
+   * board_state.
+   */
+  static void rook_bishop_move_helper(BoardState &board_state, int x_coordinate,
+                                      int y_coordinate, int x_direction,
+                                      int y_direction,
+                                      std::vector<Move> &possible_moves);
 };
 } // namespace engine::parts
 
