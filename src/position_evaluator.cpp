@@ -47,6 +47,11 @@ auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int
 void PositionEvaluator::evaluate_pawn(int x_coordinate, int y_coordinate,
                                       Piece &piece, int &eval)
 {
+  // Piece value.
+  if (piece.piece_color == PieceColor::WHITE)
+    eval += constants::PAWN_VALUE;
+  else
+    eval -= constants::PAWN_VALUE;
   // Position value - x coordinate.
   switch (x_coordinate)
   {
@@ -109,13 +114,13 @@ void PositionEvaluator::evaluate_knight(int x_coordinate, int y_coordinate,
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE)
   {
-    eval += 150;
+    eval += constants::KNIGHT_VALUE;
     if (!piece.piece_has_moved)
       eval -= 30;
   }
   else
   {
-    eval -= 150;
+    eval -= constants::KNIGHT_VALUE;
     if (!piece.piece_has_moved)
       eval += 30;
   }
@@ -143,13 +148,13 @@ void PositionEvaluator::evaluate_bishop(int x_coordinate, int y_coordinate,
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE)
   {
-    eval += 170;
+    eval += constants::BISHOP_VALUE;
     if (!piece.piece_has_moved)
       eval -= 30;
   }
   else
   {
-    eval -= 170;
+    eval -= constants::BISHOP_VALUE;
     if (!piece.piece_has_moved)
       eval += 30;
   }
@@ -179,9 +184,9 @@ void PositionEvaluator::evaluate_rook(int x_coordinate, int y_coordinate,
 {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE)
-    eval += 400;
+    eval += constants::ROOK_VALUE;
   else
-    eval -= 400;
+    eval -= constants::ROOK_VALUE;
 
   // The more moves a rook has, the better.
   int new_x, new_y;
@@ -208,9 +213,9 @@ void PositionEvaluator::evaluate_queen(int x_coordinate, int y_coordinate,
 {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE)
-    eval += 1000;
+    eval += constants::QUEEN_VALUE;
   else
-    eval -= 1000;
+    eval -= constants::QUEEN_VALUE;
 
   // The more moves a queen has, the better.
   int new_x, new_y;
@@ -237,9 +242,9 @@ void PositionEvaluator::evaluate_king(int x_coordinate, int y_coordinate,
 {
   // Piece value.
   if (piece.piece_color == PieceColor::WHITE)
-    eval += 20000;
+    eval += constants::KING_VALUE;
   else
-    eval -= 20000;
+    eval -= constants::KING_VALUE;
   // King is safer in the sides.
   switch (x_coordinate)
   {
