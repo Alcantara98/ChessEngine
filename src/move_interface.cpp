@@ -46,20 +46,11 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
       if (matches[1].matched)
       {
         // Castle Move.
-        from_x = 4;
-        to_x = matches[1] == "O-O" ? 6 : 2; // King-side : Queen-side.
-
-        if (game_board_state.color_to_move == PieceColor::WHITE)
-        {
-          from_y = 0;
-          to_y = 0;
-        }
-        else
-        {
-          from_y = 7;
-          to_y = 7;
-        }
         piece_type = 'k';
+        from_x = 4; // Initial x coordinate for both white and black king.
+        to_x = matches[1] == "O-O" ? 6 : 2; // King-side : Queen-side.
+        from_y = to_y =
+            game_board_state.color_to_move == PieceColor::WHITE ? 0 : 7;
       }
       else
       {
@@ -70,8 +61,10 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 
         to_x = algebraic_to_int.at(matches[5].str().at(0));
         to_y = matches[5].str().at(1) - '0' - 1;
+        // Capture move.
         if (matches[4].matched)
         {
+          // En-passant capture.
           if (piece_type == 'p' &&
               game_board_state.chess_board[to_x][to_y]->piece_type ==
                   PieceType::EMPTY)
@@ -79,17 +72,20 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
             is_en_passant = true;
             captured_piece = game_board_state.chess_board[to_x][from_y];
           }
+          // Normal capture.
           else
           {
             captured_piece = game_board_state.chess_board[to_x][to_y];
           }
         }
+        // Pawn moved two squares.
         if (piece_type == 'p' && (to_y - from_y == 2 || from_y - to_y == 2))
         {
           pawn_moved_two = true;
           pmt_x = to_x;
           pmt_y = to_y;
         }
+        // Pawn promotion.
         if (matches[6].matched)
         {
           promotion_piece_type =
