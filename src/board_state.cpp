@@ -23,9 +23,9 @@ BoardState::BoardState(const BoardState &other)
       zobrist_keys(other.zobrist_keys),
       zobrist_side_to_move(other.zobrist_side_to_move)
 {
-  for (int x_position = 0; x_position < 8; ++x_position)
+  for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
   {
-    for (int y_position = 0; y_position < 8; ++y_position)
+    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
     {
       if (other.chess_board[x_position][x_position] != nullptr)
       {
@@ -43,9 +43,9 @@ BoardState::BoardState(const BoardState &other)
 // Destructor
 BoardState::~BoardState()
 {
-  for (int x_position = 0; x_position < 8; ++x_position)
+  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
   {
-    for (int y_position = 0; y_position < 8; ++y_position)
+    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
     {
       if (chess_board[x_position][y_position] != nullptr &&
           chess_board[x_position][y_position] != &empty_piece)
@@ -61,9 +61,9 @@ BoardState::~BoardState()
 void BoardState::reset_board()
 {
   // Set empty squares.
-  for (int y_position = 2; y_position < 6; ++y_position)
+  for (int y_position = Y2_POSITION; y_position <= Y6_POSITION; ++y_position)
   {
-    for (int x_position = 0; x_position < 8; ++x_position)
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
       chess_board[x_position][y_position] = &empty_piece;
     }
@@ -317,9 +317,9 @@ auto BoardState::square_is_attacked(int x_position, int y_position,
 
 auto BoardState::king_is_checked(PieceColor &color_of_king) -> bool
 {
-  for (int x_position = 0; x_position < 8; ++x_position)
+  for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
   {
-    for (int y_position = 0; y_position < 8; ++y_position)
+    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
     {
       Piece *test_piece = chess_board[x_position][y_position];
       if (test_piece->piece_type == PieceType::KING &&
@@ -337,9 +337,9 @@ auto BoardState::compute_zobrist_hash() const -> size_t
 {
   size_t hash = 0;
 
-  for (int y_position = 0; y_position < 8; ++y_position)
+  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
-    for (int x_position = 0; x_position < 8; ++x_position)
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
       Piece *piece = chess_board[x_position][y_position];
       if (piece->piece_type != PieceType::EMPTY)
@@ -366,9 +366,9 @@ void BoardState::initialize_zobrist_keys()
   std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
   std::uniform_int_distribution<size_t> dist;
 
-  for (int square = 0; square < 64; ++square)
+  for (int square = 0; square < NUM_OF_SQUARES; ++square)
   {
-    for (int piece = 0; piece < 6; ++piece)
+    for (int piece = 0; piece < NUM_OF_PIECE_TYPES; ++piece)
     {
       zobrist_keys[square][piece][0] = dist(rng); // White piece
       zobrist_keys[square][piece][1] = dist(rng); // Black piece

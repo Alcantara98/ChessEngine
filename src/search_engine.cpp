@@ -58,9 +58,9 @@ auto SearchEngine::execute_best_move(int max_search_depth,
     }
 
     // Get results from threads.
-    for (int i = 0; i < possible_moves.size(); ++i)
+    for (int index = 0; index < possible_moves.size(); ++index)
     {
-      move_scores.emplace_back(possible_moves[i], futures[i].get());
+      move_scores.emplace_back(possible_moves[index], futures[index].get());
     }
 
     auto search_end_time = std::chrono::high_resolution_clock::now();

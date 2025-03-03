@@ -6,9 +6,9 @@ namespace engine::parts::move_generator
 auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
 {
   std::vector<Move> possible_moves;
-  for (int y_position = 0; y_position < 8; ++y_position)
+  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
-    for (int x_position = 0; x_position < 8; ++x_position)
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
       Piece *current_piece = board_state.chess_board[x_position][y_position];
       PieceType &piece_type = current_piece->piece_type;
@@ -322,7 +322,7 @@ void generate_knight_move(BoardState &board_state, int x_position,
                                  y_position + 2, y_position - 2, y_position + 2,
                                  y_position - 1, y_position + 1};
 
-  for (int index = 0; index < 8; ++index)
+  for (int index = 0; index < MAX_MOVES_KNIGHT; ++index)
   {
     int new_x = x_pos_list[index];
     int new_y = y_pos_list[index];

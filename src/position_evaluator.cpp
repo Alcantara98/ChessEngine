@@ -7,9 +7,9 @@ auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int
 {
   int eval = 0;
 
-  for (int y_position = 0; y_position < 8; ++y_position)
+  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
-    for (int x_position = 0; x_position < 8; ++x_position)
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
       Piece &piece = *board_state.chess_board[x_position][y_position];
       PieceType &piece_type = piece.piece_type;

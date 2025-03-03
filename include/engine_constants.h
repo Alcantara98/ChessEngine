@@ -10,6 +10,8 @@ namespace engine::parts
 // Board dimensions
 const int BOARD_WIDTH = 8;
 const int BOARD_HEIGHT = 8;
+const int NUM_OF_SQUARES = 64;
+const int NUM_OF_PIECE_TYPES = 6;
 
 // Piece values
 const int PAWN_VALUE = 100;
@@ -80,6 +82,9 @@ const std::array<std::array<int, 2>, 8> KING_DIRECTIONS = {{{-1, -1},
                                                             {+1, -1},
                                                             {+1, 0},
                                                             {+1, +1}}};
+
+// Max number of moves for a piece.
+const int MAX_MOVES_KNIGHT = 8;
 
 // Map to convert string piece type to PieceType.
 const std::map<char, parts::PieceType> STRING_TO_PIECE_TYPE = {
