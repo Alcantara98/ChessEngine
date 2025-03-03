@@ -216,49 +216,54 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
       max_search(board_state, alpha, beta, max_eval, eval, depth,
                  best_move_index, index, possible_moves);
       if (alpha >= beta)
+      {
         break;
+      }
     }
     transposition_table.store(hash, depth, max_eval, (max_eval >= beta) ? 1 : 0,
                               best_move_index);
     return max_eval;
   }
-  else
+
+  int min_eval = INF;
+  int best_move_index = 0;
+  if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
   {
-    int min_eval = INF;
-    int best_move_index = 0;
-    if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
-    {
-      min_search(board_state, alpha, beta, min_eval, eval, depth,
-                 best_move_index, entry_best_move, possible_moves);
-    }
-    for (int index = 0; index < possible_moves.size(); ++index)
-    {
-      min_search(board_state, alpha, beta, min_eval, eval, depth,
-                 best_move_index, index, possible_moves);
-      if (alpha >= beta)
-        break;
-    }
-    transposition_table.store(hash, depth, min_eval,
-                              (min_eval <= alpha) ? -1 : 0, best_move_index);
-    return min_eval;
+    min_search(board_state, alpha, beta, min_eval, eval, depth, best_move_index,
+               entry_best_move, possible_moves);
   }
+  for (int index = 0; index < possible_moves.size(); ++index)
+  {
+    min_search(board_state, alpha, beta, min_eval, eval, depth, best_move_index,
+               index, possible_moves);
+    if (alpha >= beta)
+    {
+      break;
+    }
+  }
+  transposition_table.store(hash, depth, min_eval, (min_eval <= alpha) ? -1 : 0,
+                            best_move_index);
+  return min_eval;
 }
 
-void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
+void SearchEngine::sort_moves(
+    std::vector<std::pair<Move, int>> &move_scores) const
 {
   if (engine_color == PieceColor::WHITE)
   {
     // Sort by descending order.
     sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b)
-         { return a.second > b.second; });
+         [](const std::pair<Move, int> &move_a,
+            const std::pair<Move, int> &move_b)
+         { return move_a.second > move_b.second; });
   }
   else
   {
     // Sort by ascending order.
     sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &a, const std::pair<Move, int> &b)
-         { return a.second < b.second; });
+         [](const std::pair<Move, int> &move_a,
+            const std::pair<Move, int> &move_b)
+         { return move_a.second < move_b.second; });
   }
 }
 

@@ -13,16 +13,16 @@ void TranspositionTable::store(uint64_t &hash, int search_depth, int eval_score,
 {
   // Lock the table.
   std::lock_guard<std::mutex> lock(mutex);
-  auto it = table.find(hash);
+  auto hash_value_iterator = table.find(hash);
 
-  if (it != table.end())
+  if (hash_value_iterator != table.end())
   {
     // Update existing entry
-    it->second.search_depth = search_depth;
-    it->second.eval_score = eval_score;
-    it->second.flag = flag;
-    it->second.best_move_index = best_move_index;
-    lru_list.erase(it->second.lru_position);
+    hash_value_iterator->second.search_depth = search_depth;
+    hash_value_iterator->second.eval_score = eval_score;
+    hash_value_iterator->second.flag = flag;
+    hash_value_iterator->second.best_move_index = best_move_index;
+    lru_list.erase(hash_value_iterator->second.lru_position);
   }
   else
   {
@@ -46,19 +46,19 @@ auto TranspositionTable::retrieve(uint64_t &hash, int &search_depth,
 {
   // Lock the table.
   std::lock_guard<std::mutex> lock(mutex);
-  auto it = table.find(hash);
+  auto hash_value_iterator = table.find(hash);
 
-  if (it != table.end())
+  if (hash_value_iterator != table.end())
   {
-    eval_score = it->second.eval_score;
-    flag = it->second.flag;
-    search_depth = it->second.search_depth;
-    best_move_index = it->second.best_move_index;
+    eval_score = hash_value_iterator->second.eval_score;
+    flag = hash_value_iterator->second.flag;
+    search_depth = hash_value_iterator->second.search_depth;
+    best_move_index = hash_value_iterator->second.best_move_index;
 
     // Update LRU list
-    lru_list.erase(it->second.lru_position);
+    lru_list.erase(hash_value_iterator->second.lru_position);
     lru_list.push_front(hash);
-    it->second.lru_position = lru_list.begin();
+    hash_value_iterator->second.lru_position = lru_list.begin();
 
     return true;
   }

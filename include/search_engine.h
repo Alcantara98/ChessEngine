@@ -38,7 +38,8 @@ public:
    *
    * @return Vector of possible moves.
    */
-  auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
+  static auto
+  calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
 
   /**
    * @brief Finds the best move for the engine and applies it to the board.
@@ -94,7 +95,7 @@ private:
    *
    * @param move_scores Vector of moves and their scores.
    */
-  void sort_moves(std::vector<std::pair<Move, int>> &move_scores);
+  void sort_moves(std::vector<std::pair<Move, int>> &move_scores) const;
 
   /**
    * @brief Max search procedure for each possible move.

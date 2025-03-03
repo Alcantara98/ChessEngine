@@ -12,7 +12,8 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state,
   bool first_move = !pawn_piece->piece_has_moved;
 
   // Create pawn moves.
-  int pawn_direction, promotion_tile;
+  int pawn_direction;
+  int promotion_tile;
   if (pawn_piece->piece_color == PieceColor::WHITE)
   {
     pawn_direction = 1;
@@ -118,7 +119,8 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state,
   // Promotion moves.
   else
   {
-    int new_x, new_y;
+    int new_x;
+    int new_y;
     // Promotion through normal one square move forward.
     if (board[x_coordinate][y_plus_pd]->piece_type == PieceType::EMPTY)
     {
@@ -222,7 +224,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state,
   {
     // Castle king side.
     Piece *rook = board[7][y_coordinate];
-    if (rook->piece_type == PieceType::ROOK && rook->piece_has_moved == false)
+    if (rook->piece_type == PieceType::ROOK && !rook->piece_has_moved)
     {
       if (board[x_plus_1][y_coordinate]->piece_type == PieceType::EMPTY &&
           board[x_coordinate + 2][y_coordinate]->piece_type == PieceType::EMPTY)
@@ -240,7 +242,7 @@ void MoveGenerator::generate_king_move(BoardState &board_state,
     }
     // Castle queen side.
     rook = board[0][y_coordinate];
-    if (rook->piece_type == PieceType::ROOK && rook->piece_has_moved == false)
+    if (rook->piece_type == PieceType::ROOK && !rook->piece_has_moved)
     {
       if (board[x_minus_1][y_coordinate]->piece_type == PieceType::EMPTY &&
           board[x_coordinate - 2][y_coordinate]->piece_type ==

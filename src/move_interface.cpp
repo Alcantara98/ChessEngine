@@ -37,7 +37,9 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 
     // Validate move.
     if (!validate_move(possible_moves, move.get(), piece_type))
+    {
       continue;
+    }
 
     // Move is valid, exit loop.
     break;
@@ -100,8 +102,10 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
         }
         // Normal capture.
         else
+        {
           move->captured_piece =
               game_board_state.chess_board[move->to_x][move->to_y];
+        }
       }
       // Pawn moved two squares.
       if (piece_type == 'p' && (std::abs(move->to_y - move->from_y) == 2))
@@ -112,12 +116,16 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
       }
       // Pawn promotion.
       if (matches[6].matched)
+      {
         move->promotion_piece_type =
             constants::STRING_TO_PIECE_TYPE.at(matches[6].str().at(0));
+      }
     }
   }
-  else // Input did not match regex.
+  else
+  { // Input did not match regex.
     return false;
+  }
 
   return true;
 }
@@ -160,7 +168,7 @@ auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
 
   // Check if move is in generated possible moves.
   bool found_move = false;
-  for (auto &possible_move : possible_moves)
+  for (const auto &possible_move : possible_moves)
   {
     if (possible_move == *move)
     {

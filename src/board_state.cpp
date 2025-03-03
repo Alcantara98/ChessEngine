@@ -186,7 +186,7 @@ void BoardState::apply_move(Move &move)
         new Piece(move.promotion_piece_type, move.moving_piece->piece_color);
   }
 
-  if (move.captured_piece != nullptr && move.capture_is_en_passant == false)
+  if (move.captured_piece != nullptr && !move.capture_is_en_passant)
   {
     // If capturing, original square will not be empty after swap.
     // Clear old square (point to empty_piece).
@@ -250,7 +250,7 @@ void BoardState::undo_move()
     chess_board[move.to_x][move.to_y] = move.moving_piece;
   }
 
-  if (move.captured_piece != nullptr && move.capture_is_en_passant == false)
+  if (move.captured_piece != nullptr && !move.capture_is_en_passant)
   {
     // If a piece was captured, add the piece back.
     chess_board[move.from_x][move.from_y] = move.captured_piece;

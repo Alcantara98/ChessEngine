@@ -149,7 +149,7 @@ private:
   size_t zobrist_side_to_move;
 
   // All empty squares point to the same Piece instance.
-  Piece empty_piece = Piece();
+  Piece empty_piece;
 
   /**
    * @brief Initialises the zobrist keys.
