@@ -32,16 +32,6 @@ public:
   SearchEngine(BoardState &board_state);
 
   /**
-   * @brief Calculates all possible moves of current board state.
-   *
-   * @param board_state BoardState object to calculate moves from.
-   *
-   * @return Vector of possible moves.
-   */
-  static auto
-  calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
-
-  /**
    * @brief Finds the best move for the engine and applies it to the board.
    *
    * @param max_search_depth Max depth to search.

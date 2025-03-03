@@ -33,11 +33,10 @@ void ChessEngine::start_game()
   {
     player_color = parts::PieceColor::WHITE;
     parts::Move user_move = move_interface.input_to_move(
-        engine::parts::SearchEngine::calculate_possible_moves(
-            game_board_state));
+        parts::move_generator::calculate_possible_moves(game_board_state));
     game_board_state.apply_move(user_move);
-    printf("eval: %d\n",
-           position_evaluator.evaluate_position(game_board_state));
+    printf("eval: %d\n", engine::parts::PositionEvaluator::evaluate_position(
+                             game_board_state));
     game_board_state.print_board(player_color);
     search_engine.engine_color = parts::PieceColor::BLACK;
   }
@@ -85,8 +84,7 @@ void ChessEngine::game_loop(int max_search_depth, bool show_performance)
 
     // Player's turn.
     parts::Move user_move = move_interface.input_to_move(
-        engine::parts::SearchEngine::calculate_possible_moves(
-            game_board_state));
+        parts::move_generator::calculate_possible_moves(game_board_state));
     game_board_state.apply_move(user_move);
     game_board_state.print_board(player_color);
   }
@@ -100,7 +98,7 @@ auto ChessEngine::is_checkmate() -> bool
   if (game_board_state.king_is_checked(current_color))
   {
     std::vector<parts::Move> possible_moves =
-        engine::parts::SearchEngine::calculate_possible_moves(game_board_state);
+        parts::move_generator::calculate_possible_moves(game_board_state);
     for (parts::Move move : possible_moves)
     {
       game_board_state.apply_move(move);
@@ -124,7 +122,7 @@ auto ChessEngine::is_stalemate() -> bool
   if (!game_board_state.king_is_checked(current_color))
   {
     std::vector<parts::Move> possible_moves =
-        engine::parts::SearchEngine::calculate_possible_moves(game_board_state);
+        parts::move_generator::calculate_possible_moves(game_board_state);
     for (parts::Move move : possible_moves)
     {
       game_board_state.apply_move(move);

@@ -12,60 +12,11 @@ SearchEngine::SearchEngine(BoardState &board_state)
 } // Initialize with a max size
 
 // PUBLIC FUNCTIONS
-auto SearchEngine::calculate_possible_moves(BoardState &board_state)
-    -> std::vector<Move>
-{
-  std::vector<Move> possible_moves;
-  for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate)
-  {
-    for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate)
-    {
-      Piece *current_piece =
-          board_state.chess_board[x_coordinate][y_coordinate];
-      PieceType &piece_type = current_piece->piece_type;
-
-      if (current_piece->piece_color == board_state.color_to_move)
-      {
-        switch (piece_type)
-        {
-        case PieceType::PAWN:
-          MoveGenerator::generate_pawn_move(board_state, x_coordinate,
-                                            y_coordinate, possible_moves);
-          break;
-        case PieceType::ROOK:
-          MoveGenerator::generate_rook_move(board_state, x_coordinate,
-                                            y_coordinate, possible_moves);
-          break;
-        case PieceType::KNIGHT:
-          MoveGenerator::generate_knight_move(board_state, x_coordinate,
-                                              y_coordinate, possible_moves);
-          break;
-        case PieceType::BISHOP:
-          MoveGenerator::generate_bishop_move(board_state, x_coordinate,
-                                              y_coordinate, possible_moves);
-          break;
-        case PieceType::QUEEN:
-          MoveGenerator::generate_queen_move(board_state, x_coordinate,
-                                             y_coordinate, possible_moves);
-          break;
-        case PieceType::KING:
-          MoveGenerator::generate_king_move(board_state, x_coordinate,
-                                            y_coordinate, possible_moves);
-          break;
-        default:
-          // Empty square.
-          break;
-        }
-      }
-    }
-  }
-  return std::move(possible_moves);
-}
-
 auto SearchEngine::execute_best_move(int max_search_depth,
                                      bool show_performance) -> bool
 {
-  std::vector<Move> possible_moves = calculate_possible_moves(game_board_state);
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(game_board_state);
   std::vector<std::pair<Move, int>> move_scores;
   bool maximising = engine_color == PieceColor::WHITE;
 
@@ -179,7 +130,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   // Evaluate leaf nodes.
   if (depth <= 0)
   {
-    int eval = position_evaluator.evaluate_position(board_state);
+    int eval = engine::parts::PositionEvaluator::evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
     return eval;
   }
@@ -199,7 +150,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
     }
   }
 
-  std::vector<Move> possible_moves = calculate_possible_moves(board_state);
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(board_state);
   int eval;
   // Start minimax search.
   if (maximise)

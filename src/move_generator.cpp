@@ -1,11 +1,60 @@
 #include "move_generator.h"
 
-namespace engine::parts
+namespace engine::parts::move_generator
 {
 //  PUBLIC FUNCTIONS
-void MoveGenerator::generate_pawn_move(BoardState &board_state,
-                                       int x_coordinate, int y_coordinate,
-                                       std::vector<Move> &possible_moves)
+auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
+{
+  std::vector<Move> possible_moves;
+  for (int y_coordinate = 0; y_coordinate < 8; ++y_coordinate)
+  {
+    for (int x_coordinate = 0; x_coordinate < 8; ++x_coordinate)
+    {
+      Piece *current_piece =
+          board_state.chess_board[x_coordinate][y_coordinate];
+      PieceType &piece_type = current_piece->piece_type;
+
+      if (current_piece->piece_color == board_state.color_to_move)
+      {
+        switch (piece_type)
+        {
+        case PieceType::PAWN:
+          generate_pawn_move(board_state, x_coordinate, y_coordinate,
+                             possible_moves);
+          break;
+        case PieceType::ROOK:
+          generate_rook_move(board_state, x_coordinate, y_coordinate,
+                             possible_moves);
+          break;
+        case PieceType::KNIGHT:
+          generate_knight_move(board_state, x_coordinate, y_coordinate,
+                               possible_moves);
+          break;
+        case PieceType::BISHOP:
+          generate_bishop_move(board_state, x_coordinate, y_coordinate,
+                               possible_moves);
+          break;
+        case PieceType::QUEEN:
+          generate_queen_move(board_state, x_coordinate, y_coordinate,
+                              possible_moves);
+          break;
+        case PieceType::KING:
+          generate_king_move(board_state, x_coordinate, y_coordinate,
+                             possible_moves);
+          break;
+        default:
+          // Empty square.
+          break;
+        }
+      }
+    }
+  }
+  return std::move(possible_moves);
+}
+
+// STATIC FUNCTIONS
+void generate_pawn_move(BoardState &board_state, int x_coordinate,
+                        int y_coordinate, std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *pawn_piece = board[x_coordinate][y_coordinate];
@@ -177,9 +226,8 @@ void MoveGenerator::generate_pawn_move(BoardState &board_state,
   }
 }
 
-void MoveGenerator::generate_king_move(BoardState &board_state,
-                                       int x_coordinate, int y_coordinate,
-                                       std::vector<Move> &possible_moves)
+void generate_king_move(BoardState &board_state, int x_coordinate,
+                        int y_coordinate, std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *king_piece = board[x_coordinate][y_coordinate];
@@ -265,9 +313,8 @@ void MoveGenerator::generate_king_move(BoardState &board_state,
   }
 }
 
-void MoveGenerator::generate_knight_move(BoardState &board_state,
-                                         int x_coordinate, int y_coordinate,
-                                         std::vector<Move> &possible_moves)
+void generate_knight_move(BoardState &board_state, int x_coordinate,
+                          int y_coordinate, std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *knight_piece = board[x_coordinate][y_coordinate];
@@ -305,9 +352,8 @@ void MoveGenerator::generate_knight_move(BoardState &board_state,
   }
 }
 
-void MoveGenerator::generate_bishop_move(BoardState &board_state,
-                                         int x_coordinate, int y_coordinate,
-                                         std::vector<Move> &possible_moves)
+void generate_bishop_move(BoardState &board_state, int x_coordinate,
+                          int y_coordinate, std::vector<Move> &possible_moves)
 {
   // Each respective pair of x and y directions represent a diagonal.
   rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, 1, 1,
@@ -320,9 +366,8 @@ void MoveGenerator::generate_bishop_move(BoardState &board_state,
                           possible_moves);
 }
 
-void MoveGenerator::generate_rook_move(BoardState &board_state,
-                                       int x_coordinate, int y_coordinate,
-                                       std::vector<Move> &possible_moves)
+void generate_rook_move(BoardState &board_state, int x_coordinate,
+                        int y_coordinate, std::vector<Move> &possible_moves)
 {
   // Each respective pair of x and y directions represent horizontal or
   // vertical moves.
@@ -336,9 +381,8 @@ void MoveGenerator::generate_rook_move(BoardState &board_state,
                           possible_moves);
 }
 
-void MoveGenerator::generate_queen_move(BoardState &board_state,
-                                        int x_coordinate, int y_coordinate,
-                                        std::vector<Move> &possible_moves)
+void generate_queen_move(BoardState &board_state, int x_coordinate,
+                         int y_coordinate, std::vector<Move> &possible_moves)
 {
   // Queen moves are a combination of rook and bishop moves.
   generate_rook_move(board_state, x_coordinate, y_coordinate, possible_moves);
@@ -346,10 +390,9 @@ void MoveGenerator::generate_queen_move(BoardState &board_state,
 }
 
 // PRIVATE FUNCTIONS
-void MoveGenerator::rook_bishop_move_helper(BoardState &board_state,
-                                            int x_coordinate, int y_coordinate,
-                                            int x_direction, int y_direction,
-                                            std::vector<Move> &possible_moves)
+void rook_bishop_move_helper(BoardState &board_state, int x_coordinate,
+                             int y_coordinate, int x_direction, int y_direction,
+                             std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *moving_piece = board[x_coordinate][y_coordinate];
@@ -378,4 +421,4 @@ void MoveGenerator::rook_bishop_move_helper(BoardState &board_state,
     }
   }
 }
-} // namespace engine::parts
+} // namespace engine::parts::move_generator
