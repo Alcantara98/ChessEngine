@@ -53,6 +53,21 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
       continue;
     }
 
+    // Check captured piece.
+    if (move->captured_piece != nullptr)
+    {
+      if (move->captured_piece->piece_type == PieceType::EMPTY)
+      {
+        printf("Invalid Move - Empty Square\n");
+        continue;
+      }
+      if (move->captured_piece->piece_color == move->moving_piece->piece_color)
+      {
+        printf("Invalid Move - Cannot capture own piece\n");
+        continue;
+      }
+    }
+
     // Check if it is the first move of the moving piece.
     if (move->moving_piece->piece_has_moved)
       move->first_move_of_moving_piece = false;
@@ -112,6 +127,7 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
     else
     {
       piece_type = matches[2].str().at(0);
+
       // Get initial coordinates.
       move->from_x = constants::ALGEBRAIC_TO_INT.at(matches[3].str().at(0));
       move->from_y = matches[3].str().at(1) - '0' - 1;
@@ -127,7 +143,7 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
       // Capture move.
       if (matches[4].matched)
       {
-        // En-passant capture.
+        // En-passant capture if pawn moves diagonally to empty square.
         if (piece_type == 'p' &&
             game_board_state.chess_board[move->to_x][move->to_y]->piece_type ==
                 PieceType::EMPTY)
