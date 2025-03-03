@@ -142,7 +142,9 @@ private:
       {PieceType::PAWN, 'p'}};
 
   // Zobrist keys
-  std::array<std::array<std::array<size_t, 2>, 6>, 64> zobrist_keys;
+  std::array<std::array<std::array<size_t, NUM_OF_COLORS>, NUM_OF_PIECE_TYPES>,
+             NUM_OF_SQUARES>
+      zobrist_keys;
 
   // Zobrist key for the side to move.
   size_t zobrist_side_to_move;

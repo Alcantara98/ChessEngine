@@ -64,13 +64,13 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
   int promotion_tile;
   if (pawn_piece->piece_color == PieceColor::WHITE)
   {
-    pawn_direction = 1;
-    promotion_tile = 7;
+    pawn_direction = POSITIVE_DIRECTION;
+    promotion_tile = Y_MAX;
   }
   else
   {
-    pawn_direction = -1;
-    promotion_tile = 0;
+    pawn_direction = NEGATIVE_DIRECTION;
+    promotion_tile = Y_MIN;
   }
   // Helper variables.
   int y_plus_pd = y_position + pawn_direction;
@@ -97,7 +97,7 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
                                   y_position + (2 * pawn_direction));
     }
     // Normal capture.
-    if (x_position > 0)
+    if (x_position > X_MIN)
     {
       Piece *capture_left = board[x_minus_1][y_plus_pd];
       if (capture_left->piece_type != PieceType::EMPTY &&
@@ -108,7 +108,7 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
                                     first_move);
       }
     }
-    if (x_position < 7)
+    if (x_position < X_MAX)
     {
       Piece *capture_right = board[x_plus_1][y_plus_pd];
       if (capture_right->piece_type != PieceType::EMPTY &&
@@ -123,7 +123,7 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
         (y_position == 3 && pawn_piece->piece_color == PieceColor::BLACK))
     {
       Move &previous_move = board_state.previous_move_stack.top();
-      if (x_position > 0)
+      if (x_position > X_MIN)
       {
         Piece *left_piece = board[x_minus_1][y_position];
         if (left_piece->piece_type == PieceType::PAWN &&
@@ -142,7 +142,7 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
           }
         }
       }
-      if (x_position < 7)
+      if (x_position < X_MAX)
       {
         Piece *right_piece = board[x_plus_1][y_position];
         if (right_piece->piece_type == PieceType::PAWN &&
@@ -181,7 +181,7 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
                                   pawn_piece, PieceType::ROOK);
     }
     // Promotion through capture.
-    if (x_position > 0)
+    if (x_position > X_MIN)
     { // Check if x_minus_1 is within bounds
       Piece *capture_left = board[x_minus_1][y_plus_pd];
       if (capture_left->piece_type != PieceType::EMPTY &&
@@ -201,7 +201,7 @@ void generate_pawn_move(BoardState &board_state, int x_position, int y_position,
                                     PieceType::ROOK);
       }
     }
-    if (x_position < 7)
+    if (x_position < X_MAX)
     { // Check if x_plus_1 is within bounds
       Piece *capture_right = board[x_plus_1][y_plus_pd];
       if (capture_right->piece_type != PieceType::EMPTY &&
@@ -239,7 +239,7 @@ void generate_king_move(BoardState &board_state, int x_position, int y_position,
     for (int new_y = y_position - 1; new_y <= y_position + 1; ++new_y)
     {
       // Continue if coordinate is out of the chess board.
-      if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7)
+      if (new_x < X_MIN || new_x > X_MAX || new_y < Y_MIN || new_y > Y_MAX)
       {
         continue;
       }
@@ -268,7 +268,7 @@ void generate_king_move(BoardState &board_state, int x_position, int y_position,
                                                     king_piece->piece_color))
   {
     // Castle king side.
-    Piece *rook = board[7][y_position];
+    Piece *rook = board[X_MAX][y_position];
     if (rook->piece_type == PieceType::ROOK && !rook->piece_has_moved)
     {
       if (board[x_plus_1][y_position]->piece_type == PieceType::EMPTY &&
@@ -327,7 +327,7 @@ void generate_knight_move(BoardState &board_state, int x_position,
     int new_x = x_pos_list[index];
     int new_y = y_pos_list[index];
     // Continue if coordinate is out of the chess board.
-    if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7)
+    if (new_x < X_MIN || new_x > X_MAX || new_y < Y_MIN || new_y > Y_MAX)
     {
       continue;
     }
@@ -395,7 +395,7 @@ void rook_bishop_move_helper(BoardState &board_state, int x_position,
 
   int new_x = x_position + x_direction;
   int new_y = y_position + y_direction;
-  for (; new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8;
+  for (; new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX;
        new_x += x_direction, new_y += y_direction)
   {
     Piece *target_piece = board[new_x][new_y];

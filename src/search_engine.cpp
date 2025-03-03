@@ -7,7 +7,7 @@ namespace engine::parts
 // CONSTRUCTORS
 SearchEngine::SearchEngine(BoardState &board_state)
     : game_board_state(board_state), position_evaluator(PositionEvaluator()),
-      transposition_table(10000000)
+      transposition_table(MAX_TRANSPOSITION_TABLE_SIZE)
 {
 } // Initialize with a max size
 
@@ -76,7 +76,9 @@ auto SearchEngine::execute_best_move(int max_search_depth,
       printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
       printf("TT Size: %d\n", transposition_table.get_size());
       printf("Nodes per second: %d kN/s\n\n",
-             static_cast<int>(nodes_visited / (duration / 1000.0) / 1000));
+             static_cast<int>(nodes_visited /
+                              (duration / MILLISECONDS_TO_SECONDS) /
+                              NODES_TO_KILONODES));
     }
 
     // Reset performance metrics.

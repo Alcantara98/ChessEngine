@@ -14,9 +14,7 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 {
   std::unique_ptr<Move> move;
   char piece_type;
-  int i = 0;
-
-  while (i == 0)
+  while (true)
   {
     // Reset variables.
     move =
@@ -29,7 +27,7 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
     std::cout << '\n';
 
     // Parse input string move.
-    if (!parse_string_move(move, move_string, piece_type))
+    if (!create_move_from_string(move, move_string, piece_type))
     {
       printf("Invalid Move - Regex Match Failure\n");
       continue;
@@ -48,9 +46,9 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 }
 
 // PRIVATE FUNCTIONS
-auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
-                                      const std::string &move_string,
-                                      char &piece_type) -> bool
+auto MoveInterface::create_move_from_string(std::unique_ptr<Move> &move,
+                                            const std::string &move_string,
+                                            char &piece_type) -> bool
 {
   // Check if move is valid.
   std::smatch matches;
@@ -59,28 +57,30 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
   if (std::regex_match(move_string, matches, moveRegex))
   {
     // Get initial and final coordinates.
-    if (matches[1].matched)
+    if (matches[CASTLE_MOVE_INDEX].matched)
     {
       // Castle Move.
       piece_type = 'k';
       // Initial x coordinate for both white and black king.
-      move->from_x = 4;
+      move->from_x = XE_POSITION;
       // King-side : Queen-side.
-      move->to_x = matches[1] == "O-O" ? 6 : 2;
+      move->to_x = matches[1] == "O-O" ? XG_POSITION : XB_POSITION;
       move->from_y = move->to_y =
-          game_board_state.color_to_move == PieceColor::WHITE ? 0 : 7;
+          game_board_state.color_to_move == PieceColor::WHITE ? Y_MIN : Y_MAX;
     }
     else
     {
-      piece_type = matches[2].str().at(0);
+      piece_type = matches[PIECE_TYPE_INDEX].str().at(0);
 
       // Get initial coordinates.
-      move->from_x = ALGEBRAIC_TO_INT.at(matches[3].str().at(0));
-      move->from_y = matches[3].str().at(1) - '0' - 1;
+      std::string from_position = matches[FROM_POSITION_INDEX].str();
+      move->from_x = ALGEBRAIC_TO_INT.at(from_position.at(0));
+      move->from_y = from_position.at(1) - '0' - 1;
 
       // Get final coordinates.
-      move->to_x = ALGEBRAIC_TO_INT.at(matches[5].str().at(0));
-      move->to_y = matches[5].str().at(1) - '0' - 1;
+      std::string to_position = matches[TO_POSITION_INDEX].str();
+      move->to_x = ALGEBRAIC_TO_INT.at(to_position.at(0));
+      move->to_y = to_position.at(1) - '0' - 1;
     }
 
     // Get moving piece.
@@ -126,10 +126,10 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
     }
 
     // Pawn promotion.
-    if (matches[6].matched)
+    if (matches[PROMOTION_INDEX].matched)
     {
       move->promotion_piece_type =
-          STRING_TO_PIECE_TYPE.at(matches[6].str().at(0));
+          STRING_TO_PIECE_TYPE.at(matches[PROMOTION_INDEX].str().at(0));
     }
   }
   else

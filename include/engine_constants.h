@@ -7,13 +7,14 @@
 
 namespace engine::parts
 {
-// Board dimensions
+// Board dimensions.
 const int BOARD_WIDTH = 8;
 const int BOARD_HEIGHT = 8;
 const int NUM_OF_SQUARES = 64;
 const int NUM_OF_PIECE_TYPES = 6;
+const int NUM_OF_COLORS = 2;
 
-// Piece values
+// Piece values.
 const int PAWN_VALUE = 100;
 const int KNIGHT_VALUE = 320;
 const int BISHOP_VALUE = 330;
@@ -21,14 +22,14 @@ const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
 
-// Evaluation constants
+// Evaluation points.
 const int VERY_SMALL_EVAL_VALUE = 5;
 const int SMALL_EVVAL_VALUE = 10;
 const int MEDIUM_EVAL_VALUE = 20;
 const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 
-// Board positions
+// Board positions.
 const int XA_POSITION = 0;
 const int XB_POSITION = 1;
 const int XC_POSITION = 2;
@@ -50,18 +51,33 @@ const int Y_MAX = 7;
 const int X_MIN = 0;
 const int X_MAX = 7;
 
-// Board Directions
+// User input regex match index.
+const int CASTLE_MOVE_INDEX = 1;
+const int PIECE_TYPE_INDEX = 2;
+const int FROM_POSITION_INDEX = 3;
+const int CAPTURE_MOVE_INDEX = 4;
+const int TO_POSITION_INDEX = 5;
+const int PROMOTION_INDEX = 6;
+
+// Max transposition table size.
+const int MAX_TRANSPOSITION_TABLE_SIZE = 10000000;
+
+// Performance matrix conversions.
+const int NODES_TO_KILONODES = 1000;
+const double MILLISECONDS_TO_SECONDS = 1000.0;
+
+// Board directions.
 const int POSITIVE_DIRECTION = 1;
 const int NEGATIVE_DIRECTION = -1;
 
-// Position Evvaluation Maps
+// Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
     {5, 10, 20, 30, 30, 20, 10, 5}};
 
 const std::array<int, 8> KING_POSITION_EVAL_MAP = {
     {5, 20, 15, 0, 0, 15, 20, 5}};
 
-// Direction maps for pieces.
+// Direction Maps for Pieces
 const std::array<std::array<int, 2>, 8> QUEEN_DIRECTIONS = {
     {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 

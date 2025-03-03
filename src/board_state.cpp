@@ -170,18 +170,20 @@ void BoardState::apply_move(Move &move)
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
   {
-    // Castle move if king moved two squares.
+    // Castle move if king moved two squares, so move rooks.
     switch (move.to_x - move.from_x)
     {
     case 2:
       // King Side Castle.
-      chess_board[7][move.to_y]->piece_has_moved = true;
-      std::swap(chess_board[5][move.to_y], chess_board[7][move.to_y]);
+      chess_board[XH_POSITION][move.to_y]->piece_has_moved = true;
+      std::swap(chess_board[XH_POSITION][move.to_y],
+                chess_board[XF_POSITION][move.to_y]);
       break;
     case -2:
       // Queen Side Castle.
-      chess_board[0][move.to_y]->piece_has_moved = true;
-      std::swap(chess_board[0][move.to_y], chess_board[3][move.to_y]);
+      chess_board[XA_POSITION][move.to_y]->piece_has_moved = true;
+      std::swap(chess_board[XA_POSITION][move.to_y],
+                chess_board[XD_POSITION][move.to_y]);
       break;
     default:
       break;
@@ -242,13 +244,15 @@ void BoardState::undo_move()
     {
     case 2:
       // King Side Castle.
-      std::swap(chess_board[5][move.to_y], chess_board[7][move.to_y]);
-      chess_board[7][move.to_y]->piece_has_moved = false;
+      std::swap(chess_board[XF_POSITION][move.to_y],
+                chess_board[XH_POSITION][move.to_y]);
+      chess_board[XH_POSITION][move.to_y]->piece_has_moved = false;
       break;
     case -2:
       // Queen Side Castle.
-      std::swap(chess_board[0][move.to_y], chess_board[3][move.to_y]);
-      chess_board[0][move.to_y]->piece_has_moved = false;
+      std::swap(chess_board[XD_POSITION][move.to_y],
+                chess_board[XA_POSITION][move.to_y]);
+      chess_board[XA_POSITION][move.to_y]->piece_has_moved = false;
       break;
     default:
       break;
@@ -346,8 +350,8 @@ auto BoardState::compute_zobrist_hash() const -> size_t
       {
         int piece_index = static_cast<int>(piece->piece_type) - 1;
         int color_index = (piece->piece_color == PieceColor::WHITE) ? 0 : 1;
-        hash ^=
-            zobrist_keys[y_position * 8 + x_position][piece_index][color_index];
+        hash ^= zobrist_keys[y_position * BOARD_WIDTH + x_position][piece_index]
+                            [color_index];
       }
     }
   }
@@ -389,9 +393,11 @@ auto BoardState::move_leaves_king_in_check(Move &move) -> bool
 auto BoardState::square_is_attacked_by_pawn(
     int &x_position, int &y_position, PieceColor &color_being_attacked) -> bool
 {
-  int pawn_direction = (color_being_attacked == PieceColor::WHITE) ? 1 : -1;
-  if (x_position > 0 && y_position + pawn_direction >= 0 &&
-      y_position + pawn_direction < 8)
+  int pawn_direction = (color_being_attacked == PieceColor::WHITE)
+                           ? POSITIVE_DIRECTION
+                           : NEGATIVE_DIRECTION;
+  if (x_position > X_MIN && y_position + pawn_direction >= Y_MIN &&
+      y_position + pawn_direction <= Y_MAX)
   {
     if (chess_board[x_position - 1][y_position + pawn_direction]->piece_type ==
             PieceType::PAWN &&
@@ -401,8 +407,8 @@ auto BoardState::square_is_attacked_by_pawn(
       return true;
     }
   }
-  if (x_position < 7 && y_position + pawn_direction >= 0 &&
-      y_position + pawn_direction < 8)
+  if (x_position < X_MAX && y_position + pawn_direction >= Y_MIN &&
+      y_position + pawn_direction <= Y_MAX)
   {
     if (chess_board[x_position + 1][y_position + pawn_direction]->piece_type ==
             PieceType::PAWN &&
@@ -422,7 +428,7 @@ auto BoardState::square_is_attacked_by_knight(
   {
     int new_x = x_position + direction[0];
     int new_y = y_position + direction[1];
-    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       if (chess_board[new_x][new_y]->piece_type == PieceType::KNIGHT &&
           chess_board[new_x][new_y]->piece_color != color_being_attacked)
@@ -441,7 +447,7 @@ auto BoardState::square_is_attacked_by_rook_or_queen(
   {
     int new_x = x_position + direction[0];
     int new_y = y_position + direction[1];
-    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y < Y_MAX)
     {
       Piece *target_piece = chess_board[new_x][new_y];
       if (target_piece->piece_type != PieceType::EMPTY)
@@ -498,7 +504,7 @@ auto BoardState::square_is_attacked_by_king(
   {
     int new_x = direction[0];
     int new_y = direction[1];
-    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       if (chess_board[new_x][new_y]->piece_type == PieceType::KING &&
           chess_board[new_x][new_y]->piece_color != color_being_attacked)

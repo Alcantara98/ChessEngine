@@ -96,7 +96,7 @@ void PositionEvaluator::evaluate_knight(int x_position, int y_position,
   {
     new_x = x_position + move[0];
     new_y = y_position + move[1];
-    if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE)
@@ -139,7 +139,7 @@ void PositionEvaluator::evaluate_bishop(int x_position, int y_position,
   {
     new_x = x_position + direction[0];
     new_y = y_position + direction[1];
-    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE)
@@ -177,7 +177,7 @@ void PositionEvaluator::evaluate_rook(int x_position, int y_position,
   {
     new_x = x_position + direction[0];
     new_y = y_position + direction[1];
-    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE)
@@ -215,7 +215,7 @@ void PositionEvaluator::evaluate_queen(int x_position, int y_position,
   {
     new_x = x_position + direction[0];
     new_y = y_position + direction[1];
-    while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8)
+    while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
       if (piece.piece_color == PieceColor::WHITE)

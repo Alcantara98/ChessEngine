@@ -49,9 +49,9 @@ private:
    * @param move_from_input Updated Move object based on user input.
    * @param move_string String to convert into a Move.
    */
-  auto parse_string_move(std::unique_ptr<Move> &move_from_input,
-                         const std::string &move_string,
-                         char &piece_type) -> bool;
+  auto create_move_from_string(std::unique_ptr<Move> &move_from_input,
+                               const std::string &move_string,
+                               char &piece_type) -> bool;
 
   /**
    * @brief Validates a move.
