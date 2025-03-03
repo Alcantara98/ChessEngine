@@ -60,9 +60,10 @@
 
 ### Install Dependencies
 
-   - Install a C++ compiler (e.g., GCC, Clang, MSVC).
    - Install CMake for build configuration.
+   - Set compiler cmake -DCMAKE_C_COMPILER="C:/path/to/compiler" -DCMAKE_CXX_COMPILER="C:/path/to/compiler++"
    - Use `clang-format` and `clang-tidy` for code formatting and static analysis. Install llvm version 18.1.8. See here: https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8
+   - Will create a container soon.
 
 ### Hooks
   - Copy hooks/pre-commit to .git/hooks/pre-commit.

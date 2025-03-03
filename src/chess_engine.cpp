@@ -95,23 +95,19 @@ auto ChessEngine::is_checkmate() -> bool
   parts::PieceColor current_color = game_board_state.color_to_move;
   // If the king is checked and all possible moves result in a checked king,
   // it is a checkmate.
-  if (game_board_state.king_is_checked(current_color))
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(game_board_state);
+  for (parts::Move move : possible_moves)
   {
-    std::vector<parts::Move> possible_moves =
-        parts::move_generator::calculate_possible_moves(game_board_state);
-    for (parts::Move move : possible_moves)
+    game_board_state.apply_move(move);
+    if (!game_board_state.king_is_checked(current_color))
     {
-      game_board_state.apply_move(move);
-      if (!game_board_state.king_is_checked(current_color))
-      {
-        game_board_state.undo_move();
-        return false;
-      }
       game_board_state.undo_move();
+      return false;
     }
-    return true;
+    game_board_state.undo_move();
   }
-  return false;
+  return true;
 }
 
 auto ChessEngine::is_stalemate() -> bool
@@ -119,22 +115,18 @@ auto ChessEngine::is_stalemate() -> bool
   parts::PieceColor current_color = game_board_state.color_to_move;
   // If the king is not checked and all possible moves result in a checked
   // king, it is a stalemate.
-  if (!game_board_state.king_is_checked(current_color))
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(game_board_state);
+  for (parts::Move move : possible_moves)
   {
-    std::vector<parts::Move> possible_moves =
-        parts::move_generator::calculate_possible_moves(game_board_state);
-    for (parts::Move move : possible_moves)
+    game_board_state.apply_move(move);
+    if (!game_board_state.king_is_checked(current_color))
     {
-      game_board_state.apply_move(move);
-      if (!game_board_state.king_is_checked(current_color))
-      {
-        game_board_state.undo_move();
-        return false;
-      }
       game_board_state.undo_move();
+      return false;
     }
-    return true;
+    game_board_state.undo_move();
   }
-  return false;
+  return true;
 }
 } // namespace engine
