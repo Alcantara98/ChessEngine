@@ -61,7 +61,7 @@ BoardState::~BoardState()
 void BoardState::reset_board()
 {
   // Set empty squares.
-  for (int y_position = Y2_POSITION; y_position <= Y6_POSITION; ++y_position)
+  for (int y_position = Y2_RANK; y_position <= Y6_RANK; ++y_position)
   {
     for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
@@ -71,48 +71,42 @@ void BoardState::reset_board()
   // Set Pawns.
   for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
   {
-    chess_board[x_position][Y2_POSITION] =
+    chess_board[x_position][Y2_RANK] =
         new Piece(PieceType::PAWN, PieceColor::WHITE);
-    chess_board[x_position][Y7_POSITION] =
+    chess_board[x_position][Y7_RANK] =
         new Piece(PieceType::PAWN, PieceColor::BLACK);
   }
   // Set Rooks.
-  chess_board[XA_POSITION][Y1_POSITION] =
-      new Piece(PieceType::ROOK, PieceColor::WHITE);
-  chess_board[XH_POSITION][Y1_POSITION] =
-      new Piece(PieceType::ROOK, PieceColor::WHITE);
-  chess_board[XA_POSITION][Y8_POSITION] =
-      new Piece(PieceType::ROOK, PieceColor::BLACK);
-  chess_board[XH_POSITION][Y8_POSITION] =
-      new Piece(PieceType::ROOK, PieceColor::BLACK);
+  chess_board[XA_FILE][Y1_RANK] = new Piece(PieceType::ROOK, PieceColor::WHITE);
+  chess_board[XH_FILE][Y1_RANK] = new Piece(PieceType::ROOK, PieceColor::WHITE);
+  chess_board[XA_FILE][Y8_RANK] = new Piece(PieceType::ROOK, PieceColor::BLACK);
+  chess_board[XH_FILE][Y8_RANK] = new Piece(PieceType::ROOK, PieceColor::BLACK);
   // Set Knights.
-  chess_board[XB_POSITION][Y1_POSITION] =
+  chess_board[XB_FILE][Y1_RANK] =
       new Piece(PieceType::KNIGHT, PieceColor::WHITE);
-  chess_board[XG_POSITION][Y1_POSITION] =
+  chess_board[XG_FILE][Y1_RANK] =
       new Piece(PieceType::KNIGHT, PieceColor::WHITE);
-  chess_board[XB_POSITION][Y8_POSITION] =
+  chess_board[XB_FILE][Y8_RANK] =
       new Piece(PieceType::KNIGHT, PieceColor::BLACK);
-  chess_board[XG_POSITION][Y8_POSITION] =
+  chess_board[XG_FILE][Y8_RANK] =
       new Piece(PieceType::KNIGHT, PieceColor::BLACK);
   // Set Bishops.
-  chess_board[XC_POSITION][Y1_POSITION] =
+  chess_board[XC_FILE][Y1_RANK] =
       new Piece(PieceType::BISHOP, PieceColor::WHITE);
-  chess_board[XF_POSITION][Y1_POSITION] =
+  chess_board[XF_FILE][Y1_RANK] =
       new Piece(PieceType::BISHOP, PieceColor::WHITE);
-  chess_board[XC_POSITION][Y8_POSITION] =
+  chess_board[XC_FILE][Y8_RANK] =
       new Piece(PieceType::BISHOP, PieceColor::BLACK);
-  chess_board[XF_POSITION][Y8_POSITION] =
+  chess_board[XF_FILE][Y8_RANK] =
       new Piece(PieceType::BISHOP, PieceColor::BLACK);
   // Set Queens.
-  chess_board[XD_POSITION][Y1_POSITION] =
+  chess_board[XD_FILE][Y1_RANK] =
       new Piece(PieceType::QUEEN, PieceColor::WHITE);
-  chess_board[XD_POSITION][Y8_POSITION] =
+  chess_board[XD_FILE][Y8_RANK] =
       new Piece(PieceType::QUEEN, PieceColor::BLACK);
   // Set Kings.
-  chess_board[XE_POSITION][Y1_POSITION] =
-      new Piece(PieceType::KING, PieceColor::WHITE);
-  chess_board[XE_POSITION][Y8_POSITION] =
-      new Piece(PieceType::KING, PieceColor::BLACK);
+  chess_board[XE_FILE][Y1_RANK] = new Piece(PieceType::KING, PieceColor::WHITE);
+  chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
 }
 
 void BoardState::print_board(PieceColor color)
@@ -175,15 +169,15 @@ void BoardState::apply_move(Move &move)
     {
     case 2:
       // King Side Castle.
-      chess_board[XH_POSITION][move.to_y]->piece_has_moved = true;
-      std::swap(chess_board[XH_POSITION][move.to_y],
-                chess_board[XF_POSITION][move.to_y]);
+      chess_board[XH_FILE][move.to_y]->piece_has_moved = true;
+      std::swap(chess_board[XH_FILE][move.to_y],
+                chess_board[XF_FILE][move.to_y]);
       break;
     case -2:
       // Queen Side Castle.
-      chess_board[XA_POSITION][move.to_y]->piece_has_moved = true;
-      std::swap(chess_board[XA_POSITION][move.to_y],
-                chess_board[XD_POSITION][move.to_y]);
+      chess_board[XA_FILE][move.to_y]->piece_has_moved = true;
+      std::swap(chess_board[XA_FILE][move.to_y],
+                chess_board[XD_FILE][move.to_y]);
       break;
     default:
       break;
@@ -244,15 +238,15 @@ void BoardState::undo_move()
     {
     case 2:
       // King Side Castle.
-      std::swap(chess_board[XF_POSITION][move.to_y],
-                chess_board[XH_POSITION][move.to_y]);
-      chess_board[XH_POSITION][move.to_y]->piece_has_moved = false;
+      std::swap(chess_board[XF_FILE][move.to_y],
+                chess_board[XH_FILE][move.to_y]);
+      chess_board[XH_FILE][move.to_y]->piece_has_moved = false;
       break;
     case -2:
       // Queen Side Castle.
-      std::swap(chess_board[XD_POSITION][move.to_y],
-                chess_board[XA_POSITION][move.to_y]);
-      chess_board[XA_POSITION][move.to_y]->piece_has_moved = false;
+      std::swap(chess_board[XD_FILE][move.to_y],
+                chess_board[XA_FILE][move.to_y]);
+      chess_board[XA_FILE][move.to_y]->piece_has_moved = false;
       break;
     default:
       break;
@@ -396,6 +390,7 @@ auto BoardState::square_is_attacked_by_pawn(
   int pawn_direction = (color_being_attacked == PieceColor::WHITE)
                            ? POSITIVE_DIRECTION
                            : NEGATIVE_DIRECTION;
+  // Check for pawn attacks in negative x direction.
   if (x_position > X_MIN && y_position + pawn_direction >= Y_MIN &&
       y_position + pawn_direction <= Y_MAX)
   {
@@ -407,6 +402,7 @@ auto BoardState::square_is_attacked_by_pawn(
       return true;
     }
   }
+  // Check for pawn attacks in positive x direction.
   if (x_position < X_MAX && y_position + pawn_direction >= Y_MIN &&
       y_position + pawn_direction <= Y_MAX)
   {
@@ -424,20 +420,17 @@ auto BoardState::square_is_attacked_by_pawn(
 auto BoardState::square_is_attacked_by_knight(
     int &x_position, int &y_position, PieceColor &color_being_attacked) -> bool
 {
-  for (const auto &direction : KNIGHT_MOVES)
-  {
-    int new_x = x_position + direction[0];
-    int new_y = y_position + direction[1];
-    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
-    {
-      if (chess_board[new_x][new_y]->piece_type == PieceType::KNIGHT &&
-          chess_board[new_x][new_y]->piece_color != color_being_attacked)
+  return std::any_of(
+      KNIGHT_MOVES.begin(), KNIGHT_MOVES.end(),
+      [&](const auto &direction)
       {
-        return true;
-      }
-    }
-  }
-  return false;
+        int new_x = x_position + direction[0];
+        int new_y = y_position + direction[1];
+        return new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
+               new_y <= Y_MAX &&
+               chess_board[new_x][new_y]->piece_type == PieceType::KNIGHT &&
+               chess_board[new_x][new_y]->piece_color != color_being_attacked;
+      });
 }
 
 auto BoardState::square_is_attacked_by_rook_or_queen(
@@ -458,6 +451,7 @@ auto BoardState::square_is_attacked_by_rook_or_queen(
         {
           return true;
         }
+        // Stop if a piece is blocking the way.
         break;
       }
       new_x += direction[0];
@@ -474,8 +468,8 @@ auto BoardState::square_is_attacked_by_bishop_or_queen(
   {
     int new_x = x_position + direction[0];
     int new_y = y_position + direction[1];
-    while (new_x >= XA_POSITION && new_x <= XH_POSITION &&
-           new_y >= Y1_POSITION && new_y <= Y8_POSITION)
+    while (new_x >= XA_FILE && new_x <= XH_FILE && new_y >= Y1_RANK &&
+           new_y <= Y8_RANK)
     {
       Piece *target_piece = chess_board[new_x][new_y];
       if (target_piece->piece_type != PieceType::EMPTY)
@@ -486,6 +480,7 @@ auto BoardState::square_is_attacked_by_bishop_or_queen(
         {
           return true;
         }
+        // Stop if a piece is blocking the way.
         break;
       }
       new_x += direction[0];
@@ -498,21 +493,17 @@ auto BoardState::square_is_attacked_by_bishop_or_queen(
 auto BoardState::square_is_attacked_by_king(
     int &x_position, int &y_position, PieceColor &color_being_attacked) -> bool
 {
-  // Check for king attacks
-  ;
-  for (const auto &direction : KING_DIRECTIONS)
-  {
-    int new_x = direction[0];
-    int new_y = direction[1];
-    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
-    {
-      if (chess_board[new_x][new_y]->piece_type == PieceType::KING &&
-          chess_board[new_x][new_y]->piece_color != color_being_attacked)
+  // Check for king attacks.
+  return std::any_of(
+      KING_MOVES.begin(), KING_MOVES.end(),
+      [&](const auto &direction)
       {
-        return true;
-      }
-    }
-  }
-  return false;
+        int new_x = direction[0];
+        int new_y = direction[1];
+        return new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
+               new_y <= Y_MAX &&
+               chess_board[new_x][new_y]->piece_type == PieceType::KING &&
+               chess_board[new_x][new_y]->piece_color != color_being_attacked;
+      });
 }
 } // namespace engine::parts

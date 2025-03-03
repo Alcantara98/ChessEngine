@@ -30,22 +30,22 @@ const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 
 // Board positions.
-const int XA_POSITION = 0;
-const int XB_POSITION = 1;
-const int XC_POSITION = 2;
-const int XD_POSITION = 3;
-const int XE_POSITION = 4;
-const int XF_POSITION = 5;
-const int XG_POSITION = 6;
-const int XH_POSITION = 7;
-const int Y1_POSITION = 0;
-const int Y2_POSITION = 1;
-const int Y3_POSITION = 2;
-const int Y4_POSITION = 3;
-const int Y5_POSITION = 4;
-const int Y6_POSITION = 5;
-const int Y7_POSITION = 6;
-const int Y8_POSITION = 7;
+const int XA_FILE = 0;
+const int XB_FILE = 1;
+const int XC_FILE = 2;
+const int XD_FILE = 3;
+const int XE_FILE = 4;
+const int XF_FILE = 5;
+const int XG_FILE = 6;
+const int XH_FILE = 7;
+const int Y1_RANK = 0;
+const int Y2_RANK = 1;
+const int Y3_RANK = 2;
+const int Y4_RANK = 3;
+const int Y5_RANK = 4;
+const int Y6_RANK = 5;
+const int Y7_RANK = 6;
+const int Y8_RANK = 7;
 const int Y_MIN = 0;
 const int Y_MAX = 7;
 const int X_MIN = 0;
@@ -90,14 +90,14 @@ const std::array<std::array<int, 2>, 8> KNIGHT_MOVES = {
 const std::array<std::array<int, 2>, 4> ROOK_DIRECTIONS = {
     {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
 
-const std::array<std::array<int, 2>, 8> KING_DIRECTIONS = {{{-1, -1},
-                                                            {-1, 0},
-                                                            {-1, +1},
-                                                            {0, -1},
-                                                            {0, +1},
-                                                            {+1, -1},
-                                                            {+1, 0},
-                                                            {+1, +1}}};
+const std::array<std::array<int, 2>, 8> KING_MOVES = {{{-1, -1},
+                                                       {-1, 0},
+                                                       {-1, +1},
+                                                       {0, -1},
+                                                       {0, +1},
+                                                       {+1, -1},
+                                                       {+1, 0},
+                                                       {+1, +1}}};
 
 // Max number of moves for a piece.
 const int MAX_MOVES_KNIGHT = 8;
