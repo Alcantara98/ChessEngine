@@ -62,7 +62,7 @@
 
    - Install a C++ compiler (e.g., GCC, Clang, MSVC).
    - Install CMake for build configuration.
-   - Use `clang-format` and `clang-tidy` for code formatting and static analysis. Install llvm version 18.1.8.
+   - Use `clang-format` and `clang-tidy` for code formatting and static analysis. Install llvm version 18.1.8. See here: https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8
 
 ### Hooks
   - Copy hooks/pre-commit to .git/hooks/pre-commit.
