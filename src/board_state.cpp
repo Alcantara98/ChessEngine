@@ -69,13 +69,10 @@ void BoardState::reset_board()
     }
   }
   // Set Pawns.
-  for (int x_position = 0; x_position < 8; ++x_position)
+  for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
   {
     chess_board[x_position][Y2_POSITION] =
         new Piece(PieceType::PAWN, PieceColor::WHITE);
-  }
-  for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
-  {
     chess_board[x_position][Y7_POSITION] =
         new Piece(PieceType::PAWN, PieceColor::BLACK);
   }
@@ -421,7 +418,7 @@ auto BoardState::square_is_attacked_by_pawn(
 auto BoardState::square_is_attacked_by_knight(
     int &x_position, int &y_position, PieceColor &color_being_attacked) -> bool
 {
-  for (auto &direction : KNIGHT_MOVES)
+  for (const auto &direction : KNIGHT_MOVES)
   {
     int new_x = x_position + direction[0];
     int new_y = y_position + direction[1];
@@ -440,7 +437,7 @@ auto BoardState::square_is_attacked_by_knight(
 auto BoardState::square_is_attacked_by_rook_or_queen(
     int &x_position, int &y_position, PieceColor &color_being_attacked) -> bool
 {
-  for (auto &direction : ROOK_DIRECTIONS)
+  for (const auto &direction : ROOK_DIRECTIONS)
   {
     int new_x = x_position + direction[0];
     int new_y = y_position + direction[1];
@@ -467,7 +464,7 @@ auto BoardState::square_is_attacked_by_rook_or_queen(
 auto BoardState::square_is_attacked_by_bishop_or_queen(
     int &x_position, int &y_position, PieceColor &color_being_attacked) -> bool
 {
-  for (auto &direction : BISHOP_DIRECTIONS)
+  for (const auto &direction : BISHOP_DIRECTIONS)
   {
     int new_x = x_position + direction[0];
     int new_y = y_position + direction[1];
@@ -497,7 +494,7 @@ auto BoardState::square_is_attacked_by_king(
 {
   // Check for king attacks
   ;
-  for (auto &direction : KING_DIRECTIONS)
+  for (const auto &direction : KING_DIRECTIONS)
   {
     int new_x = direction[0];
     int new_y = direction[1];
