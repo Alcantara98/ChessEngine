@@ -5,7 +5,7 @@
 #include <array>
 #include <map>
 
-namespace engine::constants
+namespace engine::parts
 {
 // Board dimensions
 const int BOARD_WIDTH = 8;
@@ -19,21 +19,67 @@ const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
 
-// Directions for the queen.
+// Evaluation constants
+const int VERY_SMALL_EVAL_VALUE = 5;
+const int SMALL_EVVAL_VALUE = 10;
+const int MEDIUM_EVAL_VALUE = 20;
+const int LARGE_EVAL_VALUE = 40;
+const int VERY_LARGE_EVAL_VALUE = 80;
+
+// Board positions
+const int XA_POSITION = 0;
+const int XB_POSITION = 1;
+const int XC_POSITION = 2;
+const int XD_POSITION = 3;
+const int XE_POSITION = 4;
+const int XF_POSITION = 5;
+const int XG_POSITION = 6;
+const int XH_POSITION = 7;
+const int Y1_POSITION = 0;
+const int Y2_POSITION = 1;
+const int Y3_POSITION = 2;
+const int Y4_POSITION = 3;
+const int Y5_POSITION = 4;
+const int Y6_POSITION = 5;
+const int Y7_POSITION = 6;
+const int Y8_POSITION = 7;
+const int Y_MIN = 0;
+const int Y_MAX = 7;
+const int X_MIN = 0;
+const int X_MAX = 7;
+
+// Board Directions
+const int POSITIVE_DIRECTION = 1;
+const int NEGATIVE_DIRECTION = -1;
+
+// Position Evvaluation Maps
+const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
+    {5, 10, 20, 30, 30, 20, 10, 5}};
+
+const std::array<int, 8> KING_POSITION_EVAL_MAP = {
+    {5, 20, 15, 0, 0, 15, 20, 5}};
+
+// Direction maps for pieces.
 const std::array<std::array<int, 2>, 8> QUEEN_DIRECTIONS = {
     {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 
-// Directions for the bishop.
 const std::array<std::array<int, 2>, 4> BISHOP_DIRECTIONS = {
     {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 
-// Directions for the knight.
 const std::array<std::array<int, 2>, 8> KNIGHT_MOVES = {
     {{1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1}}};
 
-// Directions for the rook.
 const std::array<std::array<int, 2>, 4> ROOK_DIRECTIONS = {
     {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
+
+const std::array<std::array<int, 2>, 8> KING_DIRECTIONS = {{{-1, -1},
+                                                            {-1, 0},
+                                                            {-1, +1},
+                                                            {0, -1},
+                                                            {0, +1},
+                                                            {+1, -1},
+                                                            {+1, 0},
+                                                            {+1, +1}}};
 
 // Map to convert string piece type to PieceType.
 const std::map<char, parts::PieceType> STRING_TO_PIECE_TYPE = {
@@ -56,6 +102,6 @@ const std::map<char, int> ALGEBRAIC_TO_INT = {{'a', 0}, {'b', 1}, {'c', 2},
 const std::map<int, char> INT_TO_ALGEBRAIC = {{0, 'a'}, {1, 'b'}, {2, 'c'},
                                               {3, 'd'}, {4, 'e'}, {5, 'f'},
                                               {6, 'g'}, {7, 'h'}};
-} // namespace engine::constants
+} // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

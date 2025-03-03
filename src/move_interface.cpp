@@ -75,11 +75,11 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
       piece_type = matches[2].str().at(0);
 
       // Get initial coordinates.
-      move->from_x = constants::ALGEBRAIC_TO_INT.at(matches[3].str().at(0));
+      move->from_x = ALGEBRAIC_TO_INT.at(matches[3].str().at(0));
       move->from_y = matches[3].str().at(1) - '0' - 1;
 
       // Get final coordinates.
-      move->to_x = constants::ALGEBRAIC_TO_INT.at(matches[5].str().at(0));
+      move->to_x = ALGEBRAIC_TO_INT.at(matches[5].str().at(0));
       move->to_y = matches[5].str().at(1) - '0' - 1;
     }
 
@@ -129,7 +129,7 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
     if (matches[6].matched)
     {
       move->promotion_piece_type =
-          constants::STRING_TO_PIECE_TYPE.at(matches[6].str().at(0));
+          STRING_TO_PIECE_TYPE.at(matches[6].str().at(0));
     }
   }
   else
@@ -143,8 +143,6 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
 auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
                                   Move *move, char &piece_type) -> bool
 {
-  printf("Blah  1: %c\n",
-         constants::PIECE_TYPE_TO_STRING.at(move->moving_piece->piece_type));
   // Check if moving piece is empty.
   if (move->moving_piece->piece_type == PieceType::EMPTY)
   {
@@ -152,15 +150,12 @@ auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
     return false;
   }
 
-  printf("Blah  2\n");
   // Check if input piece type matches square piece type.
-  if (constants::STRING_TO_PIECE_TYPE.at(piece_type) !=
-      move->moving_piece->piece_type)
+  if (STRING_TO_PIECE_TYPE.at(piece_type) != move->moving_piece->piece_type)
   {
     printf("Invalid Move - Given piece type: %c does not match square piece "
            "type: %c\n",
-           piece_type,
-           constants::PIECE_TYPE_TO_STRING.at(move->moving_piece->piece_type));
+           piece_type, PIECE_TYPE_TO_STRING.at(move->moving_piece->piece_type));
     return false;
   }
 

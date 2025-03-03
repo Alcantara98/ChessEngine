@@ -28,7 +28,7 @@ public:
    * @return Returns the converted Move.
    */
   auto input_to_move(const std::vector<Move> &possible_moves,
-                     std::string string_move = "") -> Move;
+                     std::string move_string = "") -> Move;
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).

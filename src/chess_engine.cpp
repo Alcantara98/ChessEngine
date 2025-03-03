@@ -27,7 +27,6 @@ void ChessEngine::start_game()
   std::cin >> show_performance_char;
 
   show_performance = show_performance_char == 'y';
-
   if (user_color == 'w' &&
       game_board_state.color_to_move == parts::PieceColor::WHITE)
   {

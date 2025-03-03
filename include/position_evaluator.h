@@ -22,55 +22,55 @@ private:
   /**
    * @brief Evaluates pawn at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the pawn.
+   * @param x_position, y_position Position of the pawn.
    * @param eval Evaluation score.
    */
-  static void evaluate_pawn(int x_coordinate, int y_coordinate, Piece &piece,
+  static void evaluate_pawn(int x_position, int y_position, Piece &piece,
                             int &eval);
 
   /**
    * @brief Evaluates knight at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the knight.
+   * @param x_position, y_position Position of the knight.
    * @param eval Evaluation score.
    */
-  static void evaluate_knight(int x_coordinate, int y_coordinate, Piece &piece,
+  static void evaluate_knight(int x_position, int y_position, Piece &piece,
                               int &eval);
 
   /**
    * @brief Evaluates bishop at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the bishop.
+   * @param x_position, y_position Position of the bishop.
    * @param eval Evaluation score.
    */
-  static void evaluate_bishop(int x_coordinate, int y_coordinate, Piece &piece,
+  static void evaluate_bishop(int x_position, int y_position, Piece &piece,
                               int &eval);
 
   /**
    * @brief Evaluates rook at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the rook.
+   * @param x_position, y_position Position of the rook.
    * @param eval Evaluation score.
    */
-  static void evaluate_rook(int x_coordinate, int y_coordinate, Piece &piece,
+  static void evaluate_rook(int x_position, int y_position, Piece &piece,
                             int &eval);
 
   /**
    * @brief Evaluates queen at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the queen.
+   * @param x_position, y_position Position of the queen.
    * @param eval Evaluation score.
    */
-  static void evaluate_queen(int x_coordinate, int y_coordinate, Piece &piece,
+  static void evaluate_queen(int x_position, int y_position, Piece &piece,
                              int &eval);
 
   /**
    * @brief Evaluates king at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the king.
+   * @param x_position, y_position Position of the king.
    * @param eval Evaluation score.
    */
-  static void evaluate_king(int x_coordinate, int y_coordinate, Piece &piece,
+  static void evaluate_king(int x_position, int y_position, Piece &piece,
                             int &eval);
 };
 } // namespace engine::parts

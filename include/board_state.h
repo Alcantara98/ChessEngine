@@ -15,8 +15,7 @@
 namespace engine::parts
 {
 using chess_board_type =
-    std::array<std::array<Piece *, constants::BOARD_HEIGHT>,
-               constants::BOARD_WIDTH>;
+    std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>;
 
 /**
  * @brief Class to represent the current state of the chess board.
@@ -95,12 +94,12 @@ public:
   /**
    * @brief Checks if the given square is attacked.
    *
-   * @param x_coordinate, y_coordinate The coordinate of the square.
+   * @param x_position, y_position The coordinate of the square.
    * @param color_being_attacked The color of the attacked pieces.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked(int x_coordinate, int y_coordinate,
+  auto square_is_attacked(int x_position, int y_position,
                           PieceColor color_being_attacked) -> bool;
 
   /**
@@ -110,7 +109,7 @@ public:
    *
    * @return True if the king is checked, false otherwise.
    */
-  auto king_is_checked(PieceColor color_of_king) -> bool;
+  auto king_is_checked(PieceColor &color_of_king) -> bool;
 
   /**
    * @brief Computes the Zobrist hash for the current board state.
@@ -155,6 +154,64 @@ private:
    * @brief Initialises the zobrist keys.
    */
   void initialize_zobrist_keys();
+
+  /**
+   * @brief Helper function to check if a square is attacked by a pawn.
+   *
+   * @param x_position, y_position The coordinate of the pawn.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_pawn(int &x_position, int &y_position,
+                                  PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a knight.
+   *
+   * @param x_position, y_position The coordinate of the knight.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_knight(int &x_position, int &y_position,
+                                    PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a rook or queen.
+   *
+   * @param x_position, y_position The coordinate of the rook or queen.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto
+  square_is_attacked_by_rook_or_queen(int &x_position, int &y_position,
+                                      PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a bishop or
+   * queen.
+   *
+   * @param x_position, y_position The coordinate of the bishop or queen.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_bishop_or_queen(int &x_position, int &y_position,
+                                             PieceColor &color_being_attacked)
+      -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a king.
+   *
+   * @param x_position, y_position The coordinate of the king.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_king(int &x_position, int &y_position,
+                                  PieceColor &color_being_attacked) -> bool;
 };
 } // namespace engine::parts
 
