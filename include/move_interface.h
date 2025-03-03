@@ -39,6 +39,10 @@ public:
    */
   auto move_to_string(Move &move) -> std::string;
 
+private:
+  // Reference of the board state;
+  BoardState &game_board_state;
+
   /**
    * @brief Retrieves information from move string and updates a Move object.
    *
@@ -49,9 +53,16 @@ public:
                          const std::string &move_string,
                          char &piece_type) -> bool;
 
-private:
-  // Reference of the board state;
-  BoardState &game_board_state;
+  /**
+   * @brief Validates a move.
+   *
+   * @param possible_moves List of possible moves.
+   * @param move Move to validate.
+   *
+   * @return Returns true if move is valid, false otherwise.
+   */
+  auto validate_move(const std::vector<Move> &possible_moves, Move *move,
+                     char &piece_type) -> bool;
 };
 } // namespace engine::parts
 

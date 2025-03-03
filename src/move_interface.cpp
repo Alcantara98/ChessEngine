@@ -8,6 +8,7 @@ MoveInterface::MoveInterface(BoardState &board_state)
 {
 }
 
+// PUBLIC FUNCTIONS
 auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
                                   std::string move_string) -> Move
 {
@@ -34,68 +35,9 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
       continue;
     }
 
-    // Check if move is valid.
-    if (move->moving_piece->piece_type == PieceType::EMPTY)
-    {
-      printf("Invalid Move - Empty Square\n");
+    // Validate move.
+    if (!validate_move(possible_moves, move.get(), piece_type))
       continue;
-    }
-
-    // Check if input piece type matches square piece type.
-    if (constants::STRING_TO_PIECE_TYPE.at(piece_type) !=
-        move->moving_piece->piece_type)
-    {
-      printf(
-          "Invalid Move - Given piece type: %c does not match square piece "
-          "type: %c\n",
-          piece_type,
-          constants::PIECE_TYPE_TO_STRING.at(move->moving_piece->piece_type));
-      continue;
-    }
-
-    // Check captured piece.
-    if (move->captured_piece != nullptr)
-    {
-      if (move->captured_piece->piece_type == PieceType::EMPTY)
-      {
-        printf("Invalid Move - Empty Square\n");
-        continue;
-      }
-      if (move->captured_piece->piece_color == move->moving_piece->piece_color)
-      {
-        printf("Invalid Move - Cannot capture own piece\n");
-        continue;
-      }
-    }
-
-    // Check if it is the first move of the moving piece.
-    if (move->moving_piece->piece_has_moved)
-      move->first_move_of_moving_piece = false;
-    else
-      move->first_move_of_moving_piece = true;
-
-    // Check if move is in generated possible moves.
-    bool found_move = false;
-    for (auto &possible_move : possible_moves)
-    {
-      if (possible_move == *move)
-      {
-        found_move = true;
-        break;
-      }
-    }
-    if (!found_move)
-    {
-      printf("Invalid Move - Move not found in possible moves\n");
-      continue;
-    }
-
-    // Check if move puts king in check.s
-    if (game_board_state.move_leaves_king_in_check(*move))
-    {
-      printf("Invalid Move - King is checked\n");
-      continue;
-    }
 
     // Move is valid, exit loop.
     break;
@@ -103,6 +45,7 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
   return *move;
 }
 
+// PRIVATE FUNCTIONS
 auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
                                       const std::string &move_string,
                                       char &piece_type) -> bool
@@ -136,6 +79,9 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
       move->moving_piece =
           game_board_state.chess_board[move->from_x][move->from_y];
 
+      // Check if it is the first move of the moving piece.
+      move->first_move_of_moving_piece = !move->moving_piece->piece_has_moved;
+
       // Get final coordinates.
       move->to_x = constants::ALGEBRAIC_TO_INT.at(matches[5].str().at(0));
       move->to_y = matches[5].str().at(1) - '0' - 1;
@@ -154,10 +100,8 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
         }
         // Normal capture.
         else
-        {
           move->captured_piece =
               game_board_state.chess_board[move->to_x][move->to_y];
-        }
       }
       // Pawn moved two squares.
       if (piece_type == 'p' && (std::abs(move->to_y - move->from_y) == 2))
@@ -168,14 +112,72 @@ auto MoveInterface::parse_string_move(std::unique_ptr<Move> &move,
       }
       // Pawn promotion.
       if (matches[6].matched)
-      {
         move->promotion_piece_type =
             constants::STRING_TO_PIECE_TYPE.at(matches[6].str().at(0));
-      }
     }
   }
-  else
+  else // Input did not match regex.
+    return false;
+
+  return true;
+}
+
+auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
+                                  Move *move, char &piece_type) -> bool
+{
+  // Check if moving piece is empty.
+  if (move->moving_piece->piece_type == PieceType::EMPTY)
   {
+    printf("Invalid Move - Moving Piece is Empty Square\n");
+    return false;
+  }
+
+  // Check if input piece type matches square piece type.
+  if (constants::STRING_TO_PIECE_TYPE.at(piece_type) !=
+      move->moving_piece->piece_type)
+  {
+    printf("Invalid Move - Given piece type: %c does not match square piece "
+           "type: %c\n",
+           piece_type,
+           constants::PIECE_TYPE_TO_STRING.at(move->moving_piece->piece_type));
+    return false;
+  }
+
+  // Check captured piece.
+  if (move->captured_piece != nullptr)
+  {
+    if (move->captured_piece->piece_type == PieceType::EMPTY)
+    {
+      printf("Invalid Move - Empty Square\n");
+      return false;
+    }
+    if (move->captured_piece->piece_color == move->moving_piece->piece_color)
+    {
+      printf("Invalid Move - Cannot capture own piece\n");
+      return false;
+    }
+  }
+
+  // Check if move is in generated possible moves.
+  bool found_move = false;
+  for (auto &possible_move : possible_moves)
+  {
+    if (possible_move == *move)
+    {
+      found_move = true;
+      break;
+    }
+  }
+  if (!found_move)
+  {
+    printf("Invalid Move - Move not found in possible moves\n");
+    return false;
+  }
+
+  // Check if move puts king in check.
+  if (game_board_state.move_leaves_king_in_check(*move))
+  {
+    printf("Invalid Move - King is checked\n");
     return false;
   }
   return true;
