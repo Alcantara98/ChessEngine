@@ -18,7 +18,6 @@ auto SearchEngine::execute_best_move(int max_search_depth,
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
   std::vector<std::pair<Move, int>> move_scores;
-  bool maximising = engine_color == PieceColor::WHITE;
 
   // Search to max_search_depth with iterative deepening.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
@@ -41,12 +40,11 @@ auto SearchEngine::execute_best_move(int max_search_depth,
       futures.push_back(promises[move_index].get_future());
 
       search_threads.emplace_back(
-          [this, &promises, move_index, maximising, iterative_depth,
-           &thread_board_states]
+          [this, &promises, move_index, iterative_depth, &thread_board_states]()
           {
-            int eval = minimax_alpha_beta_search(
-                thread_board_states[move_index], -INF, INF, iterative_depth - 1,
-                !maximising);
+            int eval =
+                -minimax_alpha_beta_search(thread_board_states[move_index],
+                                           -INF, INF, iterative_depth - 1);
             promises[move_index].set_value(eval);
           });
     }
@@ -89,6 +87,11 @@ auto SearchEngine::execute_best_move(int max_search_depth,
   transposition_table.clear();
   sort_moves(move_scores);
 
+  for (auto move_score : move_scores)
+  {
+    printf("Score: %d\n", move_score.second);
+  }
+
   // Check if move leaves king in check.
   for (std::pair<Move, int> move_score : move_scores)
   {
@@ -104,7 +107,7 @@ auto SearchEngine::execute_best_move(int max_search_depth,
 
 // PRIVATE FUNCTIONS
 auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
-                                             int beta, int depth, bool maximise,
+                                             int beta, int depth,
                                              bool previous_move_is_null) -> int
 {
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
@@ -119,13 +122,11 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                    entry_best_move))
   {
     // Check if tt_value can be used.
-    if (depth <= entry_search_depth)
+    if (depth <= entry_search_depth &&
+        ((tt_flag == -1 && tt_value <= alpha) ||
+         (tt_flag == 1 && tt_value >= beta) || tt_flag == 0))
     {
-      if ((tt_flag == -1 && tt_value <= alpha) ||
-          (tt_flag == 1 && tt_value >= beta) || tt_flag == 0)
-      {
-        return tt_value;
-      }
+      return tt_value;
     }
   }
 
@@ -134,6 +135,10 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   {
     int eval = engine::parts::PositionEvaluator::evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+    if (board_state.color_to_move == PieceColor::BLACK)
+    {
+      return -eval;
+    }
     return eval;
   }
 
@@ -143,10 +148,10 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
     // If previous move is a null move, skip this to prevent double null
     // moves. This will prevent the search from being too shallow.
     board_state.apply_null_move();
-    int eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 3,
-                                         !maximise, true);
+    int eval =
+        -minimax_alpha_beta_search(board_state, -beta, -alpha, depth - 3, true);
     board_state.undo_null_move();
-    if ((maximise && eval >= beta) || (!maximise && eval <= alpha))
+    if (eval >= beta)
     {
       return eval;
     }
@@ -156,69 +161,48 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
       move_generator::calculate_possible_moves(board_state);
   int eval;
   // Start minimax search.
-  if (maximise)
-  {
-    int max_eval = -INF;
-    int best_move_index = 0;
-    if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
-    {
-      max_search(board_state, alpha, beta, max_eval, eval, depth,
-                 best_move_index, entry_best_move, possible_moves);
-    }
-    for (int index = 0; index < possible_moves.size(); ++index)
-    {
-      max_search(board_state, alpha, beta, max_eval, eval, depth,
-                 best_move_index, index, possible_moves);
-      if (alpha >= beta)
-      {
-        break;
-      }
-    }
-    transposition_table.store(hash, depth, max_eval, (max_eval >= beta) ? 1 : 0,
-                              best_move_index);
-    return max_eval;
-  }
-
-  int min_eval = INF;
+  int max_eval = -INF;
   int best_move_index = 0;
   if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
   {
-    min_search(board_state, alpha, beta, min_eval, eval, depth, best_move_index,
+    max_search(board_state, alpha, beta, max_eval, eval, depth, best_move_index,
                entry_best_move, possible_moves);
   }
   for (int index = 0; index < possible_moves.size(); ++index)
   {
-    min_search(board_state, alpha, beta, min_eval, eval, depth, best_move_index,
+    max_search(board_state, alpha, beta, max_eval, eval, depth, best_move_index,
                index, possible_moves);
     if (alpha >= beta)
     {
       break;
     }
   }
-  transposition_table.store(hash, depth, min_eval, (min_eval <= alpha) ? -1 : 0,
-                            best_move_index);
-  return min_eval;
-}
 
-void SearchEngine::sort_moves(
-    std::vector<std::pair<Move, int>> &move_scores) const
-{
-  if (engine_color == PieceColor::WHITE)
+  // Store in transposition table.
+  int tt_flag_to_store;
+  if (max_eval >= beta)
   {
-    // Sort by descending order.
-    sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &move_a,
-            const std::pair<Move, int> &move_b)
-         { return move_a.second > move_b.second; });
+    tt_flag_to_store = 1;
+  }
+  else if (max_eval <= alpha)
+  {
+    tt_flag_to_store = -1;
   }
   else
   {
-    // Sort by ascending order.
-    sort(move_scores.begin(), move_scores.end(),
-         [](const std::pair<Move, int> &move_a,
-            const std::pair<Move, int> &move_b)
-         { return move_a.second < move_b.second; });
+    tt_flag_to_store = 0;
   }
+  transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
+                            best_move_index);
+  return max_eval;
+}
+
+void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
+{
+  sort(
+      move_scores.begin(), move_scores.end(),
+      [](const std::pair<Move, int> &move_a, const std::pair<Move, int> &move_b)
+      { return move_a.second > move_b.second; });
 }
 
 void SearchEngine::max_search(BoardState &board_state, int &alpha, int &beta,
@@ -227,7 +211,7 @@ void SearchEngine::max_search(BoardState &board_state, int &alpha, int &beta,
                               std::vector<Move> &possible_moves)
 {
   board_state.apply_move(possible_moves[move_index]);
-  eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 1, false);
+  eval = -minimax_alpha_beta_search(board_state, -beta, -alpha, depth - 1);
   if (eval > max_eval)
   {
     max_eval = eval;
@@ -235,22 +219,6 @@ void SearchEngine::max_search(BoardState &board_state, int &alpha, int &beta,
   }
   max_eval = std::max(max_eval, eval);
   alpha = std::max(eval, alpha);
-  board_state.undo_move();
-}
-
-void SearchEngine::min_search(BoardState &board_state, int &alpha, int &beta,
-                              int &min_eval, int &eval, int &depth,
-                              int &best_move_index, int &move_index,
-                              std::vector<Move> &possible_moves)
-{
-  board_state.apply_move(possible_moves[move_index]);
-  eval = minimax_alpha_beta_search(board_state, alpha, beta, depth - 1, true);
-  if (eval < min_eval)
-  {
-    min_eval = eval;
-    best_move_index = move_index;
-  }
-  beta = std::min(eval, beta);
   board_state.undo_move();
 }
 } // namespace engine::parts
