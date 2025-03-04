@@ -4,16 +4,19 @@
 ---
 
 ### Search Engine Features
-
+#### from v1.0.0
 - Min Max Search
 - Alpha Beta Pruning
 - Transposition Table (TT)
 - Search 'saved-best-move' first from TT
 - Iterative Deepening
 
-**Current Branching Factor**: 13-14 ((branching_factor)^(search_depth) = leaf_nodes_visited)
+#### from v1.2.0
+- Null Pruning
+
+**Current Branching Factor**: 9-10 ((branching_factor)^(search_depth) = leaf_nodes_visited)
 <br/><br/>
-**Current Performance**: 1000kn/s (1,000,000 nodes per second)
+**Current Performance**: 1000-2000kn/s (1,000,000 nodes per second)
 
 ----
 
@@ -63,7 +66,6 @@
    - Install CMake for build configuration.
    - Set compiler cmake -DCMAKE_C_COMPILER="C:/path/to/compiler" -DCMAKE_CXX_COMPILER="C:/path/to/compiler++"
    - Use `clang-format` and `clang-tidy` for code formatting and static analysis. Install llvm version 18.1.8. See here: https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8
-   - Will create a container soon.
 
 ### Hooks
   - Copy hooks/pre-commit to .git/hooks/pre-commit.
