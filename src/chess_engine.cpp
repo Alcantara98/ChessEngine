@@ -31,10 +31,8 @@ void ChessEngine::start_game()
       game_board_state.color_to_move == parts::PieceColor::WHITE)
   {
     player_color = parts::PieceColor::WHITE;
-    printf("BLAH 1\n");
     parts::Move user_move = move_interface.input_to_move(
         parts::move_generator::calculate_possible_moves(game_board_state));
-    printf("BLAH 2\n");
     game_board_state.apply_move(user_move);
     printf("eval: %d\n", engine::parts::PositionEvaluator::evaluate_position(
                              game_board_state));

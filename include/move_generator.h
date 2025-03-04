@@ -117,6 +117,21 @@ static void generate_king_moves(BoardState &board_state, int x_position,
 static void generate_castle_king_moves(BoardState &board_state, int x_position,
                                        int y_position,
                                        std::vector<Move> &possible_moves);
+
+/**
+ * @brief Helper function to check if the king can castle.
+ *
+ * @param board_state Reference of the current board state.
+ * @param x_position, y_position The coordinate of the rook.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ *
+ * @return bool True if the rook can castle.
+ */
+static auto can_castle(BoardState &board_state, Piece *king_piece,
+                       int y_position, Piece *potential_rook_piece,
+                       const std::vector<int> &castle_path) -> bool;
+
 /**
  * @brief Generates all possible moves for a given knight.
  *

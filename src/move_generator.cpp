@@ -10,7 +10,6 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
   {
     for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
-      printf("blah\n");
       Piece *current_piece = board_state.chess_board[x_position][y_position];
       PieceType &piece_type = current_piece->piece_type;
 
@@ -75,21 +74,21 @@ void generate_pawn_moves(BoardState &board_state, int x_position,
     pawn_direction = NEGATIVE_DIRECTION;
     promotion_rank = Y_MIN;
   }
-  printf("blah 1\n");
+
   generate_normal_pawn_moves(chess_board, x_position, y_position,
                              possible_moves, pawn_piece, pawn_direction,
                              first_move, promotion_rank);
-  printf("blah 2\n");
+
   generate_pawn_capture_moves(chess_board, x_position, y_position,
                               possible_moves, pawn_piece, pawn_direction,
                               first_move, promotion_rank);
-  printf("blah 3\n");
 
-  Move &previous_move = board_state.previous_move_stack.top();
-  generate_en_passant_pawn_capture_moves(
-      chess_board, x_position, y_position, possible_moves, pawn_piece,
-      pawn_direction, first_move, previous_move);
-  printf("blah 4\n");
+  if (!board_state.previous_move_stack.empty())
+  {
+    generate_en_passant_pawn_capture_moves(
+        chess_board, x_position, y_position, possible_moves, pawn_piece,
+        pawn_direction, first_move, board_state.previous_move_stack.top());
+  }
 }
 
 void generate_normal_pawn_moves(chess_board_type &chess_board, int x_position,
@@ -221,12 +220,10 @@ void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
 {
   // En-passant moves can only be made on the 5th rank for white and 4th rank
   // for black.
-  printf("bleh 0\n");
   if ((y_position == Y5_RANK && pawn_piece->piece_color == PieceColor::WHITE) ||
       (y_position == Y4_RANK && pawn_piece->piece_color == PieceColor::BLACK))
   {
     // En-passant left.
-    printf("bleh 1\n");
     if (x_position > X_MIN)
     {
       Piece *captured_piece = chess_board[x_position - 1][y_position];
@@ -243,7 +240,6 @@ void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
                                     captured_piece, first_move, true);
       }
     }
-    printf("bleh 2\n");
     // En-passant right.
     if (x_position < X_MAX)
     {
@@ -307,53 +303,48 @@ void generate_castle_king_moves(BoardState &board_state, int x_position,
                                                     king_piece->piece_color))
   {
     // Castle king side.
-    Piece *rook = chess_board[X_MAX][y_position];
-    if (rook->piece_type == PieceType::ROOK && !rook->piece_has_moved)
+    Piece *potential_rook_piece = chess_board[X_MAX][y_position];
+    if (can_castle(board_state, king_piece, y_position, potential_rook_piece,
+                   {XF_FILE, XG_FILE}))
     {
-      // Check if the squares between the king and rook are empty and not
-      // attacked.
-      bool can_castle = true;
-      for (int file : {XF_FILE, XG_FILE})
-      {
-        if (chess_board[file][y_position]->piece_type != PieceType::EMPTY ||
-            !board_state.square_is_attacked(file, y_position,
-                                            king_piece->piece_color))
-        {
-          can_castle = false;
-          break;
-        }
-      }
-      if (can_castle)
-      {
-        possible_moves.emplace_back(x_position, y_position, x_position + 2,
-                                    y_position, king_piece, first_move, false);
-      }
+      possible_moves.emplace_back(x_position, y_position, x_position + 2,
+                                  y_position, king_piece, first_move, false);
     }
 
     // Castle queen side.
-    rook = chess_board[0][y_position];
-    if (rook->piece_type == PieceType::ROOK && !rook->piece_has_moved)
+    potential_rook_piece = chess_board[0][y_position];
+    if (can_castle(board_state, king_piece, y_position, potential_rook_piece,
+                   {XB_FILE, XC_FILE, XD_FILE}))
     {
-      // Check if the squares between the king and rook are empty and not
-      // attacked.
-      bool can_castle = true;
-      for (int file : {XB_FILE, XC_FILE, XD_FILE})
-      {
-        if (chess_board[file][y_position]->piece_type != PieceType::EMPTY ||
-            !board_state.square_is_attacked(file, y_position,
-                                            king_piece->piece_color))
-        {
-          can_castle = false;
-          break;
-        }
-      }
-      if (can_castle)
-      {
-        possible_moves.emplace_back(x_position, y_position, x_position - 2,
-                                    y_position, king_piece, first_move, true);
-      }
+      possible_moves.emplace_back(x_position, y_position, x_position - 2,
+                                  y_position, king_piece, first_move, true);
     }
   }
+}
+
+auto can_castle(BoardState &board_state, Piece *king_piece, int y_position,
+                Piece *potential_rook_piece,
+                const std::vector<int> &castle_path) -> bool
+{
+  // Check if the piece is a rook and has not moved.
+  if (potential_rook_piece->piece_type != PieceType::ROOK &&
+      potential_rook_piece->piece_has_moved)
+  {
+    return false;
+  }
+  // Check if the squares between the king and rook are empty and not
+  // attacked.
+  for (int file : castle_path)
+  {
+    if (board_state.chess_board[file][y_position]->piece_type !=
+            PieceType::EMPTY ||
+        board_state.square_is_attacked(file, y_position,
+                                       king_piece->piece_color))
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 void generate_knight_moves(BoardState &board_state, int x_position,
