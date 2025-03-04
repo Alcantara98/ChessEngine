@@ -5,6 +5,7 @@
 #include "move.h"
 #include "piece.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <random>
