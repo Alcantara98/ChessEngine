@@ -26,6 +26,11 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
     std::cin >> move_string;
     std::cout << '\n';
 
+    if (move_string == "exit")
+    {
+      exit(0);
+    }
+
     // Parse input string move.
     if (!create_move_from_string(move, move_string, piece_type))
     {

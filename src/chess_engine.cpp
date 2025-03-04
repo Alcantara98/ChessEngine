@@ -13,37 +13,67 @@ ChessEngine::ChessEngine()
 // PUBLIC FUNCTIONS
 void ChessEngine::start_game()
 {
-  char user_color;
-  std::cout << "Please Enter Player Color (w = White, b = Black):";
-  std::cin >> user_color;
+  char play_engine;
+  std::cout << "Play Against Engine (y = Yes, n = No):";
+  std::cin >> play_engine;
 
-  int engine_depth;
-  std::cout << "Please Enter Engine Depth:";
-  std::cin >> engine_depth;
-
-  bool show_performance;
-  char show_performance_char;
-  std::cout << "Show Performance (y = Yes, n = No):";
-  std::cin >> show_performance_char;
-
-  show_performance = show_performance_char == 'y';
-  if (user_color == 'w' &&
-      game_board_state.color_to_move == parts::PieceColor::WHITE)
+  if (play_engine == 'y')
   {
-    player_color = parts::PieceColor::WHITE;
-    parts::Move user_move = move_interface.input_to_move(
-        parts::move_generator::calculate_possible_moves(game_board_state));
-    game_board_state.apply_move(user_move);
-    printf("eval: %d\n", engine::parts::PositionEvaluator::evaluate_position(
-                             game_board_state));
-    game_board_state.print_board(player_color);
-    search_engine.engine_color = parts::PieceColor::BLACK;
+
+    char user_color;
+    std::cout << "Please Enter Player Color (w = White, b = Black):";
+    std::cin >> user_color;
+
+    int engine_depth;
+    std::cout << "Please Enter Engine Depth:";
+    std::cin >> engine_depth;
+
+    bool show_performance;
+    char show_performance_char;
+    std::cout << "Show Performance (y = Yes, n = No):";
+    std::cin >> show_performance_char;
+
+    show_performance = show_performance_char == 'y';
+    if (user_color == 'w' &&
+        game_board_state.color_to_move == parts::PieceColor::WHITE)
+    {
+      player_color = parts::PieceColor::WHITE;
+      parts::Move user_move = move_interface.input_to_move(
+          parts::move_generator::calculate_possible_moves(game_board_state));
+      game_board_state.apply_move(user_move);
+      printf("eval: %d\n", engine::parts::PositionEvaluator::evaluate_position(
+                               game_board_state));
+      game_board_state.print_board(player_color);
+      search_engine.engine_color = parts::PieceColor::BLACK;
+    }
+    else
+    {
+      search_engine.engine_color = parts::PieceColor::WHITE;
+    }
+    game_loop(engine_depth, show_performance);
   }
   else
   {
-    search_engine.engine_color = parts::PieceColor::WHITE;
+    while (true)
+    {
+      if (is_checkmate())
+      {
+        printf("Checkmate, You LOSE!\n");
+        break;
+      }
+      if (is_stalemate())
+      {
+        printf("Stalemate, It's a draw!\n");
+        break;
+      }
+
+      // Player's turn.
+      parts::Move user_move = move_interface.input_to_move(
+          parts::move_generator::calculate_possible_moves(game_board_state));
+      game_board_state.apply_move(user_move);
+      game_board_state.print_board(parts::PieceColor::WHITE);
+    }
   }
-  game_loop(engine_depth, show_performance);
 }
 
 // PRIVATE FUNCTIONS
