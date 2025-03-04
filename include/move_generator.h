@@ -30,9 +30,65 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_pawn_move(BoardState &board_state, int x_position,
-                               int y_position,
-                               std::vector<Move> &possible_moves);
+static void generate_pawn_moves(BoardState &board_state, int x_position,
+                                int y_position,
+                                std::vector<Move> &possible_moves);
+
+/**
+ * @brief Generates one square forward and two squares forward moves for a pawn.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param chess_board Reference of the current chess board.
+ * @param x_position, y_position The coordinate of the pawn.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ * @param pawn_piece The pawn piece.
+ * @param pawn_direction The direction of the pawn.
+ * @param first_move True if the pawn has not moved yet.
+ */
+static void generate_normal_pawn_moves(chess_board_type &chess_board,
+                                       int x_position, int y_position,
+                                       std::vector<Move> &possible_moves,
+                                       Piece *pawn_piece, int pawn_direction,
+                                       bool first_move, int promotion_rank);
+
+/**
+ * @brief Generates normal pawn capture moves.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param chess_board Reference of the current chess board.
+ * @param x_position, y_position The coordinate of the pawn.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ * @param pawn_piece The pawn piece.
+ * @param pawn_direction The direction of the pawn.
+ * @param first_move True if the pawn has not moved yet.
+ */
+static void generate_pawn_capture_moves(chess_board_type &chess_board,
+                                        int x_position, int y_position,
+                                        std::vector<Move> &possible_moves,
+                                        Piece *pawn_piece, int pawn_direction,
+                                        bool first_move, int promotion_rank);
+
+/**
+ * @brief Generates en passant pawn capture moves.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param board_state Reference of the current board state.
+ * @param x_position, y_position The coordinate of the pawn.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ * @param pawn_piece The pawn piece.
+ * @param pawn_direction The direction of the pawn.
+ * @param first_move True if the pawn has not moved yet.
+ */
+static void generate_en_passant_pawn_capture_moves(
+    chess_board_type &chess_board, int x_position, int y_position,
+    std::vector<Move> &possible_moves, Piece *pawn_piece, int pawn_direction,
+    bool first_move, Move &previous_move);
 
 /**
  * @brief Generates all possible moves for a given king.
@@ -44,51 +100,9 @@ static void generate_pawn_move(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_king_move(BoardState &board_state, int x_position,
-                               int y_position,
-                               std::vector<Move> &possible_moves);
-
-/**
- * @brief Generates all possible moves for a given knight.
- *
- * @note Generated moves are pushed back into the possible_moves vector.
- *
- * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the knight.
- * @param possible_moves Reference to the list of possible moves of current
- * board_state.
- */
-static void generate_knight_move(BoardState &board_state, int x_position,
-                                 int y_position,
-                                 std::vector<Move> &possible_moves);
-
-/**
- * @brief Generates all possible moves for a given bishop.
- *
- * @note Generated moves are pushed back into the possible_moves vector.
- *
- * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the bishop.
- * @param possible_moves Reference to the list of possible moves of current
- * board_state.
- */
-static void generate_bishop_move(BoardState &board_state, int x_position,
-                                 int y_position,
-                                 std::vector<Move> &possible_moves);
-
-/**
- * @brief Generates all possible moves for a given rook.
- *
- * @note Generated moves are pushed back into the possible_moves vector.
- *
- * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the rook.
- * @param possible_moves Reference to the list of possible moves of current
- * board_state.
- */
-static void generate_rook_move(BoardState &board_state, int x_position,
-                               int y_position,
-                               std::vector<Move> &possible_moves);
+static void generate_king_moves(BoardState &board_state, int x_position,
+                                int y_position,
+                                std::vector<Move> &possible_moves);
 
 /**
  * @brief Generates all possible moves for a given queen.
@@ -100,9 +114,64 @@ static void generate_rook_move(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_queen_move(BoardState &board_state, int x_position,
+static void generate_castle_king_moves(BoardState &board_state, int x_position,
+                                       int y_position,
+                                       std::vector<Move> &possible_moves);
+/**
+ * @brief Generates all possible moves for a given knight.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param board_state Reference of the current board state.
+ * @param x_position, y_position The coordinate of the knight.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ */
+static void generate_knight_moves(BoardState &board_state, int x_position,
+                                  int y_position,
+                                  std::vector<Move> &possible_moves);
+
+/**
+ * @brief Generates all possible moves for a given bishop.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param board_state Reference of the current board state.
+ * @param x_position, y_position The coordinate of the bishop.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ */
+static void generate_bishop_moves(BoardState &board_state, int x_position,
+                                  int y_position,
+                                  std::vector<Move> &possible_moves);
+
+/**
+ * @brief Generates all possible moves for a given rook.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param board_state Reference of the current board state.
+ * @param x_position, y_position The coordinate of the rook.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ */
+static void generate_rook_moves(BoardState &board_state, int x_position,
                                 int y_position,
                                 std::vector<Move> &possible_moves);
+
+/**
+ * @brief Generates all possible moves for a given queen.
+ *
+ * @note Generated moves are pushed back into the possible_moves vector.
+ *
+ * @param board_state Reference of the current board state.
+ * @param x_position, y_position The coordinate of the queen.
+ * @param possible_moves Reference to the list of possible moves of current
+ * board_state.
+ */
+static void generate_queen_moves(BoardState &board_state, int x_position,
+                                 int y_position,
+                                 std::vector<Move> &possible_moves);
 
 /**
  * @brief Generates bishop and rook moves in one given direction.

@@ -149,11 +149,6 @@ void BoardState::print_board(PieceColor color)
 
 void BoardState::apply_move(Move &move)
 {
-  if (move.pawn_moved_two_squares)
-  {
-    move.moving_piece->pawn_moved_two_squares = true;
-  }
-
   if (move.capture_is_en_passant)
   {
     // Remove captured pawn.
@@ -218,11 +213,6 @@ void BoardState::apply_move(Move &move)
 void BoardState::undo_move()
 {
   Move &move = previous_move_stack.top();
-  if (move.pawn_moved_two_squares)
-  {
-    move.moving_piece->pawn_moved_two_squares = false;
-  }
-
   if (move.capture_is_en_passant)
   {
     // Add captured pawn.
