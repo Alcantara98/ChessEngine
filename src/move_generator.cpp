@@ -1,323 +1,458 @@
 #include "move_generator.h"
 
+namespace engine::parts::move_generator
+{
 //  PUBLIC FUNCTIONS
-void MoveGenerator::generate_pawn_move(BoardState &board_state,
-                                       int x_coordinate, int y_coordinate,
-                                       std::vector<Move> &possible_moves) {
-  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
-  Piece *pawn_piece = board[x_coordinate][y_coordinate];
+auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
+{
+  std::vector<Move> possible_moves;
+  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+  {
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
+    {
+      Piece *current_piece = board_state.chess_board[x_position][y_position];
+      PieceType &piece_type = current_piece->piece_type;
+
+      if (current_piece->piece_color == board_state.color_to_move)
+      {
+        switch (piece_type)
+        {
+        case PieceType::PAWN:
+          generate_pawn_moves(board_state, x_position, y_position,
+                              possible_moves);
+          break;
+        case PieceType::ROOK:
+          generate_rook_moves(board_state, x_position, y_position,
+                              possible_moves);
+          break;
+        case PieceType::KNIGHT:
+          generate_knight_moves(board_state, x_position, y_position,
+                                possible_moves);
+          break;
+        case PieceType::BISHOP:
+          generate_bishop_moves(board_state, x_position, y_position,
+                                possible_moves);
+          break;
+        case PieceType::QUEEN:
+          generate_queen_moves(board_state, x_position, y_position,
+                               possible_moves);
+          break;
+        case PieceType::KING:
+          generate_king_moves(board_state, x_position, y_position,
+                              possible_moves);
+          generate_castle_king_moves(board_state, x_position, y_position,
+                                     possible_moves);
+          break;
+        default:
+          // Empty square.
+          break;
+        }
+      }
+    }
+  }
+  return std::move(possible_moves);
+}
+
+// STATIC FUNCTIONS
+void generate_pawn_moves(BoardState &board_state, int x_position,
+                         int y_position, std::vector<Move> &possible_moves)
+{
+  chess_board_type &chess_board = board_state.chess_board;
+  Piece *pawn_piece = chess_board[x_position][y_position];
   bool first_move = !pawn_piece->piece_has_moved;
 
   // Create pawn moves.
-  int pawn_direction, promotion_tile;
-  if (pawn_piece->piece_color == PieceColor::WHITE) {
-    pawn_direction = 1;
-    promotion_tile = 7;
-  } else {
-    pawn_direction = -1;
-    promotion_tile = 0;
+  int pawn_direction;
+  int promotion_rank;
+  if (pawn_piece->piece_color == PieceColor::WHITE)
+  {
+    pawn_direction = POSITIVE_DIRECTION;
+    promotion_rank = Y_MAX;
   }
-  // Helper variables.
-  int y_plus_pd = y_coordinate + pawn_direction;
-  int x_minus_1 = x_coordinate - 1;
-  int x_plus_1 = x_coordinate + 1;
+  else
+  {
+    pawn_direction = NEGATIVE_DIRECTION;
+    promotion_rank = Y_MIN;
+  }
 
-  if (y_plus_pd != promotion_tile) {
-    // Normal one square move forward.
-    if (board[x_coordinate][y_plus_pd]->piece_type == PieceType::EMPTY) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, x_coordinate,
-                                  y_plus_pd, pawn_piece, first_move);
+  generate_normal_pawn_moves(chess_board, x_position, y_position,
+                             possible_moves, pawn_piece, pawn_direction,
+                             first_move, promotion_rank);
+
+  generate_pawn_capture_moves(chess_board, x_position, y_position,
+                              possible_moves, pawn_piece, pawn_direction,
+                              first_move, promotion_rank);
+
+  if (!board_state.previous_move_stack.empty())
+  {
+    generate_en_passant_pawn_capture_moves(
+        chess_board, x_position, y_position, possible_moves, pawn_piece,
+        pawn_direction, first_move, board_state.previous_move_stack.top());
+  }
+}
+
+void generate_normal_pawn_moves(chess_board_type &chess_board, int x_position,
+                                int y_position,
+                                std::vector<Move> &possible_moves,
+                                Piece *pawn_piece, int pawn_direction,
+                                bool first_move, int promotion_rank)
+{
+  // One square move forward.
+  // Check if the square in front of the pawn is empty.
+  if (chess_board[x_position][y_position + pawn_direction]->piece_type ==
+      PieceType::EMPTY)
+  {
+
+    if (y_position + pawn_direction == promotion_rank)
+    {
+      // Promotion moves.
+      possible_moves.emplace_back(x_position, y_position, x_position,
+                                  y_position + pawn_direction, pawn_piece,
+                                  PieceType::QUEEN);
+      possible_moves.emplace_back(x_position, y_position, x_position,
+                                  y_position + pawn_direction, pawn_piece,
+                                  PieceType::BISHOP);
+      possible_moves.emplace_back(x_position, y_position, x_position,
+                                  y_position + pawn_direction, pawn_piece,
+                                  PieceType::KNIGHT);
+      possible_moves.emplace_back(x_position, y_position, x_position,
+                                  y_position + pawn_direction, pawn_piece,
+                                  PieceType::ROOK);
     }
-    // Normal two square move forward.
-    if (first_move &&
-        board[x_coordinate][y_plus_pd]->piece_type == PieceType::EMPTY &&
-        board[x_coordinate][y_coordinate + (2 * pawn_direction)]->piece_type ==
-            PieceType::EMPTY) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, x_coordinate,
-                                  y_coordinate + (2 * pawn_direction),
-                                  pawn_piece, true, true, x_coordinate,
-                                  y_coordinate + (2 * pawn_direction));
+    else
+    {
+      // Normal move.
+      possible_moves.emplace_back(x_position, y_position, x_position,
+                                  y_position + pawn_direction, pawn_piece,
+                                  first_move);
     }
-    // Normal capture.
-    if (x_coordinate > 0) {
-      Piece *capture_left = board[x_minus_1][y_plus_pd];
-      if (capture_left->piece_type != PieceType::EMPTY &&
-          capture_left->piece_color != pawn_piece->piece_color) {
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_minus_1,
-                                    y_plus_pd, pawn_piece, capture_left,
-                                    first_move);
+  }
+  // Two square move forward.
+  // Check if both squares in front of the pawn are empty.
+  if (first_move &&
+      chess_board[x_position][y_position + pawn_direction]->piece_type ==
+          PieceType::EMPTY &&
+      chess_board[x_position][y_position + (2 * pawn_direction)]->piece_type ==
+          PieceType::EMPTY)
+  {
+    possible_moves.emplace_back(
+        x_position, y_position, x_position, y_position + (2 * pawn_direction),
+        pawn_piece, true, true, x_position, y_position + (2 * pawn_direction));
+  }
+}
+
+void generate_pawn_capture_moves(chess_board_type &chess_board, int x_position,
+                                 int y_position,
+                                 std::vector<Move> &possible_moves,
+                                 Piece *pawn_piece, int pawn_direction,
+                                 bool first_move, int promotion_rank)
+{
+  // Normal Capture left.
+  if (x_position > X_MIN)
+  {
+    Piece *captured_piece =
+        chess_board[x_position - 1][y_position + pawn_direction];
+    if (captured_piece->piece_type != PieceType::EMPTY &&
+        captured_piece->piece_color != pawn_piece->piece_color)
+    {
+      if (y_position + pawn_direction == promotion_rank)
+      {
+        possible_moves.emplace_back(x_position, y_position, x_position - 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::QUEEN);
+        possible_moves.emplace_back(x_position, y_position, x_position - 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::BISHOP);
+        possible_moves.emplace_back(x_position, y_position, x_position - 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::KNIGHT);
+        possible_moves.emplace_back(x_position, y_position, x_position - 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::ROOK);
       }
-    }
-    if (x_coordinate < 7) {
-      Piece *capture_right = board[x_plus_1][y_plus_pd];
-      if (capture_right->piece_type != PieceType::EMPTY &&
-          capture_right->piece_color != pawn_piece->piece_color) {
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_plus_1,
-                                    y_plus_pd, pawn_piece, capture_right,
-                                    first_move);
-      }
-    }
-    // En-passant captures.
-    if ((y_coordinate == 4 && pawn_piece->piece_color == PieceColor::WHITE) ||
-        (y_coordinate == 3 && pawn_piece->piece_color == PieceColor::BLACK)) {
-      Move &previous_move = board_state.previous_move_stack.top();
-      if (x_coordinate > 0) {
-        Piece *left_piece = board[x_minus_1][y_coordinate];
-        if (left_piece->piece_type == PieceType::PAWN &&
-            previous_move.pawn_moved_two_squares_to_x == (x_minus_1) &&
-            previous_move.pawn_moved_two_squares_to_y == y_coordinate) {
-          if (left_piece->piece_color != pawn_piece->piece_color &&
-              left_piece->pawn_moved_two_squares) {
-            if (board[x_minus_1][y_plus_pd]->piece_type == PieceType::EMPTY) {
-              possible_moves.emplace_back(x_coordinate, y_coordinate, x_minus_1,
-                                          y_plus_pd, pawn_piece, left_piece,
-                                          first_move, true);
-            }
-          }
-        }
-      }
-      if (x_coordinate < 7) {
-        Piece *right_piece = board[x_plus_1][y_coordinate];
-        if (right_piece->piece_type == PieceType::PAWN &&
-            previous_move.pawn_moved_two_squares_to_x == (x_plus_1) &&
-            previous_move.pawn_moved_two_squares_to_y == y_coordinate) {
-          if (right_piece->piece_color != pawn_piece->piece_color &&
-              right_piece->pawn_moved_two_squares) {
-            if (board[x_plus_1][y_plus_pd]->piece_type == PieceType::EMPTY) {
-              possible_moves.emplace_back(x_coordinate, y_coordinate, x_plus_1,
-                                          y_plus_pd, pawn_piece, right_piece,
-                                          first_move, true);
-            }
-          }
-        }
+      else
+      {
+        possible_moves.emplace_back(x_position, y_position, x_position - 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, first_move);
       }
     }
   }
-  // Promotion moves.
-  else {
-    int new_x, new_y;
-    // Promotion through normal one square move forward.
-    if (board[x_coordinate][y_plus_pd]->piece_type == PieceType::EMPTY) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, x_coordinate,
-                                  y_plus_pd, pawn_piece, PieceType::QUEEN);
-      possible_moves.emplace_back(x_coordinate, y_coordinate, x_coordinate,
-                                  y_plus_pd, pawn_piece, PieceType::BISHOP);
-      possible_moves.emplace_back(x_coordinate, y_coordinate, x_coordinate,
-                                  y_plus_pd, pawn_piece, PieceType::KNIGHT);
-      possible_moves.emplace_back(x_coordinate, y_coordinate, x_coordinate,
-                                  y_plus_pd, pawn_piece, PieceType::ROOK);
-    }
-    // Promotion through capture.
-    if (x_coordinate > 0) { // Check if x_minus_1 is within bounds
-      Piece *capture_left = board[x_minus_1][y_plus_pd];
-      if (capture_left->piece_type != PieceType::EMPTY &&
-          capture_left->piece_color != pawn_piece->piece_color) {
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_minus_1,
-                                    y_plus_pd, pawn_piece, capture_left,
-                                    PieceType::QUEEN);
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_minus_1,
-                                    y_plus_pd, pawn_piece, capture_left,
-                                    PieceType::BISHOP);
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_minus_1,
-                                    y_plus_pd, pawn_piece, capture_left,
-                                    PieceType::KNIGHT);
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_minus_1,
-                                    y_plus_pd, pawn_piece, capture_left,
-                                    PieceType::ROOK);
+  // Normal Capture right.
+  if (x_position < X_MAX)
+  {
+    Piece *captured_piece =
+        chess_board[x_position + 1][y_position + pawn_direction];
+    if (captured_piece->piece_type != PieceType::EMPTY &&
+        captured_piece->piece_color != pawn_piece->piece_color)
+    {
+      if (y_position + pawn_direction == promotion_rank)
+      {
+        possible_moves.emplace_back(x_position, y_position, x_position + 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::QUEEN);
+        possible_moves.emplace_back(x_position, y_position, x_position + 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::BISHOP);
+        possible_moves.emplace_back(x_position, y_position, x_position + 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::KNIGHT);
+        possible_moves.emplace_back(x_position, y_position, x_position + 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, PieceType::ROOK);
       }
-    }
-    if (x_coordinate < 7) { // Check if x_plus_1 is within bounds
-      Piece *capture_right = board[x_plus_1][y_plus_pd];
-      if (capture_right->piece_type != PieceType::EMPTY &&
-          capture_right->piece_color != pawn_piece->piece_color) {
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_plus_1,
-                                    y_plus_pd, pawn_piece, capture_right,
-                                    PieceType::QUEEN);
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_plus_1,
-                                    y_plus_pd, pawn_piece, capture_right,
-                                    PieceType::BISHOP);
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_plus_1,
-                                    y_plus_pd, pawn_piece, capture_right,
-                                    PieceType::KNIGHT);
-        possible_moves.emplace_back(x_coordinate, y_coordinate, x_plus_1,
-                                    y_plus_pd, pawn_piece, capture_right,
-                                    PieceType::ROOK);
+      else
+      {
+        possible_moves.emplace_back(x_position, y_position, x_position + 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, first_move);
       }
     }
   }
 }
 
-void MoveGenerator::generate_king_move(BoardState &board_state,
-                                       int x_coordinate, int y_coordinate,
-                                       std::vector<Move> &possible_moves) {
-  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
-  Piece *king_piece = board[x_coordinate][y_coordinate];
+void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
+                                            int x_position, int y_position,
+                                            std::vector<Move> &possible_moves,
+                                            Piece *pawn_piece,
+                                            int pawn_direction, bool first_move,
+                                            Move &previous_move)
+{
+  // En-passant moves can only be made on the 5th rank for white and 4th rank
+  // for black.
+  if ((y_position == Y5_RANK && pawn_piece->piece_color == PieceColor::WHITE) ||
+      (y_position == Y4_RANK && pawn_piece->piece_color == PieceColor::BLACK))
+  {
+    // En-passant left.
+    if (x_position > X_MIN)
+    {
+      Piece *captured_piece = chess_board[x_position - 1][y_position];
+      if (captured_piece->piece_type == PieceType::PAWN &&
+          previous_move.pawn_moved_two_squares_to_x == (x_position - 1) &&
+          previous_move.pawn_moved_two_squares_to_y == y_position &&
+          captured_piece->piece_color != pawn_piece->piece_color &&
+          chess_board[x_position - 1][y_position + pawn_direction]
+                  ->piece_type == PieceType::EMPTY)
+      {
+
+        possible_moves.emplace_back(x_position, y_position, x_position - 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, first_move, true);
+      }
+    }
+    // En-passant right.
+    if (x_position < X_MAX)
+    {
+      Piece *captured_piece = chess_board[x_position + 1][y_position];
+      if (captured_piece->piece_type == PieceType::PAWN &&
+          previous_move.pawn_moved_two_squares_to_x == (x_position + 1) &&
+          previous_move.pawn_moved_two_squares_to_y == y_position &&
+          captured_piece->piece_color != pawn_piece->piece_color &&
+          chess_board[x_position + 1][y_position + pawn_direction]
+                  ->piece_type == PieceType::EMPTY)
+      {
+        possible_moves.emplace_back(x_position, y_position, x_position + 1,
+                                    y_position + pawn_direction, pawn_piece,
+                                    captured_piece, first_move, true);
+      }
+    }
+  }
+}
+
+void generate_king_moves(BoardState &board_state, int x_position,
+                         int y_position, std::vector<Move> &possible_moves)
+{
+  chess_board_type &board = board_state.chess_board;
+  Piece *king_piece = board[x_position][y_position];
   bool first_move = !king_piece->piece_has_moved;
 
-  // Helper variables.
-  int x_minus_1 = x_coordinate - 1;
-  int x_plus_1 = x_coordinate + 1;
-
-  for (int new_x = x_coordinate - 1; new_x <= x_coordinate + 1; ++new_x) {
-    for (int new_y = y_coordinate - 1; new_y <= y_coordinate + 1; ++new_y) {
-      // Continue if coordinate is out of the chess board.
-      if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7) {
-        continue;
-      }
-      // Continue if the position is the kings current position.
-      if (new_x == x_coordinate && new_y == y_coordinate) {
-        continue;
-      }
-      Piece *target_piece = board[new_x][new_y];
-      // Normal move.
-      if (target_piece->piece_type == PieceType::EMPTY) {
-        possible_moves.emplace_back(x_coordinate, y_coordinate, new_x, new_y,
-                                    king_piece, first_move);
-      }
-      // Capture move.
-      else if (target_piece->piece_color != king_piece->piece_color) {
-        possible_moves.emplace_back(x_coordinate, y_coordinate, new_x, new_y,
-                                    king_piece, target_piece, first_move);
-      }
-    }
-  }
-  // Castle Moves
-  if (first_move && !board_state.square_is_attacked(x_coordinate, y_coordinate,
-                                                    king_piece->piece_color)) {
-    // Castle king side.
-    Piece *rook = board[7][y_coordinate];
-    if (rook->piece_type == PieceType::ROOK && rook->piece_has_moved == false) {
-      if (board[x_plus_1][y_coordinate]->piece_type == PieceType::EMPTY &&
-          board[x_coordinate + 2][y_coordinate]->piece_type ==
-              PieceType::EMPTY) {
-        if (!board_state.square_is_attacked(x_plus_1, y_coordinate,
-                                            king_piece->piece_color) &&
-            !board_state.square_is_attacked(x_coordinate + 2, y_coordinate,
-                                            king_piece->piece_color)) {
-          possible_moves.emplace_back(x_coordinate, y_coordinate,
-                                      x_coordinate + 2, y_coordinate,
-                                      king_piece, first_move, false);
-        }
-      }
-    }
-    // Castle queen side.
-    rook = board[0][y_coordinate];
-    if (rook->piece_type == PieceType::ROOK && rook->piece_has_moved == false) {
-      if (board[x_minus_1][y_coordinate]->piece_type == PieceType::EMPTY &&
-          board[x_coordinate - 2][y_coordinate]->piece_type ==
-              PieceType::EMPTY &&
-          board[x_coordinate - 3][y_coordinate]->piece_type ==
-              PieceType::EMPTY) {
-        if (!board_state.square_is_attacked(x_minus_1, y_coordinate,
-                                            king_piece->piece_color) &&
-            !board_state.square_is_attacked(x_coordinate - 2, y_coordinate,
-                                            king_piece->piece_color) &&
-            !board_state.square_is_attacked(x_coordinate - 3, y_coordinate,
-                                            king_piece->piece_color)) {
-          possible_moves.emplace_back(x_coordinate, y_coordinate,
-                                      x_coordinate - 2, y_coordinate,
-                                      king_piece, first_move, true);
-        }
-      }
-    }
-  }
-}
-
-void MoveGenerator::generate_knight_move(BoardState &board_state,
-                                         int x_coordinate, int y_coordinate,
-                                         std::vector<Move> &possible_moves) {
-  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
-  Piece *knight_piece = board[x_coordinate][y_coordinate];
-  bool first_move = !knight_piece->piece_has_moved;
-
-  std::vector<int> x_pos_list = {
-      x_coordinate - 2, x_coordinate - 2, x_coordinate - 1, x_coordinate - 1,
-      x_coordinate + 1, x_coordinate + 1, x_coordinate + 2, x_coordinate + 2};
-  std::vector<int> y_pos_list = {
-      y_coordinate - 1, y_coordinate + 1, y_coordinate - 2, y_coordinate + 2,
-      y_coordinate - 2, y_coordinate + 2, y_coordinate - 1, y_coordinate + 1};
-
-  for (int index = 0; index < 8; ++index) {
-    int new_x = x_pos_list[index];
-    int new_y = y_pos_list[index];
+  for (auto direction : KING_MOVES)
+  {
+    int new_x = x_position + direction[0];
+    int new_y = y_position + direction[1];
     // Continue if coordinate is out of the chess board.
-    if (new_x < 0 || new_x > 7 || new_y < 0 || new_y > 7) {
+    if (new_x < X_MIN || new_x > X_MAX || new_y < Y_MIN || new_y > Y_MAX)
+    {
       continue;
     }
     Piece *target_piece = board[new_x][new_y];
     // Normal move.
-    if (target_piece->piece_type == PieceType::EMPTY) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, new_x, new_y,
+    if (target_piece->piece_type == PieceType::EMPTY)
+    {
+      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                  king_piece, first_move);
+    }
+    // Capture move.
+    else if (target_piece->piece_color != king_piece->piece_color)
+    {
+      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                  king_piece, target_piece, first_move);
+    }
+  }
+}
+
+void generate_castle_king_moves(BoardState &board_state, int x_position,
+                                int y_position,
+                                std::vector<Move> &possible_moves)
+{
+  chess_board_type &chess_board = board_state.chess_board;
+  Piece *king_piece = chess_board[x_position][y_position];
+  bool first_move = !king_piece->piece_has_moved;
+  // Check if the king is not in check and has not moved.
+  if (first_move && !board_state.square_is_attacked(x_position, y_position,
+                                                    king_piece->piece_color))
+  {
+    // Castle king side.
+    Piece *potential_rook_piece = chess_board[X_MAX][y_position];
+    if (can_castle(board_state, king_piece, y_position, potential_rook_piece,
+                   {XF_FILE, XG_FILE}))
+    {
+      possible_moves.emplace_back(x_position, y_position, x_position + 2,
+                                  y_position, king_piece, first_move, false);
+    }
+
+    // Castle queen side.
+    potential_rook_piece = chess_board[0][y_position];
+    if (can_castle(board_state, king_piece, y_position, potential_rook_piece,
+                   {XB_FILE, XC_FILE, XD_FILE}))
+    {
+      possible_moves.emplace_back(x_position, y_position, x_position - 2,
+                                  y_position, king_piece, first_move, true);
+    }
+  }
+}
+
+auto can_castle(BoardState &board_state, Piece *king_piece, int y_position,
+                Piece *potential_rook_piece,
+                const std::vector<int> &castle_path) -> bool
+{
+  // Check if the piece is a rook and has not moved.
+  if (potential_rook_piece->piece_type != PieceType::ROOK &&
+      potential_rook_piece->piece_has_moved)
+  {
+    return false;
+  }
+  // Check if the squares between the king and rook are empty and not
+  // attacked.
+  for (int file : castle_path)
+  {
+    if (board_state.chess_board[file][y_position]->piece_type !=
+            PieceType::EMPTY ||
+        board_state.square_is_attacked(file, y_position,
+                                       king_piece->piece_color))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+void generate_knight_moves(BoardState &board_state, int x_position,
+                           int y_position, std::vector<Move> &possible_moves)
+{
+  chess_board_type &board = board_state.chess_board;
+  Piece *knight_piece = board[x_position][y_position];
+  bool first_move = !knight_piece->piece_has_moved;
+
+  std::vector<int> x_pos_list = {x_position - 2, x_position - 2, x_position - 1,
+                                 x_position - 1, x_position + 1, x_position + 1,
+                                 x_position + 2, x_position + 2};
+  std::vector<int> y_pos_list = {y_position - 1, y_position + 1, y_position - 2,
+                                 y_position + 2, y_position - 2, y_position + 2,
+                                 y_position - 1, y_position + 1};
+
+  for (int index = 0; index < MAX_MOVES_KNIGHT; ++index)
+  {
+    int new_x = x_pos_list[index];
+    int new_y = y_pos_list[index];
+    // Continue if coordinate is out of the chess board.
+    if (new_x < X_MIN || new_x > X_MAX || new_y < Y_MIN || new_y > Y_MAX)
+    {
+      continue;
+    }
+    Piece *target_piece = board[new_x][new_y];
+    // Normal move.
+    if (target_piece->piece_type == PieceType::EMPTY)
+    {
+      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
                                   knight_piece, first_move);
     }
     // Capture move.
-    else if (target_piece->piece_color != knight_piece->piece_color) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, new_x, new_y,
+    else if (target_piece->piece_color != knight_piece->piece_color)
+    {
+      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
                                   knight_piece, target_piece, first_move);
     }
   }
 }
 
-void MoveGenerator::generate_bishop_move(BoardState &board_state,
-                                         int x_coordinate, int y_coordinate,
-                                         std::vector<Move> &possible_moves) {
+void generate_bishop_moves(BoardState &board_state, int x_position,
+                           int y_position, std::vector<Move> &possible_moves)
+{
   // Each respective pair of x and y directions represent a diagonal.
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, 1, 1,
+  rook_bishop_move_helper(board_state, x_position, y_position, 1, 1,
                           possible_moves);
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, 1, -1,
+  rook_bishop_move_helper(board_state, x_position, y_position, 1, -1,
                           possible_moves);
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, -1, 1,
+  rook_bishop_move_helper(board_state, x_position, y_position, -1, 1,
                           possible_moves);
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, -1, -1,
+  rook_bishop_move_helper(board_state, x_position, y_position, -1, -1,
                           possible_moves);
 }
 
-void MoveGenerator::generate_rook_move(BoardState &board_state,
-                                       int x_coordinate, int y_coordinate,
-                                       std::vector<Move> &possible_moves) {
+void generate_rook_moves(BoardState &board_state, int x_position,
+                         int y_position, std::vector<Move> &possible_moves)
+{
   // Each respective pair of x and y directions represent horizontal or
   // vertical moves.
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, 1, 0,
+  rook_bishop_move_helper(board_state, x_position, y_position, 1, 0,
                           possible_moves);
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, -1, 0,
+  rook_bishop_move_helper(board_state, x_position, y_position, -1, 0,
                           possible_moves);
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, 0, 1,
+  rook_bishop_move_helper(board_state, x_position, y_position, 0, 1,
                           possible_moves);
-  rook_bishop_move_helper(board_state, x_coordinate, y_coordinate, 0, -1,
+  rook_bishop_move_helper(board_state, x_position, y_position, 0, -1,
                           possible_moves);
 }
 
-void MoveGenerator::generate_queen_move(BoardState &board_state,
-                                        int x_coordinate, int y_coordinate,
-                                        std::vector<Move> &possible_moves) {
+void generate_queen_moves(BoardState &board_state, int x_position,
+                          int y_position, std::vector<Move> &possible_moves)
+{
   // Queen moves are a combination of rook and bishop moves.
-  generate_rook_move(board_state, x_coordinate, y_coordinate, possible_moves);
-  generate_bishop_move(board_state, x_coordinate, y_coordinate, possible_moves);
+  generate_rook_moves(board_state, x_position, y_position, possible_moves);
+  generate_bishop_moves(board_state, x_position, y_position, possible_moves);
 }
 
 // PRIVATE FUNCTIONS
-void MoveGenerator::rook_bishop_move_helper(BoardState &board_state,
-                                            int x_coordinate, int y_coordinate,
-                                            int x_direction, int y_direction,
-                                            std::vector<Move> &possible_moves) {
-  std::array<std::array<Piece *, 8>, 8> &board = board_state.chess_board;
-  Piece *moving_piece = board[x_coordinate][y_coordinate];
+void rook_bishop_move_helper(BoardState &board_state, int x_position,
+                             int y_position, int x_direction, int y_direction,
+                             std::vector<Move> &possible_moves)
+{
+  chess_board_type &board = board_state.chess_board;
+  Piece *moving_piece = board[x_position][y_position];
   bool first_move = !moving_piece->piece_has_moved;
 
-  int new_x = x_coordinate + x_direction;
-  int new_y = y_coordinate + y_direction;
-  for (; new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8;
-       new_x += x_direction, new_y += y_direction) {
+  int new_x = x_position + x_direction;
+  int new_y = y_position + y_direction;
+  for (; new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX;
+       new_x += x_direction, new_y += y_direction)
+  {
     Piece *target_piece = board[new_x][new_y];
-    if (target_piece->piece_type == PieceType::EMPTY) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, new_x, new_y,
+    if (target_piece->piece_type == PieceType::EMPTY)
+    {
+      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
                                   moving_piece, first_move);
-    } else if (target_piece->piece_color != moving_piece->piece_color) {
-      possible_moves.emplace_back(x_coordinate, y_coordinate, new_x, new_y,
+    }
+    else if (target_piece->piece_color != moving_piece->piece_color)
+    {
+      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
                                   moving_piece, target_piece, first_move);
       break;
-    } else {
+    }
+    else
+    {
       break;
     }
   }
 }
+} // namespace engine::parts::move_generator

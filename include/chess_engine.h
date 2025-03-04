@@ -6,10 +6,13 @@
 #include "position_evaluator.h"
 #include "search_engine.h"
 
+namespace engine
+{
 /**
  * @brief Class that combineas all the components of the chess engine.
  */
-class ChessEngine {
+class ChessEngine
+{
 public:
   /**
    * @brief Default Constructor - Initialises the Chess Engine.
@@ -23,19 +26,19 @@ public:
 
 private:
   // Board state object.
-  BoardState game_board_state;
+  parts::BoardState game_board_state;
 
   // Best move finder object.
-  SearchEngine search_engine;
+  parts::SearchEngine search_engine;
 
   // Move interface object.
-  MoveInterface move_interface;
+  parts::MoveInterface move_interface;
 
   // Position evaluator object.
-  PositionEvaluator position_evaluator;
+  parts::PositionEvaluator position_evaluator;
 
   // Player color.
-  PieceColor player_color;
+  parts::PieceColor player_color;
 
   /**
    * @brief Main game loop.
@@ -52,5 +55,6 @@ private:
    */
   auto is_stalemate() -> bool;
 };
+} // namespace engine
 
 #endif

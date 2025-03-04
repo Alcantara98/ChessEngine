@@ -3,88 +3,76 @@
 
 #include "board_state.h"
 
+namespace engine::parts
+{
 /**
  * @brief Class to evaluate the current position of the chess board.
  */
-class PositionEvaluator {
+class PositionEvaluator
+{
 public:
   /**
    * @brief Evaluates current position using chess heuristics.
    * @param board_state BoardState object to evaluate.
    * @return Score of the given position.
    */
-  auto evaluate_position(BoardState &board_state) -> int;
+  static auto evaluate_position(BoardState &board_state) -> int;
 
 private:
-  // Directions for the queen.
-  const std::array<std::array<int, 2>, 8> queen_directions = {
-      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
-
-  // Directions for the bishop.
-  const std::array<std::array<int, 2>, 4> bishop_directions = {
-      {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
-
-  // Directions for the knight.
-  const std::array<std::array<int, 2>, 8> knight_moves = {
-      {{1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1}}};
-
-  // Directions for the rook.
-  const std::array<std::array<int, 2>, 4> rook_directions = {
-      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
-
   /**
    * @brief Evaluates pawn at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the pawn.
+   * @param x_position, y_position Position of the pawn.
    * @param eval Evaluation score.
    */
-  void evaluate_pawn(int x_coordinate, int y_coordinate, Piece &piece,
-                     int &eval);
+  static void evaluate_pawn(int x_position, int y_position, Piece &piece,
+                            int &eval);
 
   /**
    * @brief Evaluates knight at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the knight.
+   * @param x_position, y_position Position of the knight.
    * @param eval Evaluation score.
    */
-  void evaluate_knight(int x_coordinate, int y_coordinate, Piece &piece,
-                       int &eval);
+  static void evaluate_knight(int x_position, int y_position, Piece &piece,
+                              int &eval);
 
   /**
    * @brief Evaluates bishop at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the bishop.
+   * @param x_position, y_position Position of the bishop.
    * @param eval Evaluation score.
    */
-  void evaluate_bishop(int x_coordinate, int y_coordinate, Piece &piece,
-                       int &eval);
+  static void evaluate_bishop(int x_position, int y_position, Piece &piece,
+                              int &eval);
 
   /**
    * @brief Evaluates rook at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the rook.
+   * @param x_position, y_position Position of the rook.
    * @param eval Evaluation score.
    */
-  void evaluate_rook(int x_coordinate, int y_coordinate, Piece &piece,
-                     int &eval);
+  static void evaluate_rook(int x_position, int y_position, Piece &piece,
+                            int &eval);
 
   /**
    * @brief Evaluates queen at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the queen.
+   * @param x_position, y_position Position of the queen.
    * @param eval Evaluation score.
    */
-  void evaluate_queen(int x_coordinate, int y_coordinate, Piece &piece,
-                      int &eval);
+  static void evaluate_queen(int x_position, int y_position, Piece &piece,
+                             int &eval);
 
   /**
    * @brief Evaluates king at given position.
    *
-   * @param x_coordinate, y_coordinate Position of the king.
+   * @param x_position, y_position Position of the king.
    * @param eval Evaluation score.
    */
-  void evaluate_king(int x_coordinate, int y_coordinate, Piece &piece,
-                     int &eval);
+  static void evaluate_king(int x_position, int y_position, Piece &piece,
+                            int &eval);
 };
+} // namespace engine::parts
 
 #endif

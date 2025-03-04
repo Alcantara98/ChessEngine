@@ -1,9 +1,11 @@
 #ifndef BOARD_STATE_H
 #define BOARD_STATE_H
 
+#include "engine_constants.h"
 #include "move.h"
 #include "piece.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <random>
@@ -11,13 +13,19 @@
 #include <unordered_map>
 #include <vector>
 
+namespace engine::parts
+{
+using chess_board_type =
+    std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>;
+
 /**
  * @brief Class to represent the current state of the chess board.
  */
-class BoardState {
+class BoardState
+{
 public:
   // 8 x 8 array to represent a chess board.
-  std::array<std::array<Piece *, 8>, 8> chess_board;
+  chess_board_type chess_board;
 
   // Stack to keep track of previous moves.
   std::stack<Move> previous_move_stack;
@@ -43,7 +51,7 @@ public:
    * starts the game.
    * @param engine_color Determines which color to maximise for.
    */
-  BoardState(std::array<std::array<Piece *, 8>, 8> &input_chess_board,
+  BoardState(chess_board_type &input_chess_board,
              PieceColor color_to_move = PieceColor::WHITE);
 
   // Deep copy constructor
@@ -87,12 +95,12 @@ public:
   /**
    * @brief Checks if the given square is attacked.
    *
-   * @param x_coordinate, y_coordinate The coordinate of the square.
+   * @param x_position, y_position The coordinate of the square.
    * @param color_being_attacked The color of the attacked pieces.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked(int x_coordinate, int y_coordinate,
+  auto square_is_attacked(int x_position, int y_position,
                           PieceColor color_being_attacked) -> bool;
 
   /**
@@ -102,7 +110,7 @@ public:
    *
    * @return True if the king is checked, false otherwise.
    */
-  auto king_is_checked(PieceColor color_of_king) -> bool;
+  auto king_is_checked(PieceColor &color_of_king) -> bool;
 
   /**
    * @brief Computes the Zobrist hash for the current board state.
@@ -110,6 +118,14 @@ public:
    * @return The Zobrist hash value.
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
+
+  /**
+   * @brief Checks if the given move leaves the king in check.
+   * @param move The move to check.
+   *
+   * @return True if the move leaves the king in check, false otherwise.
+   */
+  auto move_leaves_king_in_check(Move &move) -> bool;
 
 private:
   // PieceType to Char mapping for white pieces.
@@ -127,18 +143,79 @@ private:
       {PieceType::PAWN, 'p'}};
 
   // Zobrist keys
-  std::array<std::array<std::array<size_t, 2>, 6>, 64> zobrist_keys;
+  std::array<std::array<std::array<size_t, NUM_OF_COLORS>, NUM_OF_PIECE_TYPES>,
+             NUM_OF_SQUARES>
+      zobrist_keys;
 
   // Zobrist key for the side to move.
   size_t zobrist_side_to_move;
 
   // All empty squares point to the same Piece instance.
-  Piece empty_piece = Piece();
+  Piece empty_piece;
 
   /**
    * @brief Initialises the zobrist keys.
    */
   void initialize_zobrist_keys();
+
+  /**
+   * @brief Helper function to check if a square is attacked by a pawn.
+   *
+   * @param x_position, y_position The coordinate of the pawn.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_pawn(int &x_position, int &y_position,
+                                  PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a knight.
+   *
+   * @param x_position, y_position The coordinate of the knight.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_knight(int &x_position, int &y_position,
+                                    PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a rook or queen.
+   *
+   * @param x_position, y_position The coordinate of the rook or queen.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto
+  square_is_attacked_by_rook_or_queen(int &x_position, int &y_position,
+                                      PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a bishop or
+   * queen.
+   *
+   * @param x_position, y_position The coordinate of the bishop or queen.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_bishop_or_queen(int &x_position, int &y_position,
+                                             PieceColor &color_being_attacked)
+      -> bool;
+
+  /**
+   * @brief Helper function to check if a square is attacked by a king.
+   *
+   * @param x_position, y_position The coordinate of the king.
+   * @param color_being_attacked The color of the attacked pieces.
+   *
+   * @return True if the square is attacked, false otherwise.
+   */
+  auto square_is_attacked_by_king(int &x_position, int &y_position,
+                                  PieceColor &color_being_attacked) -> bool;
 };
+} // namespace engine::parts
 
 #endif

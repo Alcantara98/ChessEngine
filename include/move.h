@@ -3,10 +3,13 @@
 
 #include "piece.h"
 
+namespace engine::parts
+{
 /**
  * @brief Class to represent a move in chess.
  */
-struct Move {
+struct Move
+{
   // The piece that is moving.
   Piece *moving_piece;
 
@@ -124,5 +127,6 @@ struct Move {
    */
   auto operator==(const Move &other) const -> bool;
 };
+} // namespace engine::parts
 
 #endif
