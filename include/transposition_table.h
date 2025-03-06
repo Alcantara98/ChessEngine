@@ -14,6 +14,7 @@ namespace engine::parts
  */
 struct TranspositionTableEntry
 {
+  // PROPERTIES
   // Maximum depth of the search.
   int search_depth;
 
@@ -33,11 +34,13 @@ struct TranspositionTableEntry
 class TranspositionTable
 {
 public:
+  // CONSTRUCTORS
   /**
    * @brief Construct a new Transposition Table object
    */
   TranspositionTable(uint64_t max_size);
 
+  // FUNCTIONS
   /**
    * @brief Store a new entry in the transposition table.
    *
@@ -74,6 +77,7 @@ public:
   void clear();
 
 private:
+  // PROPERTIES
   // Maximum size of the transposition table.
   uint64_t max_size;
 
@@ -86,6 +90,7 @@ private:
   // Mutex to protect the table.
   std::mutex mutex;
 
+  // FUNCTIONS
   /**
    * @brief Remove the least recently used entry from the table.
    */

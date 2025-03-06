@@ -41,7 +41,6 @@ public:
    *
    * @param color_to_move Color to move with current state. White by default
    * starts the game.
-   * @param engine_color Determines which color to maximise for.
    */
   BoardState(PieceColor color_to_move = PieceColor::WHITE);
 
@@ -52,7 +51,6 @@ public:
    * input_chess_board.
    * @param color_to_move Color to move with current state. White by default
    * starts the game.
-   * @param engine_color Determines which color to maximise for.
    */
   BoardState(chess_board_type &input_chess_board,
              PieceColor color_to_move = PieceColor::WHITE);

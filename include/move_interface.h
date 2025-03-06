@@ -16,11 +16,13 @@ namespace engine::parts
 class MoveInterface
 {
 public:
+  // CONSTRUCTORS
   /**
    * @brief User to Engine move interface.
    */
   MoveInterface(BoardState &board_state);
 
+  // FUNCTIONS
   /**
    * @brief Get user input and convert it into a Move.
    *
@@ -42,9 +44,11 @@ public:
   auto move_to_string(Move &move) -> std::string;
 
 private:
+  // PROPERTIES
   // Reference of the board state;
   BoardState &game_board_state;
 
+  // FUNCTIONS
   /**
    * @brief Retrieves information from move string and updates a Move object.
    *

@@ -10,6 +10,7 @@ namespace engine::parts
  */
 struct Move
 {
+  // PROPERTIES
   // The piece that is moving.
   Piece *moving_piece;
 
@@ -37,6 +38,7 @@ struct Move
   // If a pawn moved two squares, these are the coordinates the pawn moved to.
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
+  // CONSTRUCTORS
   /**
    * @brief Constructor with all parameters.
    *

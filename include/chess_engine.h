@@ -16,17 +16,20 @@ namespace engine
 class ChessEngine
 {
 public:
+  // CONSTRUCTORS
   /**
    * @brief Default Constructor - Initialises the Chess Engine.
    */
   ChessEngine();
 
+  // FUNCTIONS
   /**
    * @brief State machine for the chess engine.
    */
   void state_machine();
 
 private:
+  // PROPERTIES
   // Board state object.
   parts::BoardState game_board_state;
 
@@ -48,6 +51,7 @@ private:
   // Flag to check if game is over.
   bool game_over = false;
 
+  // FUNCTIONS
   // Current state. Uses main_menu_state by default.
   void (ChessEngine::*current_state)() = &ChessEngine::main_menu_state;
 
