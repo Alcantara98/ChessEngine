@@ -6,7 +6,7 @@ namespace engine::parts
 BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
   initialize_zobrist_keys();
-  reset_board();
+  setup_board();
 }
 
 BoardState::BoardState(chess_board_type &input_chess_board,
@@ -41,24 +41,10 @@ BoardState::BoardState(const BoardState &other)
 }
 
 // Destructor
-BoardState::~BoardState()
-{
-  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
-  {
-    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
-    {
-      if (chess_board[x_position][y_position] != nullptr &&
-          chess_board[x_position][y_position] != &empty_piece)
-      {
-        delete chess_board[x_position][y_position];
-        chess_board[x_position][y_position] = nullptr;
-      }
-    }
-  }
-}
+BoardState::~BoardState() { clear_pointers(); }
 
 // PUBLIC FUNCTIONS
-void BoardState::reset_board()
+void BoardState::setup_board()
 {
   // Set empty squares.
   for (int y_position = Y2_RANK; y_position <= Y6_RANK; ++y_position)
@@ -107,6 +93,14 @@ void BoardState::reset_board()
   // Set Kings.
   chess_board[XE_FILE][Y1_RANK] = new Piece(PieceType::KING, PieceColor::WHITE);
   chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
+}
+
+void BoardState::reset_board()
+{
+  color_to_move = PieceColor::WHITE;
+  previous_move_stack.empty();
+  clear_pointers();
+  setup_board();
 }
 
 void BoardState::print_board(PieceColor color)
@@ -212,6 +206,10 @@ void BoardState::apply_move(Move &move)
 
 void BoardState::undo_move()
 {
+  if (previous_move_stack.empty())
+  {
+    return;
+  }
   Move &move = previous_move_stack.top();
   if (move.capture_is_en_passant)
   {
@@ -321,6 +319,15 @@ auto BoardState::king_is_checked(PieceColor &color_of_king) -> bool
   return false;
 }
 
+auto BoardState::move_leaves_king_in_check(Move &move) -> bool
+{
+  apply_move(move);
+  bool king_is_checked_after_move =
+      king_is_checked(move.moving_piece->piece_color);
+  undo_move();
+  return king_is_checked_after_move;
+}
+
 auto BoardState::compute_zobrist_hash() const -> size_t
 {
   size_t hash = 0;
@@ -349,6 +356,22 @@ auto BoardState::compute_zobrist_hash() const -> size_t
 }
 
 // PRIVATE FUNCTIONS
+void BoardState::clear_pointers()
+{
+  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
+  {
+    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+    {
+      if (chess_board[x_position][y_position] != nullptr &&
+          chess_board[x_position][y_position] != &empty_piece)
+      {
+        delete chess_board[x_position][y_position];
+        chess_board[x_position][y_position] = nullptr;
+      }
+    }
+  }
+}
+
 void BoardState::initialize_zobrist_keys()
 {
   std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
@@ -363,15 +386,6 @@ void BoardState::initialize_zobrist_keys()
     }
   }
   zobrist_side_to_move = dist(rng);
-}
-
-auto BoardState::move_leaves_king_in_check(Move &move) -> bool
-{
-  apply_move(move);
-  bool king_is_checked_after_move =
-      king_is_checked(move.moving_piece->piece_color);
-  undo_move();
-  return king_is_checked_after_move;
 }
 
 auto BoardState::square_is_attacked_by_pawn(

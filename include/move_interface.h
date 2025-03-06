@@ -2,7 +2,6 @@
 #define MOVE_INTERFACE_H
 
 #include "board_state.h"
-#include "move_generator.h"
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -25,16 +24,19 @@ public:
   /**
    * @brief Get user input and convert it into a Move.
    *
-   * @return Returns the converted Move.
+   * @param possible_moves List of possible moves.
+   * @param string_move User input.
+   *
+   * @return Returns true if move is valid, false otherwise.
    */
   auto input_to_move(const std::vector<Move> &possible_moves,
-                     std::string move_string = "") -> Move;
+                     std::string string_move) -> bool;
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).
    *
    * @param move Move to convert into a string.
-   * @param board_state Chess board to help conversion.
+   *
    * @return Returns a string reprsenting the move.
    */
   auto move_to_string(Move &move) -> std::string;
@@ -66,4 +68,4 @@ private:
 };
 } // namespace engine::parts
 
-#endif
+#endif // MOVE_INTERFACE_H

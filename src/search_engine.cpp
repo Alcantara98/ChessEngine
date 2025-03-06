@@ -12,8 +12,7 @@ SearchEngine::SearchEngine(BoardState &board_state)
 } // Initialize with a max size
 
 // PUBLIC FUNCTIONS
-auto SearchEngine::execute_best_move(int max_search_depth,
-                                     bool show_performance) -> bool
+auto SearchEngine::execute_best_move() -> bool
 {
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
@@ -86,11 +85,6 @@ auto SearchEngine::execute_best_move(int max_search_depth,
 
   transposition_table.clear();
   sort_moves(move_scores);
-
-  for (auto move_score : move_scores)
-  {
-    printf("Score: %d\n", move_score.second);
-  }
 
   // Check if move leaves king in check.
   for (std::pair<Move, int> move_score : move_scores)

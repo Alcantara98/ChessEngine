@@ -15,8 +15,9 @@
 
 namespace engine::parts
 {
-using chess_board_type =
-    std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>;
+// 8 x 8 array type to represent a chess board.
+typedef std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>
+    chess_board_type;
 
 /**
  * @brief Class to represent the current state of the chess board.
@@ -24,6 +25,7 @@ using chess_board_type =
 class BoardState
 {
 public:
+  // PROPERTIES
   // 8 x 8 array to represent a chess board.
   chess_board_type chess_board;
 
@@ -33,8 +35,9 @@ public:
   // Represents which color is to move.
   PieceColor color_to_move = PieceColor::WHITE;
 
+  // CONSTRUCTORS
   /**
-   * @brief Default Constructor - sets chess_board using reset_board.
+   * @brief Default Constructor - sets chess_board using setup_board.
    *
    * @param color_to_move Color to move with current state. White by default
    * starts the game.
@@ -59,6 +62,12 @@ public:
 
   // Destructor
   ~BoardState();
+
+  // FUNCTIONS
+  /**
+   * @brief Resets chess board to default starting piece positions.
+   */
+  void setup_board();
 
   /**
    * @brief Resets chess board to default starting piece positions.
@@ -113,13 +122,6 @@ public:
   auto king_is_checked(PieceColor &color_of_king) -> bool;
 
   /**
-   * @brief Computes the Zobrist hash for the current board state.
-   *
-   * @return The Zobrist hash value.
-   */
-  [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
-
-  /**
    * @brief Checks if the given move leaves the king in check.
    * @param move The move to check.
    *
@@ -127,7 +129,15 @@ public:
    */
   auto move_leaves_king_in_check(Move &move) -> bool;
 
+  /**
+   * @brief Computes the Zobrist hash for the current board state.
+   *
+   * @return The Zobrist hash value.
+   */
+  [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
+
 private:
+  // PROPERTIES
   // PieceType to Char mapping for white pieces.
   const std::unordered_map<PieceType, char> white_piece_to_char_map = {
       {PieceType::EMPTY, '-'},  {PieceType::KING, 'K'},
@@ -152,6 +162,12 @@ private:
 
   // All empty squares point to the same Piece instance.
   Piece empty_piece;
+
+  // FUNCTIONS
+  /**
+   * @brief Clears all pointers in the chess board.
+   */
+  void clear_pointers();
 
   /**
    * @brief Initialises the zobrist keys.

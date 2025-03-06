@@ -11,111 +11,224 @@ ChessEngine::ChessEngine()
 }
 
 // PUBLIC FUNCTIONS
-void ChessEngine::start_game()
+void ChessEngine::state_machine()
 {
-  char play_engine;
-  std::cout << "Play Against Engine (y = Yes, n = No):";
-  std::cin >> play_engine;
-
-  if (play_engine == 'y')
+  while (true)
   {
-
-    char user_color;
-    std::cout << "Please Enter Player Color (w = White, b = Black):";
-    std::cin >> user_color;
-
-    int engine_depth;
-    std::cout << "Please Enter Engine Depth:";
-    std::cin >> engine_depth;
-
-    bool show_performance;
-    char show_performance_char;
-    std::cout << "Show Performance (y = Yes, n = No):";
-    std::cin >> show_performance_char;
-
-    show_performance = show_performance_char == 'y';
-    if (user_color == 'w' &&
-        game_board_state.color_to_move == parts::PieceColor::WHITE)
-    {
-      player_color = parts::PieceColor::WHITE;
-      parts::Move user_move = move_interface.input_to_move(
-          parts::move_generator::calculate_possible_moves(game_board_state));
-      game_board_state.apply_move(user_move);
-      printf("eval: %d\n", engine::parts::PositionEvaluator::evaluate_position(
-                               game_board_state));
-      game_board_state.print_board(player_color);
-      search_engine.engine_color = parts::PieceColor::BLACK;
-    }
-    else
-    {
-      search_engine.engine_color = parts::PieceColor::WHITE;
-    }
-    game_loop(engine_depth, show_performance);
-  }
-  else
-  {
-    while (true)
-    {
-      if (is_checkmate())
-      {
-        printf("Checkmate, You LOSE!\n");
-        break;
-      }
-      if (is_stalemate())
-      {
-        printf("Stalemate, It's a draw!\n");
-        break;
-      }
-
-      // Player's turn.
-      parts::Move user_move = move_interface.input_to_move(
-          parts::move_generator::calculate_possible_moves(game_board_state));
-      game_board_state.apply_move(user_move);
-      game_board_state.print_board(parts::PieceColor::WHITE);
-    }
+    exit_state = false;
+    (this->*current_state)();
   }
 }
 
 // PRIVATE FUNCTIONS
-void ChessEngine::game_loop(int max_search_depth, bool show_performance)
+void ChessEngine::change_state(void (ChessEngine::*new_state)())
 {
-  while (true)
+  current_state = new_state;
+  exit_state = true;
+}
+
+void ChessEngine::main_menu_state()
+{
+  while (!exit_state)
   {
-    if (is_checkmate())
+    std::string play_engine;
+    std::cout << "Play Against Engine (y = Yes, n = No):";
+    std::cin >> play_engine;
+    if (play_engine == "exit")
     {
-      printf("Checkmate, You WIN!\n");
-      break;
+      exit(0);
     }
-    if (is_stalemate())
+    else if (play_engine == "y")
+    {
+      change_state(&ChessEngine::engine_vs_player_state);
+    }
+    else if (play_engine == "n")
+    {
+      change_state(&ChessEngine::player_vs_player_state);
+    }
+    else
+    {
+      printf("Invalid Input\n");
+    }
+  }
+}
+
+void ChessEngine::player_vs_player_state()
+{
+  while (!exit_state)
+  {
+    game_board_state.print_board(game_board_state.color_to_move);
+    if (!game_over && is_checkmate())
+    {
+      printf("Checkmate, %s WINS!\n",
+             game_board_state.color_to_move == player_color ? "Engine"
+                                                            : "Player");
+      game_over = true;
+    }
+    if (!game_over && is_stalemate())
     {
       printf("Stalemate, It's a draw!\n");
-      break;
+      game_over = true;
     }
 
-    // Engine's turn.
-    if (!search_engine.execute_best_move(max_search_depth, show_performance))
-    {
-      printf("Checkmate, You WIN!\n");
-      break;
-    }
+    handle_player_turn();
+  }
+}
+
+void ChessEngine::engine_vs_player_state()
+{
+  set_up_engine();
+  int max_search_depth = search_engine.max_search_depth;
+  bool show_performance = search_engine.show_performance;
+  while (!exit_state)
+  {
     game_board_state.print_board(player_color);
-
-    if (is_checkmate())
+    if (!game_over && is_checkmate())
     {
-      printf("Checkmate, You LOSE!\n");
-      break;
+      printf("Checkmate, %s WINS!\n",
+             game_board_state.color_to_move == player_color ? "Engine"
+                                                            : "Player");
+      game_over = true;
     }
-    if (is_stalemate())
+    if (!game_over && is_stalemate())
     {
       printf("Stalemate, It's a draw!\n");
+      game_over = true;
+    }
+    if (!game_over && game_board_state.color_to_move != player_color)
+    {
+      // Engine's turn.
+      if (!search_engine.execute_best_move())
+      {
+        printf("Break-Point execute_best_move\n");
+        exit(0);
+      }
+    }
+    else
+    {
+      // Player's turn.
+      handle_player_turn();
+    }
+  }
+}
+
+void ChessEngine::set_up_engine()
+{
+  int engine_depth;
+  do
+  {
+    std::cout << "Please Enter Engine Depth (1-30):";
+    std::cin >> engine_depth;
+  } while (engine_depth < 1 && engine_depth >= 30);
+  search_engine.max_search_depth = engine_depth;
+
+  char show_performance_char;
+  do
+  {
+    std::cout << "Show Performance (y = Yes, n = No):";
+    std::cin >> show_performance_char;
+  } while (show_performance_char != 'y' && show_performance_char != 'n');
+  search_engine.show_performance = show_performance_char == 'y';
+
+  char user_color;
+  do
+  {
+    std::cout << "Please Enter Player Color (w = White, b = Black):";
+    std::cin >> user_color;
+  } while (user_color != 'w' && user_color != 'b');
+
+  if (user_color == 'w' &&
+      game_board_state.color_to_move == parts::PieceColor::WHITE)
+  {
+    // Set player colors.
+    player_color = parts::PieceColor::WHITE;
+    search_engine.engine_color = parts::PieceColor::BLACK;
+
+    // White goes first, player's turn.
+    handle_player_turn();
+    game_board_state.print_board(player_color);
+  }
+  else
+  {
+    player_color = parts::PieceColor::BLACK;
+    search_engine.engine_color = parts::PieceColor::WHITE;
+  }
+}
+
+void ChessEngine::handle_player_turn()
+{
+  while (!exit_state)
+  {
+    // Indicate color to move.
+    printf("%s's Turn\n",
+           game_board_state.color_to_move == parts::PieceColor::WHITE
+               ? "White"
+               : "Black");
+
+    // Get user input.
+    std::string user_input;
+    std::cout << "Enter move: ";
+    std::cin >> user_input;
+    std::cout << '\n';
+
+    if (user_input == "exit")
+    {
+      exit(0);
+    }
+    else if (user_input == "undo")
+    {
+      game_board_state.undo_move();
+      if (current_state == &ChessEngine::engine_vs_player_state)
+      {
+        game_board_state.undo_move();
+      }
+      game_board_state.print_board(game_board_state.color_to_move);
+      if (game_over)
+      {
+        game_over = false;
+      }
+      continue;
+    }
+    else if (user_input == "menu")
+    {
+      game_board_state.reset_board();
+      change_state(&ChessEngine::main_menu_state);
+    }
+    else if (user_input == "reset")
+    {
+      game_board_state.reset_board();
+      exit_state = true;
+    }
+    else if (user_input == "play-engine")
+    {
+      game_board_state.reset_board();
+      change_state(&ChessEngine::engine_vs_player_state);
+    }
+    else if (user_input == "play-player")
+    {
+      game_board_state.reset_board();
+      change_state(&ChessEngine::player_vs_player_state);
+    }
+    else if (game_over)
+    {
+      printf("Game Over - Options:\n - menu\n - exit\n - undo\n - reset\n - "
+             "play-engine\n - "
+             "play-player\n");
+    }
+    else if (user_input == "help")
+    {
+      printf(
+          "Options:\n - menu\n - exit\n - undo\n - reset\n - play-engine\n - "
+          "play-player\n");
+    }
+    else if (move_interface.input_to_move(
+                 parts::move_generator::calculate_possible_moves(
+                     game_board_state),
+                 user_input))
+    {
+      // Move was valid, end player's turn.
       break;
     }
-
-    // Player's turn.
-    parts::Move user_move = move_interface.input_to_move(
-        parts::move_generator::calculate_possible_moves(game_board_state));
-    game_board_state.apply_move(user_move);
-    game_board_state.print_board(player_color);
   }
 }
 

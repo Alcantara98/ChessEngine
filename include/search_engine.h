@@ -24,6 +24,12 @@ public:
   // Determines which color to maximise for.
   PieceColor engine_color = PieceColor::WHITE;
 
+  // Max depth to search.
+  int max_search_depth;
+
+  // Show performance matrix of the search.
+  bool show_performance;
+
   /**
    * @brief Default Constructor - takes a chess board state.
    *
@@ -39,7 +45,7 @@ public:
    *
    * @return True if a move is found where the king is not checked.
    */
-  auto execute_best_move(int max_search_depth, bool show_performance) -> bool;
+  auto execute_best_move() -> bool;
 
 private:
   // Use for starting values of alpha and beta;
