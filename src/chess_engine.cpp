@@ -83,7 +83,6 @@ void ChessEngine::engine_vs_player_state()
 
   while (!exit_state)
   {
-    game_board_state.print_board(player_color);
     if (!game_over && is_checkmate())
     {
       printf("Checkmate, %s WINS!\n",
@@ -110,6 +109,7 @@ void ChessEngine::engine_vs_player_state()
       // Player's turn.
       handle_player_turn();
     }
+    game_board_state.print_board(player_color);
   }
 }
 
@@ -146,8 +146,8 @@ void ChessEngine::set_up_engine()
     search_engine.engine_color = parts::PieceColor::BLACK;
 
     // White goes first, player's turn.
-    handle_player_turn();
     game_board_state.print_board(player_color);
+    handle_player_turn();
   }
   else
   {
