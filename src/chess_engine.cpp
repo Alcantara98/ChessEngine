@@ -3,14 +3,15 @@
 namespace engine
 {
 // CONSTRUCTORS
+
 ChessEngine::ChessEngine()
     : search_engine(parts::SearchEngine(game_board_state)),
-      move_interface(parts::MoveInterface(game_board_state)),
-      position_evaluator(parts::PositionEvaluator())
+      move_interface(parts::MoveInterface(game_board_state))
 {
 }
 
 // PUBLIC FUNCTIONS
+
 void ChessEngine::state_machine()
 {
   while (true)
@@ -21,6 +22,7 @@ void ChessEngine::state_machine()
 }
 
 // PRIVATE FUNCTIONS
+
 void ChessEngine::change_state(void (ChessEngine::*new_state)())
 {
   current_state = new_state;
@@ -234,10 +236,9 @@ void ChessEngine::handle_player_turn()
 auto ChessEngine::is_checkmate() -> bool
 {
   parts::PieceColor current_color = game_board_state.color_to_move;
-  // If the king is checked and all possible moves result in a checked king,
-  // it is a checkmate.
   std::vector<parts::Move> possible_moves =
       parts::move_generator::calculate_possible_moves(game_board_state);
+
   for (parts::Move move : possible_moves)
   {
     game_board_state.apply_move(move);
@@ -254,10 +255,9 @@ auto ChessEngine::is_checkmate() -> bool
 auto ChessEngine::is_stalemate() -> bool
 {
   parts::PieceColor current_color = game_board_state.color_to_move;
-  // If the king is not checked and all possible moves result in a checked
-  // king, it is a stalemate.
   std::vector<parts::Move> possible_moves =
       parts::move_generator::calculate_possible_moves(game_board_state);
+
   for (parts::Move move : possible_moves)
   {
     game_board_state.apply_move(move);

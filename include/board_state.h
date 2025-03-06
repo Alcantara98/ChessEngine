@@ -55,10 +55,16 @@ public:
   BoardState(chess_board_type &input_chess_board,
              PieceColor color_to_move = PieceColor::WHITE);
 
-  // Deep copy constructor
+  /**
+   * @brief Use to copy another board state.
+   *
+   * @param other The board state to copy.
+   */
   BoardState(const BoardState &other);
 
-  // Destructor
+  /**
+   * @brief Destructor - clears all pointers in the chess board.
+   */
   ~BoardState();
 
   // FUNCTIONS
@@ -74,6 +80,8 @@ public:
 
   /**
    * @brief Prints the board.
+   *
+   * @param color The color at the bottom of the board.
    */
   void print_board(PieceColor color);
 
@@ -121,6 +129,7 @@ public:
 
   /**
    * @brief Checks if the given move leaves the king in check.
+   *
    * @param move The move to check.
    *
    * @return True if the move leaves the king in check, false otherwise.

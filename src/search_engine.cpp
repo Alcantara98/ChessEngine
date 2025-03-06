@@ -5,13 +5,15 @@
 namespace engine::parts
 {
 // CONSTRUCTORS
+
 SearchEngine::SearchEngine(BoardState &board_state)
-    : game_board_state(board_state), position_evaluator(PositionEvaluator()),
+    : game_board_state(board_state),
       transposition_table(MAX_TRANSPOSITION_TABLE_SIZE)
 {
 } // Initialize with a max size
 
 // PUBLIC FUNCTIONS
+
 auto SearchEngine::execute_best_move() -> bool
 {
   std::vector<Move> possible_moves =
@@ -100,6 +102,7 @@ auto SearchEngine::execute_best_move() -> bool
 }
 
 // PRIVATE FUNCTIONS
+
 auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool previous_move_is_null) -> int
@@ -127,7 +130,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   // Evaluate leaf nodes.
   if (depth <= 0)
   {
-    int eval = engine::parts::PositionEvaluator::evaluate_position(board_state);
+    int eval =
+        engine::parts::position_evaluator::evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
     if (board_state.color_to_move == PieceColor::BLACK)
     {

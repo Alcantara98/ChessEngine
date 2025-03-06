@@ -3,6 +3,7 @@
 namespace engine::parts::move_generator
 {
 //  PUBLIC FUNCTIONS
+
 auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
 {
   std::vector<Move> possible_moves;
@@ -54,6 +55,7 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
 }
 
 // STATIC FUNCTIONS
+
 void generate_pawn_moves(BoardState &board_state, int x_position,
                          int y_position, std::vector<Move> &possible_moves)
 {

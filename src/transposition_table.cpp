@@ -3,11 +3,13 @@
 namespace engine::parts
 {
 // CONSTRUCTORS
+
 TranspositionTable::TranspositionTable(uint64_t max_size) : max_size(max_size)
 {
 }
 
 // PUBLIC FUNCTIONS
+
 void TranspositionTable::store(uint64_t &hash, int search_depth, int eval_score,
                                int flag, int best_move_index)
 {
@@ -74,6 +76,7 @@ void TranspositionTable::clear()
 }
 
 // PRIVATE FUNCTIONS
+
 void TranspositionTable::trim()
 {
   // Remove the least recently used entry

@@ -14,21 +14,6 @@ const int NUM_OF_SQUARES = 64;
 const int NUM_OF_PIECE_TYPES = 6;
 const int NUM_OF_COLORS = 2;
 
-// Piece values.
-const int PAWN_VALUE = 100;
-const int KNIGHT_VALUE = 320;
-const int BISHOP_VALUE = 330;
-const int ROOK_VALUE = 500;
-const int QUEEN_VALUE = 900;
-const int KING_VALUE = 20000;
-
-// Evaluation points.
-const int VERY_SMALL_EVAL_VALUE = 5;
-const int SMALL_EVVAL_VALUE = 10;
-const int MEDIUM_EVAL_VALUE = 20;
-const int LARGE_EVAL_VALUE = 40;
-const int VERY_LARGE_EVAL_VALUE = 80;
-
 // Board positions.
 const int XA_FILE = 0;
 const int XB_FILE = 1;
@@ -51,6 +36,10 @@ const int Y_MAX = 7;
 const int X_MIN = 0;
 const int X_MAX = 7;
 
+// Board directions.
+const int POSITIVE_DIRECTION = 1;
+const int NEGATIVE_DIRECTION = -1;
+
 // User input regex match index.
 const int CASTLE_MOVE_INDEX = 1;
 const int PIECE_TYPE_INDEX = 2;
@@ -66,12 +55,23 @@ const int MAX_TRANSPOSITION_TABLE_SIZE = 10000000;
 const int NODES_TO_KILONODES = 1000;
 const double MILLISECONDS_TO_SECONDS = 1000.0;
 
-// Board directions.
-const int POSITIVE_DIRECTION = 1;
-const int NEGATIVE_DIRECTION = -1;
-
 // Engine constants.
 const int MAX_SEARCH_DEPTH = 30;
+
+// Piece values.
+const int PAWN_VALUE = 100;
+const int KNIGHT_VALUE = 320;
+const int BISHOP_VALUE = 330;
+const int ROOK_VALUE = 500;
+const int QUEEN_VALUE = 900;
+const int KING_VALUE = 20000;
+
+// Evaluation points.
+const int VERY_SMALL_EVAL_VALUE = 5;
+const int SMALL_EVVAL_VALUE = 10;
+const int MEDIUM_EVAL_VALUE = 20;
+const int LARGE_EVAL_VALUE = 40;
+const int VERY_LARGE_EVAL_VALUE = 80;
 
 // Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {

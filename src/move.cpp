@@ -2,6 +2,8 @@
 
 namespace engine::parts
 {
+// CONSTRUCTORS
+
 Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
            Piece *captured_piece, PieceType promotion_piece_type,
            bool is_en_passant, bool first_move, bool pawn_moved_two,

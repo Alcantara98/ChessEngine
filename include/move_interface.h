@@ -19,6 +19,8 @@ public:
   // CONSTRUCTORS
   /**
    * @brief User to Engine move interface.
+   *
+   * @param board_state Reference of the board state.
    */
   MoveInterface(BoardState &board_state);
 
@@ -54,6 +56,9 @@ private:
    *
    * @param move_from_input Updated Move object based on user input.
    * @param move_string String to convert into a Move.
+   * @param piece_type The type of piece that is moving.
+   *
+   * @return Returns true if move is valid, false otherwise.
    */
   auto create_move_from_string(std::unique_ptr<Move> &move_from_input,
                                const std::string &move_string,
@@ -64,6 +69,7 @@ private:
    *
    * @param possible_moves List of possible moves.
    * @param move Move to validate.
+   * @param piece_type The type of piece that is moving.
    *
    * @return Returns true if move is valid, false otherwise.
    */

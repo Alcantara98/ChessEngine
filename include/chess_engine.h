@@ -3,7 +3,6 @@
 
 #include "board_state.h"
 #include "move_interface.h"
-#include "position_evaluator.h"
 #include "search_engine.h"
 
 #include <functional>
@@ -39,9 +38,6 @@ private:
   // Move interface object.
   parts::MoveInterface move_interface;
 
-  // Position evaluator object.
-  parts::PositionEvaluator position_evaluator;
-
   // Player color.
   parts::PieceColor player_color;
 
@@ -51,12 +47,14 @@ private:
   // Flag to check if game is over.
   bool game_over = false;
 
-  // FUNCTIONS
   // Current state. Uses main_menu_state by default.
   void (ChessEngine::*current_state)() = &ChessEngine::main_menu_state;
 
+  // FUNCTIONS
   /**
    * @brief Changes the current state.
+   *
+   * @param new_state The new state to change to.
    */
   void change_state(void (ChessEngine::*new_state)());
 
@@ -87,11 +85,17 @@ private:
 
   /**
    * @brief Checks if the current player is in checkmate.
+   *
+   * @note If the king is checked and all possible moves result in a checked
+   * king, it is a checkmate.
    */
   auto is_checkmate() -> bool;
 
   /**
    * @brief Checks if the current player is in stalemate.
+   *
+   * @note If the king is not checked and all possible moves result in a checked
+   * king, it is a stalemate.
    */
   auto is_stalemate() -> bool;
 };

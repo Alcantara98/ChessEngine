@@ -3,12 +3,14 @@
 namespace engine::parts
 {
 // CONSTRUCTORS
+
 MoveInterface::MoveInterface(BoardState &board_state)
     : game_board_state(board_state)
 {
 }
 
 // PUBLIC FUNCTIONS
+
 auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
                                   const std::string &move_string) -> bool
 {
@@ -37,6 +39,7 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 }
 
 // PRIVATE FUNCTIONS
+
 auto MoveInterface::create_move_from_string(std::unique_ptr<Move> &move,
                                             const std::string &move_string,
                                             char &piece_type) -> bool

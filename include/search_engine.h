@@ -64,9 +64,6 @@ private:
   // See BoardState.
   BoardState &game_board_state;
 
-  // Position Evaluator object.
-  PositionEvaluator position_evaluator;
-
   // Transposition Table object.
   TranspositionTable transposition_table;
 

@@ -2,7 +2,8 @@
 
 namespace engine::parts
 {
-// CONSTUCTORS
+// CONSTRUCTORS
+
 BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
   initialize_zobrist_keys();
@@ -16,7 +17,6 @@ BoardState::BoardState(chess_board_type &input_chess_board,
   initialize_zobrist_keys();
 }
 
-// Deep copy constructor
 BoardState::BoardState(const BoardState &other)
     : color_to_move(other.color_to_move),
       previous_move_stack(other.previous_move_stack),
@@ -40,10 +40,10 @@ BoardState::BoardState(const BoardState &other)
   }
 }
 
-// Destructor
 BoardState::~BoardState() { clear_pointers(); }
 
 // PUBLIC FUNCTIONS
+
 void BoardState::setup_board()
 {
   // Set empty squares.
@@ -215,10 +215,10 @@ void BoardState::undo_move()
   Move &move = previous_move_stack.top();
   if (move.capture_is_en_passant)
   {
-    // Add captured pawn.
     int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
                              : move.to_y + 1;
+    // Add captured pawn.
     chess_board[move.to_x][captured_y_pos] = move.captured_piece;
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
@@ -358,6 +358,7 @@ auto BoardState::compute_zobrist_hash() const -> size_t
 }
 
 // PRIVATE FUNCTIONS
+
 void BoardState::clear_pointers()
 {
   for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
