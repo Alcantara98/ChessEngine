@@ -97,8 +97,10 @@ void BoardState::setup_board()
 
 void BoardState::reset_board()
 {
-  color_to_move = PieceColor::WHITE;
-  previous_move_stack.empty();
+  while (!previous_move_stack.empty())
+  {
+    undo_move();
+  }
   clear_pointers();
   setup_board();
 }

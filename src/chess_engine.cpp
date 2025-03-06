@@ -78,8 +78,7 @@ void ChessEngine::player_vs_player_state()
 void ChessEngine::engine_vs_player_state()
 {
   set_up_engine();
-  int max_search_depth = search_engine.max_search_depth;
-  bool show_performance = search_engine.show_performance;
+
   while (!exit_state)
   {
     game_board_state.print_board(player_color);
@@ -119,7 +118,7 @@ void ChessEngine::set_up_engine()
   {
     std::cout << "Please Enter Engine Depth (1-30):";
     std::cin >> engine_depth;
-  } while (engine_depth < 1 && engine_depth >= 30);
+  } while (engine_depth < 1 && engine_depth >= parts::MAX_SEARCH_DEPTH);
   search_engine.max_search_depth = engine_depth;
 
   char show_performance_char;

@@ -25,12 +25,12 @@ public:
    * @brief Get user input and convert it into a Move.
    *
    * @param possible_moves List of possible moves.
-   * @param string_move User input.
+   * @param move_string User input.
    *
    * @return Returns true if move is valid, false otherwise.
    */
   auto input_to_move(const std::vector<Move> &possible_moves,
-                     std::string string_move) -> bool;
+                     const std::string &move_string) -> bool;
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).

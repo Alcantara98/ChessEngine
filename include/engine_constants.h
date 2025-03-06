@@ -70,6 +70,9 @@ const double MILLISECONDS_TO_SECONDS = 1000.0;
 const int POSITIVE_DIRECTION = 1;
 const int NEGATIVE_DIRECTION = -1;
 
+// Engine constants.
+const int MAX_SEARCH_DEPTH = 30;
+
 // Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
     {5, 10, 20, 30, 30, 20, 10, 5}};

@@ -10,7 +10,7 @@ MoveInterface::MoveInterface(BoardState &board_state)
 
 // PUBLIC FUNCTIONS
 auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
-                                  std::string move_string) -> bool
+                                  const std::string &move_string) -> bool
 {
   std::unique_ptr<Move> move;
   char piece_type;
