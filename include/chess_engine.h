@@ -78,6 +78,11 @@ private:
   void engine_vs_player_state();
 
   /**
+   * @brief Checks if the game is over.
+   */
+  void check_and_handle_if_game_over();
+
+  /**
    * @brief Setup engine parameters.
    */
   void set_up_engine();

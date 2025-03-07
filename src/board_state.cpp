@@ -107,6 +107,7 @@ void BoardState::reset_board()
 
 void BoardState::print_board(PieceColor color)
 {
+  printf("\n");
   if (color == PieceColor::WHITE)
   {
     // Print board from white's perspective. (White at bottom)

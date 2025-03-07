@@ -44,7 +44,7 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
 
 void ChessEngine::main_menu_state()
 {
-  printf("\n%s\n", parts::MAIN_MENU_STATE.c_str());
+  printf("\n~%s~\n\n", parts::MAIN_MENU_STATE.c_str());
   std::string user_input;
   while (!exit_state)
   {
@@ -64,23 +64,12 @@ void ChessEngine::main_menu_state()
 
 void ChessEngine::player_vs_player_state()
 {
-  printf("\n%s - Have Fun :)\n", parts::PLAYER_VS_PLAYER_STATE.c_str());
+  printf("\n~%s~\n\n -- Have Fun --\n", parts::PLAYER_VS_PLAYER_STATE.c_str());
   while (!exit_state)
   {
     game_board_state.print_board(game_board_state.color_to_move);
-    if (!game_over && is_checkmate())
-    {
-      std::string winner =
-          game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"
-                                                                     : "White";
-      printf("Checkmate, %s WINS!\n", winner.c_str());
-      game_over = true;
-    }
-    if (!game_over && is_stalemate())
-    {
-      printf("Stalemate, It's a draw!\n");
-      game_over = true;
-    }
+
+    check_and_handle_if_game_over();
 
     handle_player_turn();
   }
@@ -88,23 +77,18 @@ void ChessEngine::player_vs_player_state()
 
 void ChessEngine::engine_vs_player_state()
 {
-  printf("\n%s - Good Luck!\n", parts::ENGINE_VS_PLAYER_STATE.c_str());
+  printf("\n~%s~\n\n -- Good Luck! --\n",
+         parts::ENGINE_VS_PLAYER_STATE.c_str());
+
   set_up_engine();
+
+  // Print initial board state.
+  game_board_state.print_board(player_color);
 
   while (!exit_state)
   {
-    if (!game_over && is_checkmate())
-    {
-      std::string winner =
-          game_board_state.color_to_move == player_color ? "Engine" : "Player";
-      printf("Checkmate, %s WINS!\n", winner.c_str());
-      game_over = true;
-    }
-    if (!game_over && is_stalemate())
-    {
-      printf("Stalemate, It's a draw!\n");
-      game_over = true;
-    }
+    check_and_handle_if_game_over();
+
     if (!game_over && game_board_state.color_to_move != player_color)
     {
       // Engine's turn.
@@ -123,11 +107,29 @@ void ChessEngine::engine_vs_player_state()
   }
 }
 
+void ChessEngine::check_and_handle_if_game_over()
+{
+  if (!game_over && is_checkmate())
+  {
+    std::string winner =
+        game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"
+                                                                   : "White";
+    printf("\nCheckmate, %s WINS!\n", winner.c_str());
+    game_over = true;
+  }
+  if (!game_over && is_stalemate())
+  {
+    printf("\nStalemate, It's a draw!\n");
+    game_over = true;
+  }
+}
+
 void ChessEngine::set_up_engine()
 {
   std::string user_message;
   std::string allowed_inputs;
 
+  // Get user input for engine settings.
   user_message = "Please Enter Engine Depth (1-30): ";
   int search_depth = getValidIntInput(user_message, 1, parts::MAX_SEARCH_DEPTH);
   search_engine.max_search_depth = search_depth;
@@ -169,7 +171,6 @@ void ChessEngine::handle_player_turn()
     // Get user input.
     printf("Enter move: ");
     std::cin >> user_input;
-    std::cout << '\n';
 
     if (handle_state_change_commands(user_input))
     {
@@ -200,7 +201,7 @@ auto ChessEngine::handle_state_change_commands(const std::string &user_input)
 {
   if (user_input == "exit")
   {
-    printf("\nGoodbye G!\n\n");
+    printf("\n -- Goodbye G! --\n\n");
     exit(0);
   }
   else if (user_input == "menu")
@@ -315,7 +316,7 @@ auto ChessEngine::getValidCharInput(const std::string &user_message,
       char_input = user_input[0];
       return char_input;
     }
-    printf("Invalid input. Please try again\n\n");
+    printf("Invalid input. Please try again\n");
   }
   return ' ';
 }
