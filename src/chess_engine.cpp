@@ -25,12 +25,26 @@ void ChessEngine::state_machine()
 
 void ChessEngine::change_state(void (ChessEngine::*new_state)())
 {
+  if (new_state == &ChessEngine::main_menu_state)
+  {
+    current_state_name = parts::MAIN_MENU_STATE;
+  }
+  else if (new_state == &ChessEngine::player_vs_player_state)
+  {
+    current_state_name = parts::PLAYER_VS_PLAYER_STATE;
+  }
+  else if (new_state == &ChessEngine::engine_vs_player_state)
+  {
+    current_state_name = parts::ENGINE_VS_PLAYER_STATE;
+  }
+  game_board_state.reset_board();
   current_state = new_state;
   exit_state = true;
 }
 
 void ChessEngine::main_menu_state()
 {
+  printf("\n%s\n", parts::MAIN_MENU_STATE.c_str());
   std::string user_input;
   while (!exit_state)
   {
@@ -50,6 +64,7 @@ void ChessEngine::main_menu_state()
 
 void ChessEngine::player_vs_player_state()
 {
+  printf("\n%s - Have Fun :)\n", parts::PLAYER_VS_PLAYER_STATE.c_str());
   while (!exit_state)
   {
     game_board_state.print_board(game_board_state.color_to_move);
@@ -73,6 +88,7 @@ void ChessEngine::player_vs_player_state()
 
 void ChessEngine::engine_vs_player_state()
 {
+  printf("\n%s - Good Luck!\n", parts::ENGINE_VS_PLAYER_STATE.c_str());
   set_up_engine();
 
   while (!exit_state)
@@ -184,27 +200,28 @@ auto ChessEngine::handle_state_change_commands(const std::string &user_input)
 {
   if (user_input == "exit")
   {
+    printf("\nGoodbye G!\n\n");
     exit(0);
   }
   else if (user_input == "menu")
   {
-    game_board_state.reset_board();
     change_state(&ChessEngine::main_menu_state);
   }
   else if (user_input == "play-engine")
   {
-    game_board_state.reset_board();
     change_state(&ChessEngine::engine_vs_player_state);
   }
   else if (user_input == "play-player")
   {
-    game_board_state.reset_board();
     change_state(&ChessEngine::player_vs_player_state);
   }
   else if (user_input == "help")
   {
-    printf("Options:\n - menu\n - exit\n - undo\n - reset\n - play-engine\n - "
-           "play-player\n\n");
+    printf("Current State: %s\n", current_state_name.c_str());
+    printf(
+        "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
+        "play-player\n\n Playing States:\n  - undo\n  - reset\n  - enter a "
+        "move\n\n");
   }
   else
   {

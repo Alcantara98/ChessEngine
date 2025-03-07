@@ -130,6 +130,11 @@ const std::map<int, char> INT_TO_ALGEBRAIC = {{0, 'a'}, {1, 'b'}, {2, 'c'},
 // User input constants.
 const std::string YES_NO_CHARS = "yn";
 const std::string WHITE_BLACK_CHARS = "wb";
+
+// State names.
+const std::string MAIN_MENU_STATE = "Main Menu";
+const std::string PLAYER_VS_PLAYER_STATE = "Player vs Player";
+const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

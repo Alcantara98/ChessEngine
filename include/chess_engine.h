@@ -51,6 +51,9 @@ private:
   // Current state. Uses main_menu_state by default.
   void (ChessEngine::*current_state)() = &ChessEngine::main_menu_state;
 
+  // Current state name.
+  std::string current_state_name = parts::MAIN_MENU_STATE;
+
   // FUNCTIONS
   /**
    * @brief Changes the current state.
