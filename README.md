@@ -16,17 +16,17 @@
 
 **Current Branching Factor**: 9-10 ((branching_factor)^(search_depth) = leaf_nodes_visited)
 <br/><br/>
-**Current Performance**: 1000-2000kn/s (1,000,000 nodes per second)
+**Current Performance**: 1000-2000kn/s (1-2 million nodes per second)
 
 ----
 
 ### How to Run
 
 1. Run chess_engine.exe.
-2. Enter which colour you would like to play. (w = white, b = black).
-3. Enter the depth the engine will search to for each move.
-4. Enter if you want the engine to print performance matrix.
-5. Enter move and play.
+2. Enter 'y' if you want to play the engine.
+3. Engine will ask for engine settings.
+4. Enter a move when it is your turn (See [Moves](#moves)).
+5. You can also enter 'help' at any time to see all possible commands.
 
 ---
 
