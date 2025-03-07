@@ -5,15 +5,16 @@
 namespace engine::parts
 {
 // CONSTRUCTORS
+
 SearchEngine::SearchEngine(BoardState &board_state)
-    : game_board_state(board_state), position_evaluator(PositionEvaluator()),
+    : game_board_state(board_state),
       transposition_table(MAX_TRANSPOSITION_TABLE_SIZE)
 {
 } // Initialize with a max size
 
 // PUBLIC FUNCTIONS
-auto SearchEngine::execute_best_move(int max_search_depth,
-                                     bool show_performance) -> bool
+
+auto SearchEngine::execute_best_move() -> bool
 {
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
@@ -87,17 +88,13 @@ auto SearchEngine::execute_best_move(int max_search_depth,
   transposition_table.clear();
   sort_moves(move_scores);
 
-  for (auto move_score : move_scores)
-  {
-    printf("Score: %d\n", move_score.second);
-  }
-
   // Check if move leaves king in check.
   for (std::pair<Move, int> move_score : move_scores)
   {
     if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
       game_board_state.apply_move(move_score.first);
+      printf("Evaluation of Engine's Move: %d\n", -move_score.second);
       return true;
     }
   }
@@ -106,6 +103,7 @@ auto SearchEngine::execute_best_move(int max_search_depth,
 }
 
 // PRIVATE FUNCTIONS
+
 auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool previous_move_is_null) -> int
@@ -133,7 +131,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   // Evaluate leaf nodes.
   if (depth <= 0)
   {
-    int eval = engine::parts::PositionEvaluator::evaluate_position(board_state);
+    int eval =
+        engine::parts::position_evaluator::evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
     if (board_state.color_to_move == PieceColor::BLACK)
     {

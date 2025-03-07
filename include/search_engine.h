@@ -21,9 +21,17 @@ class SearchEngine
 {
 
 public:
+  // PROPERTIES
   // Determines which color to maximise for.
   PieceColor engine_color = PieceColor::WHITE;
 
+  // Max depth to search.
+  int max_search_depth;
+
+  // Show performance matrix of the search.
+  bool show_performance;
+
+  // CONSTRUCTORS
   /**
    * @brief Default Constructor - takes a chess board state.
    *
@@ -31,6 +39,7 @@ public:
    */
   SearchEngine(BoardState &board_state);
 
+  // FUNCTIONS
   /**
    * @brief Finds the best move for the engine and applies it to the board.
    *
@@ -39,9 +48,10 @@ public:
    *
    * @return True if a move is found where the king is not checked.
    */
-  auto execute_best_move(int max_search_depth, bool show_performance) -> bool;
+  auto execute_best_move() -> bool;
 
 private:
+  // PROPERTIES
   // Use for starting values of alpha and beta;
   const int INF = std::numeric_limits<int>::max();
 
@@ -54,15 +64,13 @@ private:
   // See BoardState.
   BoardState &game_board_state;
 
-  // Position Evaluator object.
-  PositionEvaluator position_evaluator;
-
   // Transposition Table object.
   TranspositionTable transposition_table;
 
   // The max depth the current iterative search will reach.
   int max_iterative_search_depth;
 
+  // FUNCTIONS
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.

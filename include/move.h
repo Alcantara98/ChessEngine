@@ -10,6 +10,7 @@ namespace engine::parts
  */
 struct Move
 {
+  // PROPERTIES
   // The piece that is moving.
   Piece *moving_piece;
 
@@ -37,6 +38,7 @@ struct Move
   // If a pawn moved two squares, these are the coordinates the pawn moved to.
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
+  // CONSTRUCTORS
   /**
    * @brief Constructor with all parameters.
    *
@@ -57,8 +59,8 @@ struct Move
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
        Piece *captured_piece, PieceType promotion_piece_type,
-       bool capture_is_en_passant, bool moving_piece_first_move,
-       bool pawn_moved_two, int pawn_moved_two_squares_to_x,
+       bool capture_is_en_passant, bool first_move_of_moving_piece,
+       bool pawn_moved_two_squares, int pawn_moved_two_squares_to_x,
        int pawn_moved_two_squares_to_y);
 
   /**
@@ -74,7 +76,8 @@ struct Move
    * moved two squares, these are the coordinates the pawn moved to.
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-       bool first_move = false, bool pawn_moved_two = false,
+       bool first_move_of_moving_piece = false,
+       bool pawn_moved_two_squares = false,
        int pawn_moved_two_squares_to_x = -1,
        int pawn_moved_two_squares_to_y = -1);
 
@@ -85,9 +88,9 @@ struct Move
    * @param to_x, to_y moving_piece coordinates after applying this move.
    * @param moving_piece The piece that is moving.
    * @param captured_piece The piece that is captured by moving_piece.
+   * @param first_move_of_moving_piece True if this is the moving_piece's first
    * @param capture_is_en_passant True if moveing_piece (has to be a pawn)
    * captures En Passant.
-   * @param first_move_of_moving_piece True if this is the moving_piece's first
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
        Piece *captured_piece, bool first_move_of_moving_piece = false,

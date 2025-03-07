@@ -2,11 +2,12 @@
 
 namespace engine::parts
 {
-// CONSTUCTORS
+// CONSTRUCTORS
+
 BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
   initialize_zobrist_keys();
-  reset_board();
+  setup_board();
 }
 
 BoardState::BoardState(chess_board_type &input_chess_board,
@@ -16,7 +17,6 @@ BoardState::BoardState(chess_board_type &input_chess_board,
   initialize_zobrist_keys();
 }
 
-// Deep copy constructor
 BoardState::BoardState(const BoardState &other)
     : color_to_move(other.color_to_move),
       previous_move_stack(other.previous_move_stack),
@@ -40,25 +40,11 @@ BoardState::BoardState(const BoardState &other)
   }
 }
 
-// Destructor
-BoardState::~BoardState()
-{
-  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
-  {
-    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
-    {
-      if (chess_board[x_position][y_position] != nullptr &&
-          chess_board[x_position][y_position] != &empty_piece)
-      {
-        delete chess_board[x_position][y_position];
-        chess_board[x_position][y_position] = nullptr;
-      }
-    }
-  }
-}
+BoardState::~BoardState() { clear_pointers(); }
 
 // PUBLIC FUNCTIONS
-void BoardState::reset_board()
+
+void BoardState::setup_board()
 {
   // Set empty squares.
   for (int y_position = Y2_RANK; y_position <= Y6_RANK; ++y_position)
@@ -109,8 +95,19 @@ void BoardState::reset_board()
   chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
 }
 
+void BoardState::reset_board()
+{
+  while (!previous_move_stack.empty())
+  {
+    undo_move();
+  }
+  clear_pointers();
+  setup_board();
+}
+
 void BoardState::print_board(PieceColor color)
 {
+  printf("\n");
   if (color == PieceColor::WHITE)
   {
     // Print board from white's perspective. (White at bottom)
@@ -212,13 +209,17 @@ void BoardState::apply_move(Move &move)
 
 void BoardState::undo_move()
 {
+  if (previous_move_stack.empty())
+  {
+    return;
+  }
   Move &move = previous_move_stack.top();
   if (move.capture_is_en_passant)
   {
-    // Add captured pawn.
     int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
                              : move.to_y + 1;
+    // Add captured pawn.
     chess_board[move.to_x][captured_y_pos] = move.captured_piece;
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
@@ -321,6 +322,15 @@ auto BoardState::king_is_checked(PieceColor &color_of_king) -> bool
   return false;
 }
 
+auto BoardState::move_leaves_king_in_check(Move &move) -> bool
+{
+  apply_move(move);
+  bool king_is_checked_after_move =
+      king_is_checked(move.moving_piece->piece_color);
+  undo_move();
+  return king_is_checked_after_move;
+}
+
 auto BoardState::compute_zobrist_hash() const -> size_t
 {
   size_t hash = 0;
@@ -349,6 +359,23 @@ auto BoardState::compute_zobrist_hash() const -> size_t
 }
 
 // PRIVATE FUNCTIONS
+
+void BoardState::clear_pointers()
+{
+  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
+  {
+    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+    {
+      if (chess_board[x_position][y_position] != nullptr &&
+          chess_board[x_position][y_position] != &empty_piece)
+      {
+        delete chess_board[x_position][y_position];
+        chess_board[x_position][y_position] = nullptr;
+      }
+    }
+  }
+}
+
 void BoardState::initialize_zobrist_keys()
 {
   std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
@@ -363,15 +390,6 @@ void BoardState::initialize_zobrist_keys()
     }
   }
   zobrist_side_to_move = dist(rng);
-}
-
-auto BoardState::move_leaves_king_in_check(Move &move) -> bool
-{
-  apply_move(move);
-  bool king_is_checked_after_move =
-      king_is_checked(move.moving_piece->piece_color);
-  undo_move();
-  return king_is_checked_after_move;
 }
 
 auto BoardState::square_is_attacked_by_pawn(

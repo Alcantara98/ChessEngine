@@ -3,49 +3,43 @@
 namespace engine::parts
 {
 // CONSTRUCTORS
+
 MoveInterface::MoveInterface(BoardState &board_state)
     : game_board_state(board_state)
 {
 }
 
 // PUBLIC FUNCTIONS
+
 auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
-                                  std::string move_string) -> Move
+                                  const std::string &move_string) -> bool
 {
   std::unique_ptr<Move> move;
   char piece_type;
-  while (true)
+
+  // Reset variables.
+  move = std::make_unique<Move>(-1, -1, -1, -1, nullptr, nullptr,
+                                PieceType::EMPTY, false, false, false, -1, -1);
+
+  // Parse input string move.
+  if (!create_move_from_string(move, move_string, piece_type))
   {
-    // Reset variables.
-    move =
-        std::make_unique<Move>(-1, -1, -1, -1, nullptr, nullptr,
-                               PieceType::EMPTY, false, false, false, -1, -1);
-
-    // Get move from user.
-    std::cout << "Enter move: ";
-    std::cin >> move_string;
-    std::cout << '\n';
-
-    // Parse input string move.
-    if (!create_move_from_string(move, move_string, piece_type))
-    {
-      printf("Invalid Move - Regex Match Failure\n");
-      continue;
-    }
-
-    // Validate move.
-    if (!validate_move(possible_moves, move.get(), piece_type))
-    {
-      continue;
-    }
-
-    // Move is valid, exit loop.
-    break;
+    printf("Invalid Move - Regex Match Failure\n");
+    return false;
   }
-  return *move;
+
+  // Validate move.
+  if (!validate_move(possible_moves, move.get(), piece_type))
+  {
+    return false;
+  }
+
+  game_board_state.apply_move(*move);
+  return true;
 }
 
 // PRIVATE FUNCTIONS
+
 auto MoveInterface::create_move_from_string(std::unique_ptr<Move> &move,
                                             const std::string &move_string,
                                             char &piece_type) -> bool

@@ -1,9 +1,10 @@
 #include "position_evaluator.h"
 
-namespace engine::parts
+namespace engine::parts::position_evaluator
 {
 // PUBLIC FUNCTIONS
-auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int
+
+auto evaluate_position(BoardState &board_state) -> int
 {
   int eval = 0;
 
@@ -44,11 +45,11 @@ auto PositionEvaluator::evaluate_position(BoardState &board_state) -> int
 }
 
 // PRIVATE FUNCTIONS
-void PositionEvaluator::evaluate_pawn(int x_position, int y_position,
-                                      Piece &piece, int &eval)
+
+void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece, int &eval)
 {
   // Piece value.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (pawn_piece.piece_color == PieceColor::WHITE)
   {
     eval += PAWN_VALUE;
   }
@@ -58,7 +59,7 @@ void PositionEvaluator::evaluate_pawn(int x_position, int y_position,
   }
 
   // Position value - x coordinate.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (pawn_piece.piece_color == PieceColor::WHITE)
   {
     eval += PAWN_POSITION_EVAL_MAP[x_position];
   }
@@ -68,14 +69,14 @@ void PositionEvaluator::evaluate_pawn(int x_position, int y_position,
   }
 }
 
-void PositionEvaluator::evaluate_knight(int x_position, int y_position,
-                                        Piece &piece, int &eval)
+void evaluate_knight(int x_position, int y_position, Piece &knight_piece,
+                     int &eval)
 {
   // Piece value.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (knight_piece.piece_color == PieceColor::WHITE)
   {
     eval += KNIGHT_VALUE;
-    if (!piece.piece_has_moved)
+    if (!knight_piece.piece_has_moved)
     {
       eval -= LARGE_EVAL_VALUE;
     }
@@ -83,7 +84,7 @@ void PositionEvaluator::evaluate_knight(int x_position, int y_position,
   else
   {
     eval -= KNIGHT_VALUE;
-    if (!piece.piece_has_moved)
+    if (!knight_piece.piece_has_moved)
     {
       eval += LARGE_EVAL_VALUE;
     }
@@ -99,7 +100,7 @@ void PositionEvaluator::evaluate_knight(int x_position, int y_position,
     if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
-      if (piece.piece_color == PieceColor::WHITE)
+      if (knight_piece.piece_color == PieceColor::WHITE)
       {
         eval += VERY_SMALL_EVAL_VALUE;
       }
@@ -111,14 +112,14 @@ void PositionEvaluator::evaluate_knight(int x_position, int y_position,
   }
 }
 
-void PositionEvaluator::evaluate_bishop(int x_position, int y_position,
-                                        Piece &piece, int &eval)
+void evaluate_bishop(int x_position, int y_position, Piece &bishop_piece,
+                     int &eval)
 {
   // Piece value.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (bishop_piece.piece_color == PieceColor::WHITE)
   {
     eval += BISHOP_VALUE;
-    if (!piece.piece_has_moved)
+    if (!bishop_piece.piece_has_moved)
     {
       eval -= LARGE_EVAL_VALUE;
     }
@@ -126,7 +127,7 @@ void PositionEvaluator::evaluate_bishop(int x_position, int y_position,
   else
   {
     eval -= BISHOP_VALUE;
-    if (!piece.piece_has_moved)
+    if (!bishop_piece.piece_has_moved)
     {
       eval += LARGE_EVAL_VALUE;
     }
@@ -142,7 +143,7 @@ void PositionEvaluator::evaluate_bishop(int x_position, int y_position,
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
-      if (piece.piece_color == PieceColor::WHITE)
+      if (bishop_piece.piece_color == PieceColor::WHITE)
       {
         eval += VERY_SMALL_EVAL_VALUE;
       }
@@ -157,11 +158,10 @@ void PositionEvaluator::evaluate_bishop(int x_position, int y_position,
   }
 }
 
-void PositionEvaluator::evaluate_rook(int x_position, int y_position,
-                                      Piece &piece, int &eval)
+void evaluate_rook(int x_position, int y_position, Piece &rook_piece, int &eval)
 {
   // Piece value.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (rook_piece.piece_color == PieceColor::WHITE)
   {
     eval += ROOK_VALUE;
   }
@@ -180,7 +180,7 @@ void PositionEvaluator::evaluate_rook(int x_position, int y_position,
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
-      if (piece.piece_color == PieceColor::WHITE)
+      if (rook_piece.piece_color == PieceColor::WHITE)
       {
         eval += VERY_SMALL_EVAL_VALUE;
       }
@@ -195,11 +195,11 @@ void PositionEvaluator::evaluate_rook(int x_position, int y_position,
   }
 }
 
-void PositionEvaluator::evaluate_queen(int x_position, int y_position,
-                                       Piece &piece, int &eval)
+void evaluate_queen(int x_position, int y_position, Piece &queen_piece,
+                    int &eval)
 {
   // Piece value.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (queen_piece.piece_color == PieceColor::WHITE)
   {
     eval += QUEEN_VALUE;
   }
@@ -218,7 +218,7 @@ void PositionEvaluator::evaluate_queen(int x_position, int y_position,
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
       // Increase evaluation based on the number of moves.
-      if (piece.piece_color == PieceColor::WHITE)
+      if (queen_piece.piece_color == PieceColor::WHITE)
       {
         eval += VERY_SMALL_EVAL_VALUE;
       }
@@ -233,11 +233,10 @@ void PositionEvaluator::evaluate_queen(int x_position, int y_position,
   }
 }
 
-void PositionEvaluator::evaluate_king(int x_position, int y_position,
-                                      Piece &piece, int &eval)
+void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval)
 {
   // Piece value.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (king_piece.piece_color == PieceColor::WHITE)
   {
     eval += KING_VALUE;
   }
@@ -247,7 +246,7 @@ void PositionEvaluator::evaluate_king(int x_position, int y_position,
   }
 
   // Position value - x coordinate.
-  if (piece.piece_color == PieceColor::WHITE)
+  if (king_piece.piece_color == PieceColor::WHITE)
   {
     eval += KING_POSITION_EVAL_MAP[x_position];
   }
@@ -256,4 +255,4 @@ void PositionEvaluator::evaluate_king(int x_position, int y_position,
     eval -= KING_POSITION_EVAL_MAP[x_position];
   }
 }
-} // namespace engine::parts
+} // namespace engine::parts::position_evaluator

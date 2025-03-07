@@ -8,6 +8,9 @@
 #include <array>
 #include <vector>
 
+/**
+ * @brief Namespace for move generator functions.
+ */
 namespace engine::parts::move_generator
 {
 
@@ -46,6 +49,7 @@ static void generate_pawn_moves(BoardState &board_state, int x_position,
  * @param pawn_piece The pawn piece.
  * @param pawn_direction The direction of the pawn.
  * @param first_move True if the pawn has not moved yet.
+ * @param promotion_rank The rank to promote the pawn.
  */
 static void generate_normal_pawn_moves(chess_board_type &chess_board,
                                        int x_position, int y_position,
@@ -65,6 +69,7 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
  * @param pawn_piece The pawn piece.
  * @param pawn_direction The direction of the pawn.
  * @param first_move True if the pawn has not moved yet.
+ * @param promotion_rank The rank to promote the pawn.
  */
 static void generate_pawn_capture_moves(chess_board_type &chess_board,
                                         int x_position, int y_position,
@@ -77,13 +82,14 @@ static void generate_pawn_capture_moves(chess_board_type &chess_board,
  *
  * @note Generated moves are pushed back into the possible_moves vector.
  *
- * @param board_state Reference of the current board state.
+ * @param chess_board Reference of the current chess board.
  * @param x_position, y_position The coordinate of the pawn.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  * @param pawn_piece The pawn piece.
  * @param pawn_direction The direction of the pawn.
  * @param first_move True if the pawn has not moved yet.
+ * @param previous_move The previous move applied on the board.
  */
 static void generate_en_passant_pawn_capture_moves(
     chess_board_type &chess_board, int x_position, int y_position,
@@ -122,9 +128,10 @@ static void generate_castle_king_moves(BoardState &board_state, int x_position,
  * @brief Helper function to check if the king can castle.
  *
  * @param board_state Reference of the current board state.
+ * @param king_piece The king piece.
  * @param x_position, y_position The coordinate of the rook.
- * @param possible_moves Reference to the list of possible moves of current
- * board_state.
+ * @param potential_rook_piece The potential rook piece.
+ * @param castle_path Squares the king must pass through to castle.
  *
  * @return bool True if the rook can castle.
  */
@@ -193,6 +200,7 @@ static void generate_queen_moves(BoardState &board_state, int x_position,
  *
  * @param board_state Reference of the current board state.
  * @param x_position, y_position The coordinate of the bishop or bishop.
+ * @param x_direction, y_direction The direction to move.
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */

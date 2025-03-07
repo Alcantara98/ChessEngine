@@ -2,7 +2,6 @@
 #define MOVE_INTERFACE_H
 
 #include "board_state.h"
-#include "move_generator.h"
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -17,37 +16,49 @@ namespace engine::parts
 class MoveInterface
 {
 public:
+  // CONSTRUCTORS
   /**
    * @brief User to Engine move interface.
+   *
+   * @param board_state Reference of the board state.
    */
   MoveInterface(BoardState &board_state);
 
+  // FUNCTIONS
   /**
    * @brief Get user input and convert it into a Move.
    *
-   * @return Returns the converted Move.
+   * @param possible_moves List of possible moves.
+   * @param move_string User input.
+   *
+   * @return Returns true if move is valid, false otherwise.
    */
   auto input_to_move(const std::vector<Move> &possible_moves,
-                     std::string move_string = "") -> Move;
+                     const std::string &move_string) -> bool;
 
   /**
    * @brief Converts a Move into a string(modern chess move notation).
    *
    * @param move Move to convert into a string.
-   * @param board_state Chess board to help conversion.
+   *
    * @return Returns a string reprsenting the move.
    */
   auto move_to_string(Move &move) -> std::string;
 
 private:
+  // PROPERTIES
   // Reference of the board state;
   BoardState &game_board_state;
 
+  // FUNCTIONS
   /**
    * @brief Retrieves information from move string and updates a Move object.
    *
    * @param move_from_input Updated Move object based on user input.
    * @param move_string String to convert into a Move.
+   * @param piece_type The type of piece that is moving.
+   *
+   * @return Returns true if move is valid, false otherwise.
    */
   auto create_move_from_string(std::unique_ptr<Move> &move_from_input,
                                const std::string &move_string,
@@ -58,6 +69,7 @@ private:
    *
    * @param possible_moves List of possible moves.
    * @param move Move to validate.
+   * @param piece_type The type of piece that is moving.
    *
    * @return Returns true if move is valid, false otherwise.
    */
@@ -66,4 +78,4 @@ private:
 };
 } // namespace engine::parts
 
-#endif
+#endif // MOVE_INTERFACE_H
