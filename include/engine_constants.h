@@ -4,6 +4,7 @@
 #include "piece.h"
 #include <array>
 #include <map>
+#include <string>
 
 namespace engine::parts
 {
@@ -126,6 +127,9 @@ const std::map<char, int> ALGEBRAIC_TO_INT = {{'a', 0}, {'b', 1}, {'c', 2},
 const std::map<int, char> INT_TO_ALGEBRAIC = {{0, 'a'}, {1, 'b'}, {2, 'c'},
                                               {3, 'd'}, {4, 'e'}, {5, 'f'},
                                               {6, 'g'}, {7, 'h'}};
+// User input constants.
+const std::string YES_NO_CHARS = "yn";
+const std::string WHITE_BLACK_CHARS = "wb";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

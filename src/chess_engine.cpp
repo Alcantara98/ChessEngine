@@ -31,26 +31,19 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
 
 void ChessEngine::main_menu_state()
 {
+  std::string user_input;
   while (!exit_state)
   {
-    std::string play_engine;
-    std::cout << "Play Against Engine (y = Yes, n = No):";
-    std::cin >> play_engine;
-    if (play_engine == "exit")
-    {
-      exit(0);
-    }
-    else if (play_engine == "y")
+    std::string user_message = "Play Against Engine (y = Yes, n = No): ";
+    user_input = getValidCharInput(user_message, "yn");
+
+    if (user_input == "y")
     {
       change_state(&ChessEngine::engine_vs_player_state);
     }
-    else if (play_engine == "n")
+    else if (user_input == "n")
     {
       change_state(&ChessEngine::player_vs_player_state);
-    }
-    else
-    {
-      printf("Invalid Input\n");
     }
   }
 }
@@ -101,7 +94,7 @@ void ChessEngine::engine_vs_player_state()
       // Engine's turn.
       if (!search_engine.execute_best_move())
       {
-        printf("Break-Point execute_best_move\n");
+        printf("BREAKPOINT execute_best_move\n");
         exit(0);
       }
     }
@@ -116,39 +109,28 @@ void ChessEngine::engine_vs_player_state()
 
 void ChessEngine::set_up_engine()
 {
-  int engine_depth;
-  do
-  {
-    std::cout << "Please Enter Engine Depth (1-30):";
-    std::cin >> engine_depth;
-  } while (engine_depth < 1 && engine_depth >= parts::MAX_SEARCH_DEPTH);
-  search_engine.max_search_depth = engine_depth;
+  std::string user_message;
+  std::string allowed_inputs;
 
-  char show_performance_char;
-  do
-  {
-    std::cout << "Show Performance (y = Yes, n = No):";
-    std::cin >> show_performance_char;
-  } while (show_performance_char != 'y' && show_performance_char != 'n');
+  user_message = "Please Enter Engine Depth (1-30): ";
+  int search_depth = getValidIntInput(user_message, 1, parts::MAX_SEARCH_DEPTH);
+  search_engine.max_search_depth = search_depth;
+
+  user_message = "Show Performance (y = Yes, n = No): ";
+  allowed_inputs = parts::YES_NO_CHARS;
+  char show_performance_char = getValidCharInput(user_message, allowed_inputs);
   search_engine.show_performance = show_performance_char == 'y';
 
-  char user_color;
-  do
-  {
-    std::cout << "Please Enter Player Color (w = White, b = Black):";
-    std::cin >> user_color;
-  } while (user_color != 'w' && user_color != 'b');
+  user_message = "Please Enter Player Color (w = White, b = Black):";
+  allowed_inputs = parts::WHITE_BLACK_CHARS;
+  char user_color = getValidCharInput(user_message, allowed_inputs);
 
+  // Set player and engine colors.
   if (user_color == 'w' &&
       game_board_state.color_to_move == parts::PieceColor::WHITE)
   {
-    // Set player colors.
     player_color = parts::PieceColor::WHITE;
     search_engine.engine_color = parts::PieceColor::BLACK;
-
-    // White goes first, player's turn.
-    game_board_state.print_board(player_color);
-    handle_player_turn();
   }
   else
   {
@@ -159,79 +141,166 @@ void ChessEngine::set_up_engine()
 
 void ChessEngine::handle_player_turn()
 {
+  // Indicate color to move to player.
+  std::string color_to_move =
+      game_board_state.color_to_move == parts::PieceColor::WHITE ? "White"
+                                                                 : "Black";
+  printf("%s's Turn\n", color_to_move.c_str());
+
+  std::string user_input;
   while (!exit_state)
   {
-    // Indicate color to move.
-    printf("%s's Turn\n",
-           game_board_state.color_to_move == parts::PieceColor::WHITE
-               ? "White"
-               : "Black");
-
     // Get user input.
-    std::string user_input;
-    std::cout << "Enter move: ";
+    printf("Enter move: ");
     std::cin >> user_input;
     std::cout << '\n';
 
-    if (user_input == "exit")
+    if (handle_state_change_commands(user_input))
     {
-      exit(0);
-    }
-    else if (user_input == "undo")
-    {
-      game_board_state.undo_move();
-      if (current_state == &ChessEngine::engine_vs_player_state)
-      {
-        game_board_state.undo_move();
-      }
-      game_board_state.print_board(game_board_state.color_to_move);
-      if (game_over)
-      {
-        game_over = false;
-      }
       continue;
     }
-    else if (user_input == "menu")
+    if (handle_board_undo_reset_commands(user_input))
     {
-      game_board_state.reset_board();
-      change_state(&ChessEngine::main_menu_state);
+      continue;
     }
-    else if (user_input == "reset")
+    if (move_interface.input_to_move(
+            parts::move_generator::calculate_possible_moves(game_board_state),
+            user_input))
     {
-      game_board_state.reset_board();
-      exit_state = true;
+      // Move was valid and played, end player's turn.
+      break;
     }
-    else if (user_input == "play-engine")
-    {
-      game_board_state.reset_board();
-      change_state(&ChessEngine::engine_vs_player_state);
-    }
-    else if (user_input == "play-player")
-    {
-      game_board_state.reset_board();
-      change_state(&ChessEngine::player_vs_player_state);
-    }
-    else if (game_over)
+    if (game_over)
     {
       printf("Game Over - Options:\n - menu\n - exit\n - undo\n - reset\n - "
              "play-engine\n - "
-             "play-player\n");
-    }
-    else if (user_input == "help")
-    {
-      printf(
-          "Options:\n - menu\n - exit\n - undo\n - reset\n - play-engine\n - "
-          "play-player\n");
-    }
-    else if (move_interface.input_to_move(
-                 parts::move_generator::calculate_possible_moves(
-                     game_board_state),
-                 user_input))
-    {
-      // Move was valid, end player's turn.
-      break;
+             "play-player\n\n");
     }
   }
+}
+
+auto ChessEngine::handle_state_change_commands(const std::string &user_input)
+    -> bool
+{
+  if (user_input == "exit")
+  {
+    exit(0);
+  }
+  else if (user_input == "menu")
+  {
+    game_board_state.reset_board();
+    change_state(&ChessEngine::main_menu_state);
+  }
+  else if (user_input == "play-engine")
+  {
+    game_board_state.reset_board();
+    change_state(&ChessEngine::engine_vs_player_state);
+  }
+  else if (user_input == "play-player")
+  {
+    game_board_state.reset_board();
+    change_state(&ChessEngine::player_vs_player_state);
+  }
+  else if (user_input == "help")
+  {
+    printf("Options:\n - menu\n - exit\n - undo\n - reset\n - play-engine\n - "
+           "play-player\n\n");
+  }
+  else
+  {
+    return false;
+  }
+  return true;
+}
+
+auto ChessEngine::handle_board_undo_reset_commands(
+    const std::string &user_input) -> bool
+{
+  if (user_input == "undo")
+  {
+    game_board_state.undo_move();
+    if (current_state == &ChessEngine::engine_vs_player_state)
+    {
+      game_board_state.undo_move();
+    }
+    game_board_state.print_board(game_board_state.color_to_move);
+    if (game_over)
+    {
+      game_over = false;
+    }
+  }
+  else if (user_input == "reset")
+  {
+    game_board_state.reset_board();
+    exit_state = true;
+  }
+  else
+  {
+    return false;
+  }
+  return true;
+}
+
+auto ChessEngine::getValidIntInput(const std::string &user_message, int min,
+                                   int max) -> int
+{
+  int int_input;
+  std::string user_input;
+
+  while (!exit_state)
+  {
+    printf("%s", user_message.c_str());
+
+    // Get user input.
+    std::cin >> user_input;
+
+    if (handle_state_change_commands(user_input))
+    {
+      continue;
+    }
+
+    // Use a stringstream to extract the integer.
+    std::istringstream stream(user_input);
+
+    // Try to convert the string to an integer.
+    if (stream >> int_input && int_input >= min && int_input <= max &&
+        stream.eof())
+    {
+      return int_input;
+    }
+    printf("Invalid input or out of range. Please try again\n\n");
+  }
+  return 0;
+}
+
+auto ChessEngine::getValidCharInput(const std::string &user_message,
+                                    const std::string &valid_chars) -> char
+{
+  char char_input;
+  std::string user_input;
+
+  while (!exit_state)
+  {
+    printf("%s", user_message.c_str());
+
+    // Get user input.
+    std::cin >> user_input;
+
+    if (handle_state_change_commands(user_input))
+    {
+      continue;
+    }
+
+    // Check if the input is a valid character.
+    if (user_input.length() == 1 &&
+        valid_chars.find(user_input) != std::string::npos)
+    {
+      char_input = user_input[0];
+      return char_input;
+    }
+    printf("Invalid input. Please try again\n\n");
+  }
+  return ' ';
 }
 
 auto ChessEngine::is_checkmate() -> bool

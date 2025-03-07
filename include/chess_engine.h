@@ -6,6 +6,7 @@
 #include "search_engine.h"
 
 #include <functional>
+#include <sstream>
 
 namespace engine
 {
@@ -82,6 +83,47 @@ private:
    * @brief Takes user input and handles the player's turn.
    */
   void handle_player_turn();
+
+  /**
+   * @brief Handles state changes based on user input.
+   *
+   * @param user_input User input.
+   *
+   * @return True if the input is a state change command.
+   */
+  auto handle_state_change_commands(const std::string &user_input) -> bool;
+
+  /**
+   * @brief Handles board manipulation commands.
+   *
+   * @param user_input User input.
+   *
+   * @return True if the input is a board manipulation command.
+   */
+  auto handle_board_undo_reset_commands(const std::string &user_input) -> bool;
+
+  /**
+   * @brief Gets a valid integer input from the user.
+   *
+   * @param user_message User message to display to the user.
+   * @param min Minimum value.
+   * @param max Maximum value.
+   *
+   * @return Valid integer input.
+   */
+  auto getValidIntInput(const std::string &user_message, int min,
+                        int max) -> int;
+
+  /**
+   * @brief Gets a valid character input from the user.
+   *
+   * @param user_message User message to display to the user.
+   * @param valid_chars Valid characters.
+   *
+   * @return Valid character input.
+   */
+  auto getValidCharInput(const std::string &user_message,
+                         const std::string &valid_chars) -> char;
 
   /**
    * @brief Checks if the current player is in checkmate.
