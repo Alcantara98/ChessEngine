@@ -12,7 +12,7 @@
 - Iterative Deepening
 
 #### from v1.2.0
-- Null Pruning
+- Null Move Pruning
 
 **Current Branching Factor**: 9-10 ((branching_factor)^(search_depth) = leaf_nodes_visited)
 <br/><br/>
