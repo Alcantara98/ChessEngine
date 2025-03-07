@@ -189,7 +189,8 @@ void ChessEngine::handle_player_turn()
     }
     if (game_over)
     {
-      printf("\n -- Game Over -- \nCommand Options:\n - menu\n - exit\n - undo\n - reset\n - "
+      printf("\n -- Game Over -- \nCommand Options:\n - menu\n - exit\n - "
+             "undo\n - reset\n - "
              "play-engine\n - "
              "play-player\n\n");
     }
