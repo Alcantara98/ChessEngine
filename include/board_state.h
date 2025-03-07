@@ -16,8 +16,8 @@
 namespace engine::parts
 {
 // 8 x 8 array type to represent a chess board.
-typedef std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>
-    chess_board_type;
+using chess_board_type =
+    std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>;
 
 /**
  * @brief Class to represent the current state of the chess board.

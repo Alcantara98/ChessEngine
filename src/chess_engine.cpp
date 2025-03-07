@@ -62,9 +62,10 @@ void ChessEngine::player_vs_player_state()
     game_board_state.print_board(game_board_state.color_to_move);
     if (!game_over && is_checkmate())
     {
-      printf("Checkmate, %s WINS!\n",
-             game_board_state.color_to_move == player_color ? "Engine"
-                                                            : "Player");
+      std::string winner =
+          game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"
+                                                                     : "White";
+      printf("Checkmate, %s WINS!\n", winner.c_str());
       game_over = true;
     }
     if (!game_over && is_stalemate())
@@ -85,9 +86,9 @@ void ChessEngine::engine_vs_player_state()
   {
     if (!game_over && is_checkmate())
     {
-      printf("Checkmate, %s WINS!\n",
-             game_board_state.color_to_move == player_color ? "Engine"
-                                                            : "Player");
+      std::string winner =
+          game_board_state.color_to_move == player_color ? "Engine" : "Player";
+      printf("Checkmate, %s WINS!\n", winner.c_str());
       game_over = true;
     }
     if (!game_over && is_stalemate())
