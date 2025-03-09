@@ -38,6 +38,10 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
   {
     current_state_name = parts::ENGINE_VS_PLAYER_STATE;
   }
+  if (game_over)
+  {
+    game_over = false;
+  }
   game_board_state.reset_board();
   current_state = new_state;
   exit_state = true;
@@ -273,7 +277,7 @@ auto ChessEngine::handle_board_undo_reset_commands(
   }
 
   // If it was game over and we undid the last move, it is no longer game over.
-  if (game_over && (user_input == "undo" || user_input == "redo"))
+  if (game_over)
   {
     game_over = false;
   }
