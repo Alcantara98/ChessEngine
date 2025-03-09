@@ -45,9 +45,9 @@ public:
   BoardState(PieceColor color_to_move = PieceColor::WHITE);
 
   /**
-   * @brief Use if boardstate is not default chess starting state.
+   * @brief Constructor to initialize board state with a given chess board.
    *
-   * @param input_chess_board Initialises chess_board to equal
+   * @param input_chess_board Initializes chess_board to equal
    * input_chess_board.
    * @param color_to_move Color to move with current state. White by default
    * starts the game.
@@ -56,7 +56,7 @@ public:
              PieceColor color_to_move = PieceColor::WHITE);
 
   /**
-   * @brief Use to copy another board state.
+   * @brief Copy constructor to copy another board state.
    *
    * @param other The board state to copy.
    */
@@ -86,32 +86,33 @@ public:
   void print_board(PieceColor color);
 
   /**
-   * @brief Will apply the given move unto board_state;
+   * @brief Applies the given move to the board state.
    *
    * @param move Move to apply on board_state.
    */
   void apply_move(Move &move);
 
   /**
-   * @brief Will undo the given move unto board_state;
+   * @brief Undoes the last move applied to the board state.
    */
   void undo_move();
 
   /**
-   * @brief Will apply a null move unto board_state;
+   * @brief Applies a null move to the board state.
    */
   void apply_null_move();
 
   /**
-   * @brief Will undo a null move unto board_state;
+   * @brief Undoes a null move applied to the board state.
    */
   void undo_null_move();
 
   /**
    * @brief Checks if the given square is attacked.
    *
-   * @param x_position, y_position The coordinate of the square.
-   * @param color_being_attacked The color of the attacked pieces.
+   * @param x_position The x coordinate of the square.
+   * @param y_position The y coordinate of the square.
+   * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
@@ -119,11 +120,11 @@ public:
                           PieceColor color_being_attacked) -> bool;
 
   /**
-   * @brief Checks if the king of the given color is checked.
+   * @brief Checks if the king of the given color is in check.
    *
    * @param color_of_king The color of the king to check.
    *
-   * @return True if the king is checked, false otherwise.
+   * @return True if the king is in check, false otherwise.
    */
   auto king_is_checked(PieceColor &color_of_king) -> bool;
 
@@ -177,15 +178,16 @@ private:
   void clear_pointers();
 
   /**
-   * @brief Initialises the zobrist keys.
+   * @brief Initializes the Zobrist keys.
    */
   void initialize_zobrist_keys();
 
   /**
    * @brief Helper function to check if a square is attacked by a pawn.
    *
-   * @param x_position, y_position The coordinate of the pawn.
-   * @param color_being_attacked The color of the attacked pieces.
+   * @param x_position The x coordinate of the pawn.
+   * @param y_position The y coordinate of the pawn.
+   * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
@@ -195,8 +197,9 @@ private:
   /**
    * @brief Helper function to check if a square is attacked by a knight.
    *
-   * @param x_position, y_position The coordinate of the knight.
-   * @param color_being_attacked The color of the attacked pieces.
+   * @param x_position The x coordinate of the knight.
+   * @param y_position The y coordinate of the knight.
+   * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
@@ -206,8 +209,9 @@ private:
   /**
    * @brief Helper function to check if a square is attacked by a rook or queen.
    *
-   * @param x_position, y_position The coordinate of the rook or queen.
-   * @param color_being_attacked The color of the attacked pieces.
+   * @param x_position The x coordinate of the rook or queen.
+   * @param y_position The y coordinate of the rook or queen.
+   * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
@@ -219,8 +223,9 @@ private:
    * @brief Helper function to check if a square is attacked by a bishop or
    * queen.
    *
-   * @param x_position, y_position The coordinate of the bishop or queen.
-   * @param color_being_attacked The color of the attacked pieces.
+   * @param x_position The x coordinate of the bishop or queen.
+   * @param y_position The y coordinate of the bishop or queen.
+   * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
@@ -231,8 +236,9 @@ private:
   /**
    * @brief Helper function to check if a square is attacked by a king.
    *
-   * @param x_position, y_position The coordinate of the king.
-   * @param color_being_attacked The color of the attacked pieces.
+   * @param x_position The x coordinate of the king.
+   * @param y_position The y coordinate of the king.
+   * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */

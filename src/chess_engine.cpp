@@ -252,9 +252,14 @@ auto ChessEngine::handle_board_undo_reset_commands(
       game_board_state.undo_move();
     }
     game_board_state.print_board(game_board_state.color_to_move);
-    if (game_over)
+  }
+  else if (user_input == "redo")
+  {
+    game_board_state.undo_move();
+    if (game_board_state.color_to_move == player_color &&
+        current_state == &ChessEngine::engine_vs_player_state)
     {
-      game_over = false;
+      game_board_state.undo_move();
     }
   }
   else if (user_input == "reset")
@@ -265,6 +270,12 @@ auto ChessEngine::handle_board_undo_reset_commands(
   else
   {
     return false;
+  }
+
+  // If it was game over and we undid the last move, it is no longer game over.
+  if (game_over && (user_input == "undo" || user_input == "redo"))
+  {
+    game_over = false;
   }
   return true;
 }
