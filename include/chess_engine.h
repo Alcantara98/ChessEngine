@@ -40,7 +40,7 @@ private:
   parts::MoveInterface move_interface;
 
   // Player color.
-  parts::PieceColor player_color;
+  parts::PieceColor player_color = parts::PieceColor::NONE;
 
   // Flag to go exit current state.
   bool exit_state = false;
