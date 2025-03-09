@@ -52,6 +52,7 @@ public:
 
 private:
   // PROPERTIES
+
   // Use for starting values of alpha and beta;
   const int INF = std::numeric_limits<int>::max();
 
@@ -71,6 +72,7 @@ private:
   int max_iterative_search_depth;
 
   // FUNCTIONS
+
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.

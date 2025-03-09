@@ -73,7 +73,6 @@ auto SearchEngine::execute_best_move() -> bool
       printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
       printf("Nodes Visited %d\n", nodes_visited.load());
       printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
-      printf("TT Size: %d\n", transposition_table.get_size());
       printf("Nodes per second: %d kN/s\n\n",
              static_cast<int>(nodes_visited /
                               (duration / MILLISECONDS_TO_SECONDS) /

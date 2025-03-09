@@ -17,12 +17,14 @@ class ChessEngine
 {
 public:
   // CONSTRUCTORS
+
   /**
    * @brief Default Constructor - Initialises the Chess Engine.
    */
   ChessEngine();
 
   // FUNCTIONS
+
   /**
    * @brief State machine for the chess engine.
    */
@@ -30,6 +32,7 @@ public:
 
 private:
   // PROPERTIES
+
   // Board state object.
   parts::BoardState game_board_state;
 
@@ -55,6 +58,7 @@ private:
   std::string current_state_name = parts::MAIN_MENU_STATE;
 
   // FUNCTIONS
+
   /**
    * @brief Changes the current state.
    *

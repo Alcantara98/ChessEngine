@@ -15,6 +15,10 @@ namespace engine::parts
 struct TranspositionTableEntry
 {
   // PROPERTIES
+
+  // Hash of the board state.
+  uint64_t hash;
+
   // Maximum depth of the search.
   int search_depth;
 
@@ -24,9 +28,6 @@ struct TranspositionTableEntry
   // Flag of the value. 0 = exact, 1 = lower bound, 2 = upper bound.
   int flag;
 
-  // Least recently used position in the LRU list.
-  std::list<uint64_t>::iterator lru_position;
-
   // Index of the best move in the board state.
   int best_move_index;
 };
@@ -35,19 +36,24 @@ class TranspositionTable
 {
 public:
   // CONSTRUCTORS
+
   /**
    * @brief Construct a new Transposition Table object
    */
   TranspositionTable(uint64_t max_size);
 
+  ~TranspositionTable();
+
   // FUNCTIONS
+
   /**
    * @brief Store a new entry in the transposition table.
    *
-   * @param board_state Board state to store.
+   * @param hash Hash of the board state.
    * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
+   * @param best_move_index Index of the best move in the board state.
    */
   void store(uint64_t &hash, int search_depth, int eval_score, int flag,
              int best_move_index);
@@ -55,21 +61,16 @@ public:
   /**
    * @brief Retrieve an entry from the transposition table.
    *
-   * @param board_state Board state to retrieve.
+   * @param hash Hash of the board state.
    * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
+   * @param best_move_index Index of the best move in the board state.
    *
    * @return true if the entry was found, false otherwise.
    */
   auto retrieve(uint64_t &hash, int &search_depth, int &eval_score, int &flag,
                 int &best_move_index) -> bool;
-  /**
-   * @brief Get the size of the transposition table.
-   *
-   * @return int The size of the transposition table.
-   */
-  auto get_size() -> int;
 
   /**
    * @brief Clear the transposition table.
@@ -78,23 +79,12 @@ public:
 
 private:
   // PROPERTIES
-  // Maximum size of the transposition table.
+
+  // Size of the transposition table.
   uint64_t max_size;
 
-  // Hash table to store entries.
-  std::unordered_map<uint64_t, TranspositionTableEntry> table;
-
-  // List of hash values in least recently used order.
-  std::list<uint64_t> lru_list;
-
-  // Mutex to protect the table.
-  std::mutex mutex;
-
-  // FUNCTIONS
-  /**
-   * @brief Remove the least recently used entry from the table.
-   */
-  void trim();
+  // Transposition table represented as an array.
+  TranspositionTableEntry *tt_table;
 };
 } // namespace engine::parts
 
