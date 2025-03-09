@@ -49,10 +49,11 @@ public:
   /**
    * @brief Store a new entry in the transposition table.
    *
-   * @param board_state Board state to store.
+   * @param hash Hash of the board state.
    * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
+   * @param best_move_index Index of the best move in the board state.
    */
   void store(uint64_t &hash, int search_depth, int eval_score, int flag,
              int best_move_index);
@@ -60,10 +61,11 @@ public:
   /**
    * @brief Retrieve an entry from the transposition table.
    *
-   * @param board_state Board state to retrieve.
+   * @param hash Hash of the board state.
    * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
+   * @param best_move_index Index of the best move in the board state.
    *
    * @return true if the entry was found, false otherwise.
    */
@@ -78,7 +80,7 @@ public:
 private:
   // PROPERTIES
 
-  // Maximum size of the transposition table.
+  // Size of the transposition table.
   uint64_t max_size;
 
   // Transposition table represented as an array.
