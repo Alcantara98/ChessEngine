@@ -26,6 +26,7 @@ class BoardState
 {
 public:
   // PROPERTIES
+
   // 8 x 8 array to represent a chess board.
   chess_board_type chess_board;
 
@@ -36,6 +37,7 @@ public:
   PieceColor color_to_move = PieceColor::WHITE;
 
   // CONSTRUCTORS
+
   /**
    * @brief Default Constructor - sets chess_board using setup_board.
    *
@@ -68,6 +70,7 @@ public:
   ~BoardState();
 
   // FUNCTIONS
+
   /**
    * @brief Resets chess board to default starting piece positions.
    */
@@ -146,6 +149,7 @@ public:
 
 private:
   // PROPERTIES
+
   // PieceType to Char mapping for white pieces.
   const std::unordered_map<PieceType, char> white_piece_to_char_map = {
       {PieceType::EMPTY, '-'},  {PieceType::KING, 'K'},
@@ -172,6 +176,7 @@ private:
   Piece empty_piece;
 
   // FUNCTIONS
+
   /**
    * @brief Clears all pointers in the chess board.
    */

@@ -11,6 +11,7 @@ namespace engine::parts
 struct Move
 {
   // PROPERTIES
+
   // The piece that is moving.
   Piece *moving_piece;
 
@@ -39,6 +40,7 @@ struct Move
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
   // CONSTRUCTORS
+
   /**
    * @brief Constructor with all parameters.
    *
@@ -120,6 +122,8 @@ struct Move
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
        Piece *captured_piece, PieceType promotion_piece_type);
+
+  // FUNCTIONS
 
   /**
    * @brief Overloaded operator to compare two moves.

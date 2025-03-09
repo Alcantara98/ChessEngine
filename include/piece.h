@@ -35,6 +35,7 @@ enum class PieceColor : std::uint8_t
 struct Piece
 {
   // PROPERTIES
+
   // Type of piece.
   PieceType piece_type;
 
@@ -45,6 +46,7 @@ struct Piece
   bool piece_has_moved;
 
   // CONSTRUCTORS
+
   /**
    * @brief Constructor with default values.
    *
