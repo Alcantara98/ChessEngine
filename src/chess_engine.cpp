@@ -193,7 +193,7 @@ void ChessEngine::handle_player_turn()
     }
     if (handle_board_undo_reset_commands(user_input))
     {
-      continue;
+      break;
     }
     if (move_interface.input_to_move(
             parts::move_generator::calculate_possible_moves(game_board_state),
