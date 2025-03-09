@@ -25,6 +25,7 @@ void ChessEngine::state_machine()
 
 void ChessEngine::change_state(void (ChessEngine::*new_state)())
 {
+  player_color = parts::PieceColor::NONE;
   if (new_state == &ChessEngine::main_menu_state)
   {
     current_state_name = parts::MAIN_MENU_STATE;
@@ -160,16 +161,30 @@ void ChessEngine::set_up_engine()
 void ChessEngine::handle_player_turn()
 {
   // Indicate color to move to player.
-  std::string color_to_move =
-      game_board_state.color_to_move == parts::PieceColor::WHITE ? "White"
-                                                                 : "Black";
-  printf("%s's Turn\n", color_to_move.c_str());
+  if (!game_over)
+  {
+    std::string color_to_move =
+        game_board_state.color_to_move == parts::PieceColor::WHITE ? "White"
+                                                                   : "Black";
+    printf("%s's Turn\n", color_to_move.c_str());
+  }
 
   std::string user_input;
   while (!exit_state)
   {
+    if (game_over)
+    {
+      printf("\n -- Game Over -- \n\nCommand Options:\n - menu\n - exit\n - "
+             "undo\n - reset\n - "
+             "play-engine\n - "
+             "play-player\n\n");
+      printf("Enter one of the commands above: ");
+    }
+    else
+    {
+      printf("Enter move: ");
+    }
     // Get user input.
-    printf("Enter move: ");
     std::cin >> user_input;
 
     if (handle_state_change_commands(user_input))
@@ -186,13 +201,6 @@ void ChessEngine::handle_player_turn()
     {
       // Move was valid and played, end player's turn.
       break;
-    }
-    if (game_over)
-    {
-      printf("\n -- Game Over -- \nCommand Options:\n - menu\n - exit\n - "
-             "undo\n - reset\n - "
-             "play-engine\n - "
-             "play-player\n\n");
     }
   }
 }
@@ -238,7 +246,8 @@ auto ChessEngine::handle_board_undo_reset_commands(
   if (user_input == "undo")
   {
     game_board_state.undo_move();
-    if (current_state == &ChessEngine::engine_vs_player_state)
+    if (game_board_state.color_to_move != player_color &&
+        current_state == &ChessEngine::engine_vs_player_state)
     {
       game_board_state.undo_move();
     }
