@@ -49,7 +49,7 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
 
 void ChessEngine::main_menu_state()
 {
-  printf("\n~%s~\n\n", parts::MAIN_MENU_STATE.c_str());
+  printf("\n~%s~\n", parts::MAIN_MENU_STATE.c_str());
   std::string user_input;
   while (!exit_state)
   {
@@ -141,13 +141,11 @@ void ChessEngine::set_up_engine()
   search_engine.max_search_depth = search_depth;
 
   user_message = "Show Performance (y = Yes, n = No): ";
-  allowed_inputs = parts::YES_NO_CHARS;
-  char show_performance_char = getValidCharInput(user_message, allowed_inputs);
+  char show_performance_char = getValidCharInput(user_message, "yn");
   search_engine.show_performance = show_performance_char == 'y';
 
   user_message = "Please Enter Player Color (w = White, b = Black):";
-  allowed_inputs = parts::WHITE_BLACK_CHARS;
-  char user_color = getValidCharInput(user_message, allowed_inputs);
+  char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
   if (user_color == 'w' &&
