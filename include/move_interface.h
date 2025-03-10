@@ -45,7 +45,7 @@ public:
    *
    * @return Returns a string reprsenting the move.
    */
-  auto move_to_string(Move &move) -> std::string;
+  static auto move_to_string(const Move &move) -> std::string;
 
 private:
   // PROPERTIES

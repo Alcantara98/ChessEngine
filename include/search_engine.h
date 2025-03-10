@@ -3,6 +3,7 @@
 
 #include "board_state.h"
 #include "move_generator.h"
+#include "move_interface.h"
 #include "position_evaluator.h"
 #include "transposition_table.h"
 
