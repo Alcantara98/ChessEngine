@@ -135,6 +135,17 @@ const std::string WHITE_BLACK_CHARS = "wb";
 const std::string MAIN_MENU_STATE = "Main Menu";
 const std::string PLAYER_VS_PLAYER_STATE = "Player vs Player";
 const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
+
+// Interface messages.
+const std::string GAME_OVER_HELP_MESSAGE =
+    "\n-- Game Over-- \n\nCommand Options :\n  - menu\n  - exit\n  - undo\n  - "
+    "reset\n  - play-engine\n  - play-player\n  - print-moves\n  - "
+    "help\n\nEnter one of the commands above: ";
+
+const std::string HELP_MESSAGE =
+    "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
+    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n -  "
+    "print-moves\n -  enter a move\n\n";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H
