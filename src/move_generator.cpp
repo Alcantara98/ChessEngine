@@ -101,45 +101,42 @@ void generate_normal_pawn_moves(chess_board_type &chess_board, int x_position,
 {
   // One square move forward.
   // Check if the square in front of the pawn is empty.
-  if (chess_board[x_position][y_position + pawn_direction]->piece_type ==
-      PieceType::EMPTY)
+  int new_y_position = y_position + pawn_direction;
+  if (new_y_position >= Y_MIN && new_y_position <= Y_MAX)
   {
+    if (chess_board[x_position][new_y_position]->piece_type == PieceType::EMPTY)
+    {
 
-    if (y_position + pawn_direction == promotion_rank)
-    {
-      // Promotion moves.
-      possible_moves.emplace_back(x_position, y_position, x_position,
-                                  y_position + pawn_direction, pawn_piece,
-                                  PieceType::QUEEN);
-      possible_moves.emplace_back(x_position, y_position, x_position,
-                                  y_position + pawn_direction, pawn_piece,
-                                  PieceType::BISHOP);
-      possible_moves.emplace_back(x_position, y_position, x_position,
-                                  y_position + pawn_direction, pawn_piece,
-                                  PieceType::KNIGHT);
-      possible_moves.emplace_back(x_position, y_position, x_position,
-                                  y_position + pawn_direction, pawn_piece,
-                                  PieceType::ROOK);
+      if (new_y_position == promotion_rank)
+      {
+        // Promotion moves.
+        for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
+                                PieceType::KNIGHT, PieceType::ROOK})
+        {
+          possible_moves.emplace_back(x_position, y_position, x_position,
+                                      new_y_position, pawn_piece, piece_type);
+        }
+      }
+      else
+      {
+        // Normal move.
+        possible_moves.emplace_back(x_position, y_position, x_position,
+                                    new_y_position, pawn_piece, first_move);
+      }
     }
-    else
+    // Two square move forward.
+    // Check if both squares in front of the pawn are empty.
+    int new_y_position_two_squares = y_position + (2 * pawn_direction);
+    if (first_move &&
+        chess_board[x_position][new_y_position]->piece_type ==
+            PieceType::EMPTY &&
+        chess_board[x_position][new_y_position_two_squares]->piece_type ==
+            PieceType::EMPTY)
     {
-      // Normal move.
       possible_moves.emplace_back(x_position, y_position, x_position,
-                                  y_position + pawn_direction, pawn_piece,
-                                  first_move);
+                                  new_y_position_two_squares, pawn_piece, true,
+                                  true, x_position, new_y_position_two_squares);
     }
-  }
-  // Two square move forward.
-  // Check if both squares in front of the pawn are empty.
-  if (first_move &&
-      chess_board[x_position][y_position + pawn_direction]->piece_type ==
-          PieceType::EMPTY &&
-      chess_board[x_position][y_position + (2 * pawn_direction)]->piece_type ==
-          PieceType::EMPTY)
-  {
-    possible_moves.emplace_back(
-        x_position, y_position, x_position, y_position + (2 * pawn_direction),
-        pawn_piece, true, true, x_position, y_position + (2 * pawn_direction));
   }
 }
 
@@ -149,65 +146,36 @@ void generate_pawn_capture_moves(chess_board_type &chess_board, int x_position,
                                  Piece *pawn_piece, int pawn_direction,
                                  bool first_move, int promotion_rank)
 {
-  // Normal Capture left.
-  if (x_position > X_MIN)
+  // Pawn can capture left and right.
+  for (int capture_direction : {NEGATIVE_DIRECTION, POSITIVE_DIRECTION})
   {
-    Piece *captured_piece =
-        chess_board[x_position - 1][y_position + pawn_direction];
-    if (captured_piece->piece_type != PieceType::EMPTY &&
-        captured_piece->piece_color != pawn_piece->piece_color)
+    int new_x_position = x_position + capture_direction;
+    int new_y_position = y_position + pawn_direction;
+    if (new_x_position >= X_MIN && new_x_position <= X_MAX &&
+        new_y_position >= Y_MIN && new_y_position <= Y_MAX)
     {
-      if (y_position + pawn_direction == promotion_rank)
+      Piece *captured_piece = chess_board[new_x_position][new_y_position];
+      if (captured_piece->piece_type != PieceType::EMPTY &&
+          captured_piece->piece_color != pawn_piece->piece_color)
       {
-        possible_moves.emplace_back(x_position, y_position, x_position - 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::QUEEN);
-        possible_moves.emplace_back(x_position, y_position, x_position - 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::BISHOP);
-        possible_moves.emplace_back(x_position, y_position, x_position - 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::KNIGHT);
-        possible_moves.emplace_back(x_position, y_position, x_position - 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::ROOK);
-      }
-      else
-      {
-        possible_moves.emplace_back(x_position, y_position, x_position - 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, first_move);
-      }
-    }
-  }
-  // Normal Capture right.
-  if (x_position < X_MAX)
-  {
-    Piece *captured_piece =
-        chess_board[x_position + 1][y_position + pawn_direction];
-    if (captured_piece->piece_type != PieceType::EMPTY &&
-        captured_piece->piece_color != pawn_piece->piece_color)
-    {
-      if (y_position + pawn_direction == promotion_rank)
-      {
-        possible_moves.emplace_back(x_position, y_position, x_position + 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::QUEEN);
-        possible_moves.emplace_back(x_position, y_position, x_position + 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::BISHOP);
-        possible_moves.emplace_back(x_position, y_position, x_position + 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::KNIGHT);
-        possible_moves.emplace_back(x_position, y_position, x_position + 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, PieceType::ROOK);
-      }
-      else
-      {
-        possible_moves.emplace_back(x_position, y_position, x_position + 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, first_move);
+        if (y_position + pawn_direction == promotion_rank)
+        {
+          // Add promotion moves.
+          for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
+                                  PieceType::KNIGHT, PieceType::ROOK})
+          {
+            possible_moves.emplace_back(x_position, y_position, new_x_position,
+                                        new_y_position, pawn_piece,
+                                        captured_piece, piece_type);
+          }
+        }
+        else
+        {
+          // Normal capture move.
+          possible_moves.emplace_back(x_position, y_position, new_x_position,
+                                      new_y_position, pawn_piece,
+                                      captured_piece, first_move);
+        }
       }
     }
   }
@@ -225,37 +193,26 @@ void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
   if ((y_position == Y5_RANK && pawn_piece->piece_color == PieceColor::WHITE) ||
       (y_position == Y4_RANK && pawn_piece->piece_color == PieceColor::BLACK))
   {
-    // En-passant left.
-    if (x_position > X_MIN)
+    // Pawn can capture, en-passant, left and right.
+    for (int capture_direction : {NEGATIVE_DIRECTION, POSITIVE_DIRECTION})
     {
-      Piece *captured_piece = chess_board[x_position - 1][y_position];
-      if (captured_piece->piece_type == PieceType::PAWN &&
-          previous_move.pawn_moved_two_squares_to_x == (x_position - 1) &&
-          previous_move.pawn_moved_two_squares_to_y == y_position &&
-          captured_piece->piece_color != pawn_piece->piece_color &&
-          chess_board[x_position - 1][y_position + pawn_direction]
-                  ->piece_type == PieceType::EMPTY)
+      int new_x_position = x_position + capture_direction;
+      int new_y_position = y_position + pawn_direction;
+      if (new_x_position >= X_MIN && new_x_position <= X_MAX)
       {
+        Piece *captured_piece = chess_board[new_x_position][y_position];
+        if (captured_piece->piece_type == PieceType::PAWN &&
+            previous_move.pawn_moved_two_squares_to_x == new_x_position &&
+            previous_move.pawn_moved_two_squares_to_y == y_position &&
+            captured_piece->piece_color != pawn_piece->piece_color &&
+            chess_board[new_x_position][new_y_position]->piece_type ==
+                PieceType::EMPTY)
+        {
 
-        possible_moves.emplace_back(x_position, y_position, x_position - 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, first_move, true);
-      }
-    }
-    // En-passant right.
-    if (x_position < X_MAX)
-    {
-      Piece *captured_piece = chess_board[x_position + 1][y_position];
-      if (captured_piece->piece_type == PieceType::PAWN &&
-          previous_move.pawn_moved_two_squares_to_x == (x_position + 1) &&
-          previous_move.pawn_moved_two_squares_to_y == y_position &&
-          captured_piece->piece_color != pawn_piece->piece_color &&
-          chess_board[x_position + 1][y_position + pawn_direction]
-                  ->piece_type == PieceType::EMPTY)
-      {
-        possible_moves.emplace_back(x_position, y_position, x_position + 1,
-                                    y_position + pawn_direction, pawn_piece,
-                                    captured_piece, first_move, true);
+          possible_moves.emplace_back(x_position, y_position, new_x_position,
+                                      new_y_position, pawn_piece,
+                                      captured_piece, first_move, true);
+        }
       }
     }
   }
