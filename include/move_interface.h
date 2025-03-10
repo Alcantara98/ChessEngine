@@ -45,7 +45,7 @@ public:
    *
    * @return Returns a string reprsenting the move.
    */
-  auto move_to_string(Move &move) -> std::string;
+  static auto move_to_string(const Move &move) -> std::string;
 
 private:
   // PROPERTIES
@@ -58,14 +58,13 @@ private:
   /**
    * @brief Retrieves information from move string and updates a Move object.
    *
-   * @param move_from_input Updated Move object based on user input.
+   * @param move Updated this Move object based on user input.
    * @param move_string String to convert into a Move.
    * @param piece_type The type of piece that is moving.
    *
    * @return Returns true if move is valid, false otherwise.
    */
-  auto create_move_from_string(std::unique_ptr<Move> &move_from_input,
-                               const std::string &move_string,
+  auto create_move_from_string(Move &move, const std::string &move_string,
                                char &piece_type) -> bool;
 
   /**
@@ -77,7 +76,7 @@ private:
    *
    * @return Returns true if move is valid, false otherwise.
    */
-  auto validate_move(const std::vector<Move> &possible_moves, Move *move,
+  auto validate_move(const std::vector<Move> &possible_moves, Move &move,
                      char &piece_type) -> bool;
 };
 } // namespace engine::parts

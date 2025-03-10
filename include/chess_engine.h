@@ -152,6 +152,11 @@ private:
    * king, it is a stalemate.
    */
   auto is_stalemate() -> bool;
+
+  /**
+   * @brief Prints all the moves applied to the board.
+   */
+  void print_applied_moves();
 };
 } // namespace engine
 

@@ -93,6 +93,8 @@ auto SearchEngine::execute_best_move() -> bool
     if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
       game_board_state.apply_move(move_score.first);
+      printf("Engine's Move: %s\n",
+             MoveInterface::move_to_string(move_score.first).c_str());
       printf("Evaluation of Engine's Move: %d\n", -move_score.second);
       return true;
     }

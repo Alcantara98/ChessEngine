@@ -127,14 +127,22 @@ const std::map<char, int> ALGEBRAIC_TO_INT = {{'a', 0}, {'b', 1}, {'c', 2},
 const std::map<int, char> INT_TO_ALGEBRAIC = {{0, 'a'}, {1, 'b'}, {2, 'c'},
                                               {3, 'd'}, {4, 'e'}, {5, 'f'},
                                               {6, 'g'}, {7, 'h'}};
-// User input constants.
-const std::string YES_NO_CHARS = "yn";
-const std::string WHITE_BLACK_CHARS = "wb";
 
 // State names.
 const std::string MAIN_MENU_STATE = "Main Menu";
 const std::string PLAYER_VS_PLAYER_STATE = "Player vs Player";
 const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
+
+// Interface messages.
+const std::string GAME_OVER_HELP_MESSAGE =
+    "\n-- Game Over-- \n\nCommand Options :\n  - menu\n  - exit\n  - undo\n  - "
+    "reset\n  - play-engine\n  - play-player\n  - print-moves\n  - "
+    "help\n\nEnter one of the commands above: ";
+
+const std::string HELP_MESSAGE =
+    "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
+    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n -  "
+    "print-moves\n -  enter a move\n\n";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

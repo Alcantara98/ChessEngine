@@ -49,10 +49,11 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
 
 void ChessEngine::main_menu_state()
 {
-  printf("\n~%s~\n\n", parts::MAIN_MENU_STATE.c_str());
+  printf("\n~%s~\n", parts::MAIN_MENU_STATE.c_str());
   std::string user_input;
   while (!exit_state)
   {
+    printf("%s", parts::HELP_MESSAGE.c_str());
     std::string user_message = "Play Against Engine (y = Yes, n = No): ";
     user_input = getValidCharInput(user_message, "yn");
 
@@ -140,13 +141,11 @@ void ChessEngine::set_up_engine()
   search_engine.max_search_depth = search_depth;
 
   user_message = "Show Performance (y = Yes, n = No): ";
-  allowed_inputs = parts::YES_NO_CHARS;
-  char show_performance_char = getValidCharInput(user_message, allowed_inputs);
+  char show_performance_char = getValidCharInput(user_message, "yn");
   search_engine.show_performance = show_performance_char == 'y';
 
   user_message = "Please Enter Player Color (w = White, b = Black):";
-  allowed_inputs = parts::WHITE_BLACK_CHARS;
-  char user_color = getValidCharInput(user_message, allowed_inputs);
+  char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
   if (user_color == 'w' &&
@@ -164,7 +163,7 @@ void ChessEngine::set_up_engine()
 
 void ChessEngine::handle_player_turn()
 {
-  // Indicate color to move to player.
+  // Indicate which color's turn it is.
   if (!game_over)
   {
     std::string color_to_move =
@@ -178,11 +177,7 @@ void ChessEngine::handle_player_turn()
   {
     if (game_over)
     {
-      printf("\n -- Game Over -- \n\nCommand Options:\n - menu\n - exit\n - "
-             "undo\n - reset\n - "
-             "play-engine\n - "
-             "play-player\n\n");
-      printf("Enter one of the commands above: ");
+      printf("%s", parts::GAME_OVER_HELP_MESSAGE.c_str());
     }
     else
     {
@@ -198,6 +193,13 @@ void ChessEngine::handle_player_turn()
     if (handle_board_undo_reset_commands(user_input))
     {
       break;
+    }
+    if (user_input == "print-moves")
+    {
+      printf("\nMoves Played:\n");
+      print_applied_moves();
+      printf("\n");
+      continue;
     }
     if (move_interface.input_to_move(
             parts::move_generator::calculate_possible_moves(game_board_state),
@@ -232,10 +234,7 @@ auto ChessEngine::handle_state_change_commands(const std::string &user_input)
   else if (user_input == "help")
   {
     printf("Current State: %s\n", current_state_name.c_str());
-    printf(
-        "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
-        "play-player\n\n Playing States:\n  - undo\n  - reset\n  - enter a "
-        "move\n\n");
+    printf("%s", parts::HELP_MESSAGE.c_str());
   }
   else
   {
@@ -382,5 +381,27 @@ auto ChessEngine::is_stalemate() -> bool
     game_board_state.undo_move();
   }
   return true;
+}
+
+void ChessEngine::print_applied_moves()
+{
+  std::vector<parts::Move> previous_moves_temp;
+
+  // Save all previous moves temporarily to print them.
+  while (!game_board_state.previous_move_stack.empty())
+  {
+    parts::Move move = game_board_state.previous_move_stack.top();
+    previous_moves_temp.push_back(move);
+    game_board_state.previous_move_stack.pop();
+  }
+
+  // Print first move to last move applied to the board.
+  for (int index = previous_moves_temp.size() - 1; index >= 0; --index)
+  {
+    parts::Move move = previous_moves_temp[index];
+    printf("%s\n", parts::MoveInterface::move_to_string(move).c_str());
+    // Add move back to previous move stack.
+    game_board_state.previous_move_stack.push(move);
+  }
 }
 } // namespace engine
