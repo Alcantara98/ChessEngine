@@ -111,6 +111,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
 {
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
+  int eval;
   int tt_value;
   int tt_flag;
   int entry_search_depth;
@@ -132,8 +133,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   // Evaluate leaf nodes.
   if (depth <= 0)
   {
-    int eval =
-        engine::parts::position_evaluator::evaluate_position(board_state);
+    eval = engine::parts::position_evaluator::evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
     if (board_state.color_to_move == PieceColor::BLACK)
     {
@@ -143,14 +143,10 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   }
 
   // Try a null move.
-  if (!previous_move_is_null && (max_iterative_search_depth - depth) >= 3)
+  if (!previous_move_is_null &&
+      (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH)
   {
-    // If previous move is a null move, skip this to prevent double null
-    // moves. This will prevent the search from being too shallow.
-    board_state.apply_null_move();
-    int eval =
-        -minimax_alpha_beta_search(board_state, -beta, -alpha, depth - 3, true);
-    board_state.undo_null_move();
+    do_null_move_search(board_state, alpha, beta, depth, eval);
     if (eval >= beta)
     {
       return eval;
@@ -159,17 +155,18 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
 
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(board_state);
-  int eval;
-  // Start minimax search.
   int max_eval = -INF;
   int best_move_index = 0;
+  // Start minimax search.
   if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
   {
+    // Search the best move first.
     max_search(board_state, alpha, beta, max_eval, eval, depth, best_move_index,
                entry_best_move, possible_moves);
   }
   for (int index = 0; index < possible_moves.size(); ++index)
   {
+    // Search the rest of the moves.
     max_search(board_state, alpha, beta, max_eval, eval, depth, best_move_index,
                index, possible_moves);
     if (alpha >= beta)
@@ -178,22 +175,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
     }
   }
 
-  // Store in transposition table.
-  int tt_flag_to_store;
-  if (max_eval >= beta)
-  {
-    tt_flag_to_store = 1;
-  }
-  else if (max_eval <= alpha)
-  {
-    tt_flag_to_store = -1;
-  }
-  else
-  {
-    tt_flag_to_store = 0;
-  }
-  transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
-                            best_move_index);
+  store_state_in_transposition_table(hash, depth, max_eval, alpha, beta,
+                                     best_move_index);
   return max_eval;
 }
 
@@ -220,5 +203,39 @@ void SearchEngine::max_search(BoardState &board_state, int &alpha, int &beta,
   max_eval = std::max(max_eval, eval);
   alpha = std::max(eval, alpha);
   board_state.undo_move();
+}
+
+void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
+                                       int &beta, int &depth, int &eval)
+{
+  // If previous move is a null move, skip this to prevent double null
+  // moves. This will prevent the search from being too shallow.
+  board_state.apply_null_move();
+  eval = -minimax_alpha_beta_search(board_state, -beta, -alpha,
+                                    depth - NULL_MOVE_REDUCTION, true);
+  board_state.undo_null_move();
+}
+
+void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
+                                                      int &depth, int &max_eval,
+                                                      int &alpha, int &beta,
+                                                      int &best_move_index)
+{
+  // Store in transposition table.
+  int tt_flag_to_store;
+  if (max_eval >= beta)
+  {
+    tt_flag_to_store = 1;
+  }
+  else if (max_eval <= alpha)
+  {
+    tt_flag_to_store = -1;
+  }
+  else
+  {
+    tt_flag_to_store = 0;
+  }
+  transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
+                            best_move_index);
 }
 } // namespace engine::parts

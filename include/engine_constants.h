@@ -74,6 +74,10 @@ const int MEDIUM_EVAL_VALUE = 20;
 const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 
+// Null Move Constants.
+const int NULL_MOVE_REDUCTION = 3;
+const int MIN_NULL_MOVE_DEPTH = 3;
+
 // Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
     {5, 10, 20, 30, 30, 20, 10, 5}};
