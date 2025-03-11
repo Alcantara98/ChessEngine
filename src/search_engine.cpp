@@ -57,7 +57,7 @@ void SearchEngine::evaluate_possible_moves(
     std::vector<BoardState> thread_board_states(possible_moves.size(),
                                                 BoardState(game_board_state));
 
-    auto search_start_time = std::chrono::high_resolution_clock::now();
+    auto search_start_time = std::chrono::steady_clock::now();
     // Search each move in a separate thread.
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
     {
@@ -87,7 +87,7 @@ void SearchEngine::evaluate_possible_moves(
       move_scores.emplace_back(possible_moves[index], futures[index].get());
     }
 
-    auto search_end_time = std::chrono::high_resolution_clock::now();
+    auto search_end_time = std::chrono::steady_clock::now();
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
                                        search_end_time);
   }
@@ -229,9 +229,8 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
 
 void SearchEngine::reset_and_print_performance_matrix(
     int iterative_depth,
-    std::chrono::time_point<std::chrono::high_resolution_clock>
-        search_start_time,
-    std::chrono::time_point<std::chrono::high_resolution_clock> search_end_time)
+    std::chrono::time_point<std::chrono::steady_clock> search_start_time,
+    std::chrono::time_point<std::chrono::steady_clock> search_end_time)
 {
   // Calculate duration of search.
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
