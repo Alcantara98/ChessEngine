@@ -229,8 +229,8 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
 
 void SearchEngine::reset_and_print_performance_matrix(
     int iterative_depth,
-    std::chrono::_V2::system_clock::time_point search_start_time,
-    std::chrono::_V2::system_clock::time_point search_end_time)
+    std::chrono::high_resolution_clock::time_point search_start_time,
+    std::chrono::high_resolution_clock::time_point search_end_time)
 {
   // Calculate duration of search.
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
