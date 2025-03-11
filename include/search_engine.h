@@ -157,8 +157,10 @@ private:
    */
   void reset_and_print_performance_matrix(
       int iterative_depth,
-      std::chrono::high_resolution_clock::time_point search_start_time,
-      std::chrono::high_resolution_clock::time_point search_end_time);
+      std::chrono::time_point<std::chrono::high_resolution_clock>
+          search_start_time,
+      std::chrono::time_point<std::chrono::high_resolution_clock>
+          search_end_time);
 };
 } // namespace engine::parts
 
