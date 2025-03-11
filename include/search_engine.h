@@ -75,6 +75,13 @@ private:
   // FUNCTIONS
 
   /**
+   * @brief Evaluates all possible moves and scores them.
+   *
+   * @param move_scores Vector of moves and their scores.
+   */
+  void evaluate_possible_moves(std::vector<std::pair<Move, int>> &move_scores);
+
+  /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
    *
@@ -140,6 +147,18 @@ private:
   void store_state_in_transposition_table(uint64_t &hash, int &depth,
                                           int &max_eval, int &alpha, int &beta,
                                           int &best_move_index);
+
+  /**
+   * @brief Resets and prints the performance matrix.
+   *
+   * @param iterative_depth Current iterative depth.
+   * @param search_start_time Start time of search.
+   * @param search_end_time End time of search.
+   */
+  void reset_and_print_performance_matrix(
+      int iterative_depth,
+      std::chrono::system_clock::time_point search_start_time,
+      std::chrono::system_clock::time_point search_end_time);
 };
 } // namespace engine::parts
 

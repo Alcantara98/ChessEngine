@@ -16,9 +16,33 @@ SearchEngine::SearchEngine(BoardState &board_state)
 
 auto SearchEngine::execute_best_move() -> bool
 {
+  std::vector<std::pair<Move, int>> move_scores;
+  evaluate_possible_moves(move_scores);
+  transposition_table.clear();
+  sort_moves(move_scores);
+
+  // Check if move leaves king in check.
+  for (std::pair<Move, int> move_score : move_scores)
+  {
+    if (!game_board_state.move_leaves_king_in_check(move_score.first))
+    {
+      game_board_state.apply_move(move_score.first);
+      printf("Engine's Move: %s\n",
+             MoveInterface::move_to_string(move_score.first).c_str());
+      printf("Evaluation of Engine's Move: %d\n", -move_score.second);
+      return true;
+    }
+  }
+  // No valid moves found.
+  return false;
+}
+
+// PRIVATE FUNCTIONS
+void SearchEngine::evaluate_possible_moves(
+    std::vector<std::pair<Move, int>> &move_scores)
+{
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
-  std::vector<std::pair<Move, int>> move_scores;
 
   // Search to max_search_depth with iterative deepening.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
@@ -40,6 +64,7 @@ auto SearchEngine::execute_best_move() -> bool
       thread_board_states[move_index].apply_move(possible_moves[move_index]);
       futures.push_back(promises[move_index].get_future());
 
+      // Start thread and search.
       search_threads.emplace_back(
           [this, &promises, move_index, iterative_depth, &thread_board_states]()
           {
@@ -63,47 +88,10 @@ auto SearchEngine::execute_best_move() -> bool
     }
 
     auto search_end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        search_end_time - search_start_time)
-                        .count();
-
-    // Print performance metrics.
-    if (show_performance)
-    {
-      printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
-      printf("Nodes Visited %d\n", nodes_visited.load());
-      printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
-      printf("Nodes per second: %d kN/s\n\n",
-             static_cast<int>(nodes_visited /
-                              (duration / MILLISECONDS_TO_SECONDS) /
-                              NODES_TO_KILONODES));
-    }
-
-    // Reset performance metrics.
-    nodes_visited = 0;
-    leaf_nodes_visited = 0;
+    reset_and_print_performance_matrix(iterative_depth, search_start_time,
+                                       search_end_time);
   }
-
-  transposition_table.clear();
-  sort_moves(move_scores);
-
-  // Check if move leaves king in check.
-  for (std::pair<Move, int> move_score : move_scores)
-  {
-    if (!game_board_state.move_leaves_king_in_check(move_score.first))
-    {
-      game_board_state.apply_move(move_score.first);
-      printf("Engine's Move: %s\n",
-             MoveInterface::move_to_string(move_score.first).c_str());
-      printf("Evaluation of Engine's Move: %d\n", -move_score.second);
-      return true;
-    }
-  }
-  // No valid moves found.
-  return false;
 }
-
-// PRIVATE FUNCTIONS
 
 auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
@@ -237,5 +225,32 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
   }
   transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
                             best_move_index);
+}
+
+void SearchEngine::reset_and_print_performance_matrix(
+    int iterative_depth,
+    std::chrono::_V2::system_clock::time_point search_start_time,
+    std::chrono::_V2::system_clock::time_point search_end_time)
+{
+  // Calculate duration of search.
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      search_end_time - search_start_time)
+                      .count();
+
+  // Print performance metrics to user.
+  if (show_performance)
+  {
+    printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
+    printf("Nodes Visited %d\n", nodes_visited.load());
+    printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
+    printf(
+        "Nodes per second: %d kN/s\n\n",
+        static_cast<int>(nodes_visited / (duration / MILLISECONDS_TO_SECONDS) /
+                         NODES_TO_KILONODES));
+  }
+
+  // Reset performance metrics.
+  nodes_visited = 0;
+  leaf_nodes_visited = 0;
 }
 } // namespace engine::parts
