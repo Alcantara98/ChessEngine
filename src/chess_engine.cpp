@@ -42,6 +42,7 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
   {
     game_over = false;
   }
+  search_engine.previous_move_eval = 0;
   game_board_state.reset_board();
   current_state = new_state;
   exit_state = true;
@@ -267,6 +268,7 @@ auto ChessEngine::handle_board_undo_reset_commands(
   }
   else if (user_input == "reset")
   {
+    search_engine.previous_move_eval = 0;
     game_board_state.reset_board();
     exit_state = true;
   }
