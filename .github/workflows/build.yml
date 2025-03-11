@@ -24,7 +24,7 @@ jobs:
 
       - name: Run clang-tidy check
         run: |
-          cmake -G "Ninja" -B build
+          cmake -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -B build
           clang-tidy --version
           clang-tidy -p build src/*.cpp include/*.h
 
