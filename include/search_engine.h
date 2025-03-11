@@ -75,6 +75,13 @@ private:
   // FUNCTIONS
 
   /**
+   * @brief Evaluates all possible moves and scores them.
+   *
+   * @param move_scores Vector of moves and their scores.
+   */
+  void evaluate_possible_moves(std::vector<std::pair<Move, int>> &move_scores);
+
+  /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
    *
@@ -114,6 +121,44 @@ private:
   void max_search(BoardState &board_state, int &alpha, int &beta, int &max_eval,
                   int &eval, int &depth, int &best_move_index, int &move_index,
                   std::vector<Move> &possible_moves);
+
+  /**
+   * @brief Min search procedure for each possible move.
+   *
+   * @param board_state BoardState object to search.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param depth Current depth of search.
+   * @param eval Evaluation score to be updated.
+   */
+  void do_null_move_search(BoardState &board_state, int &alpha, int &beta,
+                           int &depth, int &eval);
+
+  /**
+   * @brief Stores the state in the transposition table.
+   *
+   * @param hash Hash of the board state.
+   * @param depth Depth of the search.
+   * @param max_eval Maximum evaluation score.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param best_move_index Index of best move.
+   */
+  void store_state_in_transposition_table(uint64_t &hash, int &depth,
+                                          int &max_eval, int &alpha, int &beta,
+                                          int &best_move_index);
+
+  /**
+   * @brief Resets and prints the performance matrix.
+   *
+   * @param iterative_depth Current iterative depth.
+   * @param search_start_time Start time of search.
+   * @param search_end_time End time of search.
+   */
+  void reset_and_print_performance_matrix(
+      int iterative_depth,
+      std::chrono::time_point<std::chrono::steady_clock> search_start_time,
+      std::chrono::time_point<std::chrono::steady_clock> search_end_time);
 };
 } // namespace engine::parts
 
