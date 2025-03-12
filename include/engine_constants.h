@@ -3,6 +3,7 @@
 
 #include "piece.h"
 #include <array>
+#include <limits>
 #include <map>
 #include <string>
 
@@ -56,8 +57,10 @@ const int MAX_TRANSPOSITION_TABLE_SIZE = 10000000;
 const int NODES_TO_KILONODES = 1000;
 const double MILLISECONDS_TO_SECONDS = 1000.0;
 
-// Engine constants.
+// Search Engine constants.
 const int MAX_SEARCH_DEPTH = 30;
+// Use for starting values of alpha and beta;
+const int INF = std::numeric_limits<int>::max();
 
 // Piece values.
 const int PAWN_VALUE = 100;
@@ -66,6 +69,9 @@ const int BISHOP_VALUE = 330;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
+
+// Max number of moves for a piece.
+const int MAX_MOVES_KNIGHT = 8;
 
 // Evaluation points.
 const int VERY_SMALL_EVAL_VALUE = 5;
@@ -76,14 +82,17 @@ const int VERY_LARGE_EVAL_VALUE = 80;
 
 // Null Move Constants.
 const int NULL_MOVE_REDUCTION = 3;
-const int MIN_NULL_MOVE_DEPTH = 3;
+const int MIN_NULL_MOVE_DEPTH = 5;
+
+// Aspiration Window Constants.
+const std::array<int, 3> ASPIRATION_WINDOWS = {
+    {PAWN_VALUE + 1, (PAWN_VALUE * 2) + 1, INF}};
 
 // Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
     {5, 10, 20, 30, 30, 20, 10, 5}};
 
-const std::array<int, 8> KING_POSITION_EVAL_MAP = {
-    {5, 20, 15, 0, 0, 15, 20, 5}};
+const std::array<int, 8> KING_POSITION_EVAL_MAP = {{5, 20, 0, 0, 0, 0, 20, 5}};
 
 // Direction Maps for Pieces
 const std::array<std::array<int, 2>, 8> QUEEN_DIRECTIONS = {
@@ -106,9 +115,6 @@ const std::array<std::array<int, 2>, 8> KING_MOVES = {{{-1, -1},
                                                        {+1, -1},
                                                        {+1, 0},
                                                        {+1, +1}}};
-
-// Max number of moves for a piece.
-const int MAX_MOVES_KNIGHT = 8;
 
 // Map to convert string piece type to PieceType.
 const std::map<char, parts::PieceType> STRING_TO_PIECE_TYPE = {

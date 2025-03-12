@@ -9,8 +9,8 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <future>
-#include <limits>
 #include <thread>
 
 namespace engine::parts
@@ -30,10 +30,10 @@ public:
   int max_search_depth;
 
   // Show performance matrix of the search.
-  bool show_performance;
+  bool show_performance = false;
 
-  // The previous best move evaluation score.
-  int previous_move_eval = 0;
+  // Show move evaluations.
+  bool show_move_evaluations = false;
 
   // CONSTRUCTORS
   /**
@@ -51,11 +51,26 @@ public:
    */
   auto execute_best_move() -> bool;
 
+  /**
+   * @brief Clears the previous move evaluations.
+   */
+  void clear_previous_move_evals();
+
+  /**
+   * @brief Gets the last move evaluation score.
+   * @note If no moves have been evaluated, it returns 0.
+   *
+   * @return Last move evaluation score.
+   */
+  auto last_move_eval() -> int;
+
+  /**
+   * @brief Pops the last move evaluation score.
+   */
+  void pop_last_move_eval();
+
 private:
   // PROPERTIES
-
-  // Use for starting values of alpha and beta;
-  const int INF = std::numeric_limits<int>::max();
 
   // Number of leaf nodes visited.
   std::atomic<int> leaf_nodes_visited = 0;
@@ -71,6 +86,9 @@ private:
 
   // The max depth the current iterative search will reach.
   int max_iterative_search_depth;
+
+  // The evaluation score of the previous moves.
+  std::stack<int> previous_move_evals;
 
   // FUNCTIONS
 

@@ -1,7 +1,5 @@
 #include "search_engine.h"
 
-#include <chrono>
-
 namespace engine::parts
 {
 // CONSTRUCTORS
@@ -18,16 +16,19 @@ auto SearchEngine::execute_best_move() -> bool
 {
   std::vector<std::pair<Move, int>> move_scores;
   evaluate_possible_moves(move_scores);
-  transposition_table.clear();
   sort_moves(move_scores);
 
-  for (auto move_score : move_scores)
+  if (show_move_evaluations)
   {
-    printf("Move: %s, Score: %d\n",
-           MoveInterface::move_to_string(move_score.first).c_str(),
-           move_score.second);
+    // Print all moves and their evaluations.
+    for (auto move_score : move_scores)
+    {
+      printf("Move: %s, Score: %d\n",
+             MoveInterface::move_to_string(move_score.first).c_str(),
+             move_score.second);
+    }
+    printf("\n");
   }
-  printf("\n");
 
   // Check if move leaves king in check.
   for (std::pair<Move, int> move_score : move_scores)
@@ -35,7 +36,7 @@ auto SearchEngine::execute_best_move() -> bool
     if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
       game_board_state.apply_move(move_score.first);
-      previous_move_eval = move_score.second;
+      previous_move_evals.push(move_score.second);
       printf("Engine's Move: %s\n",
              MoveInterface::move_to_string(move_score.first).c_str());
       printf("Evaluation of Engine's Move: %d\n", -move_score.second);
@@ -44,6 +45,31 @@ auto SearchEngine::execute_best_move() -> bool
   }
   // No valid moves found.
   return false;
+}
+
+void SearchEngine::clear_previous_move_evals()
+{
+  while (!previous_move_evals.empty())
+  {
+    previous_move_evals.pop();
+  }
+}
+
+auto SearchEngine::last_move_eval() -> int
+{
+  if (!previous_move_evals.empty())
+  {
+    return previous_move_evals.top();
+  }
+  return 0;
+}
+
+void SearchEngine::pop_last_move_eval()
+{
+  if (!previous_move_evals.empty())
+  {
+    previous_move_evals.pop();
+  }
 }
 
 // PRIVATE FUNCTIONS
@@ -87,11 +113,8 @@ void SearchEngine::evaluate_possible_moves(
       search_threads.emplace_back(
           [this, &promises, move_index, iterative_depth, &thread_board_states]()
           {
-            // int eval = run_search_with_aspiration_window(
-            //     thread_board_states[move_index], iterative_depth);
-            int eval = -minimax_alpha_beta_search(
-                thread_board_states[move_index], -INF, INF, iterative_depth - 1,
-                false);
+            int eval = run_search_with_aspiration_window(
+                thread_board_states[move_index], iterative_depth);
             promises[move_index].set_value(eval);
           });
     }
@@ -117,28 +140,32 @@ void SearchEngine::evaluate_possible_moves(
 auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
                                                      int depth) -> int
 {
+  int alpha;
+  int beta;
+  int eval = 0;
 
-  int alpha = -(PAWN_VALUE / 2);
-  int beta = PAWN_VALUE / 2;
-  int eval;
-  do
+  // Try aspiration windows until a valid window is found.
+  for (int window_increment : ASPIRATION_WINDOWS)
   {
-    eval =
-        -minimax_alpha_beta_search(board_state, previous_move_eval + alpha,
-                                   previous_move_eval + beta, depth - 1, false);
-    if (eval >= beta)
+    if (window_increment == INF)
     {
-      beta *= 2;
-    }
-    else if (eval <= alpha)
-    {
-      alpha *= 2;
+      alpha = -INF;
+      beta = INF;
     }
     else
     {
+      alpha = last_move_eval() - window_increment;
+      beta = last_move_eval() + window_increment;
+    }
+    eval =
+        -minimax_alpha_beta_search(board_state, alpha, beta, depth - 1, false);
+
+    // Return eval if it is within the window.
+    if (eval < beta && eval > alpha)
+    {
       break;
     }
-  } while (true);
+  }
 
   return eval;
 }
@@ -147,6 +174,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool null_move_line) -> int
 {
+  int original_alpha = alpha;
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
   int eval;
@@ -160,10 +188,28 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                    entry_best_move))
   {
     // Check if tt_value can be used.
-    if (depth <= entry_search_depth &&
-        ((tt_flag == 1 && tt_value >= beta) || tt_flag == 0))
+    if (depth <= entry_search_depth)
     {
-      return tt_value;
+      switch (tt_flag)
+      {
+      case 0:
+        return tt_value;
+      case 1:
+        alpha = std::max(alpha, tt_value);
+        break;
+      case -1:
+        beta = std::min(beta, tt_value);
+        break;
+      default:
+        // Handle unexpected tt_flag value.
+        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+        break;
+      }
+
+      if (alpha >= beta)
+      {
+        return tt_value;
+      }
     }
   }
 
@@ -184,6 +230,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH)
   {
     do_null_move_search(board_state, alpha, beta, depth, eval);
+    // If null move (which is theoretically a losing move) is greater than beta,
+    // then return null move eval.
     if (eval >= beta)
     {
       return eval;
@@ -212,8 +260,8 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
     }
   }
 
-  store_state_in_transposition_table(hash, depth, max_eval, alpha, beta,
-                                     best_move_index);
+  store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
+                                     beta, best_move_index);
   return max_eval;
 }
 
@@ -265,6 +313,10 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
   if (max_eval >= beta)
   {
     tt_flag_to_store = 1;
+  }
+  else if (max_eval <= alpha)
+  {
+    tt_flag_to_store = -1;
   }
   else
   {
