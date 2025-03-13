@@ -74,7 +74,6 @@ const int KING_VALUE = 20000;
 const int MAX_MOVES_KNIGHT = 8;
 
 // Evaluation points.
-const int EXTREMELY_SMALL_EVAL_VALUE = 2;
 const int VERY_SMALL_EVAL_VALUE = 5;
 const int SMALL_EVAL_VALUE = 10;
 const int MEDIUM_EVAL_VALUE = 20;
