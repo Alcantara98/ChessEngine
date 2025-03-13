@@ -117,11 +117,11 @@ void evaluate_knight(int x_position, int y_position, Piece &knight_piece,
       // Increase evaluation based on the number of moves.
       if (knight_piece.piece_color == PieceColor::WHITE)
       {
-        eval += MEDIUM_EVAL_VALUE;
+        eval += VERY_SMALL_EVAL_VALUE;
       }
       else
       {
-        eval -= MEDIUM_EVAL_VALUE;
+        eval -= VERY_SMALL_EVAL_VALUE;
       }
     }
   }
@@ -160,11 +160,11 @@ void evaluate_bishop(int x_position, int y_position, Piece &bishop_piece,
       // Increase evaluation based on the number of moves.
       if (bishop_piece.piece_color == PieceColor::WHITE)
       {
-        eval += SMALL_EVVAL_VALUE;
+        eval += VERY_SMALL_EVAL_VALUE;
       }
       else
       {
-        eval -= SMALL_EVVAL_VALUE;
+        eval -= VERY_SMALL_EVAL_VALUE;
       }
 
       new_x += direction[0];
@@ -197,11 +197,11 @@ void evaluate_rook(int x_position, int y_position, Piece &rook_piece, int &eval)
       // Increase evaluation based on the number of moves.
       if (rook_piece.piece_color == PieceColor::WHITE)
       {
-        eval += SMALL_EVVAL_VALUE;
+        eval += EXTREMELY_SMALL_EVAL_VALUE;
       }
       else
       {
-        eval -= SMALL_EVVAL_VALUE;
+        eval -= EXTREMELY_SMALL_EVAL_VALUE;
       }
 
       new_x += direction[0];
@@ -235,11 +235,11 @@ void evaluate_queen(int x_position, int y_position, Piece &queen_piece,
       // Increase evaluation based on the number of moves.
       if (queen_piece.piece_color == PieceColor::WHITE)
       {
-        eval += SMALL_EVVAL_VALUE;
+        eval += EXTREMELY_SMALL_EVAL_VALUE;
       }
       else
       {
-        eval -= SMALL_EVVAL_VALUE;
+        eval -= EXTREMELY_SMALL_EVAL_VALUE;
       }
 
       new_x += direction[0];
