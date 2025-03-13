@@ -24,9 +24,10 @@ auto evaluate_position(BoardState &board_state) -> int;
  * @param x_position, y_position Position of the pawn.
  * @param pawn_piece Pawn piece object to evaluate.
  * @param eval Evaluation score to update.
+ * @param is_end_game True if the game is in the end game phase.
  */
 static void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece,
-                          int &eval);
+                          int &eval, bool &is_end_game);
 
 /**
  * @brief Evaluates knight at given position.
@@ -74,9 +75,10 @@ static void evaluate_queen(int x_position, int y_position, Piece &queen_piece,
  * @param x_position, y_position Position of the king.
  * @param king_piece King piece object to evaluate.
  * @param eval Evaluation score to update.
+ * @param is_end_game True if the game is in the end game phase.
  */
 static void evaluate_king(int x_position, int y_position, Piece &king_piece,
-                          int &eval);
+                          int &eval, bool &is_end_game);
 } // namespace engine::parts::position_evaluator
 
 #endif

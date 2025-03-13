@@ -174,6 +174,19 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool null_move_line) -> int
 {
+  // If the king is no longer in the board, checkmate has occurred.
+  // Return -INF evaluation for the side that has lost its king.
+  if (board_state.color_to_move == PieceColor::WHITE &&
+      !board_state.white_king_on_board)
+  {
+    return -INF;
+  }
+  if (board_state.color_to_move == PieceColor::BLACK &&
+      !board_state.black_king_on_board)
+  {
+    return -INF;
+  }
+
   int original_alpha = alpha;
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
@@ -203,7 +216,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
       default:
         // Handle unexpected tt_flag value.
         printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
-        break;
+        exit(0);
       }
 
       if (alpha >= beta)

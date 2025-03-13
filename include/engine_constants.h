@@ -84,6 +84,13 @@ const int VERY_LARGE_EVAL_VALUE = 80;
 const int NULL_MOVE_REDUCTION = 3;
 const int MIN_NULL_MOVE_DEPTH = 5;
 
+// Game state constants.
+const int START_MAIN_PIECES_COUNT = 12;
+const int START_QUEENS_COUNT = 2;
+const int END_GAME_CONDITION_TWO_QUEENS = 2;
+const int END_GAME_CONDITION_ONE_QUEEN = 5;
+const int END_GAME_CONDITION_NO_QUEENS = 8;
+
 // Aspiration Window Constants.
 const std::array<int, 3> ASPIRATION_WINDOWS = {
     {PAWN_VALUE + 1, (PAWN_VALUE * 2) + 1, INF}};

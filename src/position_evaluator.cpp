@@ -18,7 +18,8 @@ auto evaluate_position(BoardState &board_state) -> int
       switch (piece_type)
       {
       case PieceType::PAWN:
-        evaluate_pawn(x_position, y_position, piece, eval);
+        evaluate_pawn(x_position, y_position, piece, eval,
+                      board_state.is_end_game);
         break;
       case PieceType::ROOK:
         evaluate_rook(x_position, y_position, piece, eval);
@@ -33,7 +34,8 @@ auto evaluate_position(BoardState &board_state) -> int
         evaluate_queen(x_position, y_position, piece, eval);
         break;
       case PieceType::KING:
-        evaluate_king(x_position, y_position, piece, eval);
+        evaluate_king(x_position, y_position, piece, eval,
+                      board_state.is_end_game);
         break;
       default:
         // Empty square.
@@ -46,7 +48,8 @@ auto evaluate_position(BoardState &board_state) -> int
 
 // PRIVATE FUNCTIONS
 
-void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece, int &eval)
+void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece, int &eval,
+                   bool &is_end_game)
 {
   // Piece value.
   if (pawn_piece.piece_color == PieceColor::WHITE)
@@ -62,10 +65,22 @@ void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece, int &eval)
   if (pawn_piece.piece_color == PieceColor::WHITE)
   {
     eval += PAWN_POSITION_EVAL_MAP[x_position];
+
+    // If in the end game, give pawn value the closer they are to promotion.
+    if (is_end_game)
+    {
+      eval += y_position * MEDIUM_EVAL_VALUE;
+    }
   }
   else
   {
     eval -= PAWN_POSITION_EVAL_MAP[x_position];
+
+    // If in the end game, give pawn value the closer they are to promotion.
+    if (is_end_game)
+    {
+      eval -= (Y_MAX - y_position) * MEDIUM_EVAL_VALUE;
+    }
   }
 }
 
@@ -233,7 +248,8 @@ void evaluate_queen(int x_position, int y_position, Piece &queen_piece,
   }
 }
 
-void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval)
+void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
+                   bool &is_end_game)
 {
   // Piece value.
   if (king_piece.piece_color == PieceColor::WHITE)
@@ -246,7 +262,7 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval)
   }
 
   // Position value - x coordinate.
-  if (king_piece.piece_color == PieceColor::WHITE)
+  if (!is_end_game && king_piece.piece_color == PieceColor::WHITE)
   {
     eval += KING_POSITION_EVAL_MAP[x_position];
   }
