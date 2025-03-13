@@ -157,6 +157,11 @@ private:
    * @brief Prints all the moves applied to the board.
    */
   void print_applied_moves();
+
+  /**
+   * @brief Resets the game.
+   */
+  void reset_game();
 };
 } // namespace engine
 

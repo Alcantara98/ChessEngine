@@ -42,9 +42,8 @@ void ChessEngine::change_state(void (ChessEngine::*new_state)())
   {
     game_over = false;
   }
-  game_board_state.reset_board();
   current_state = new_state;
-  exit_state = true;
+  reset_game();
 }
 
 void ChessEngine::main_menu_state()
@@ -133,7 +132,6 @@ void ChessEngine::check_and_handle_if_game_over()
 void ChessEngine::set_up_engine()
 {
   std::string user_message;
-  std::string allowed_inputs;
 
   // Get user input for engine settings.
   user_message = "Please Enter Engine Depth (1-30): ";
@@ -143,6 +141,10 @@ void ChessEngine::set_up_engine()
   user_message = "Show Performance (y = Yes, n = No): ";
   char show_performance_char = getValidCharInput(user_message, "yn");
   search_engine.show_performance = show_performance_char == 'y';
+
+  user_message = "Show All Move Evaluations (y = Yes, n = No): ";
+  char show_move_evaluations_char = getValidCharInput(user_message, "yn");
+  search_engine.show_move_evaluations = show_move_evaluations_char == 'y';
 
   user_message = "Please Enter Player Color (w = White, b = Black):";
   char user_color = getValidCharInput(user_message, "wb");
@@ -249,26 +251,27 @@ auto ChessEngine::handle_board_undo_reset_commands(
   if (user_input == "undo")
   {
     game_board_state.undo_move();
-    if (game_board_state.color_to_move != player_color &&
-        current_state == &ChessEngine::engine_vs_player_state)
+    if (current_state == &ChessEngine::engine_vs_player_state &&
+        game_board_state.color_to_move != player_color)
     {
+      search_engine.pop_last_move_eval();
       game_board_state.undo_move();
     }
     game_board_state.print_board(game_board_state.color_to_move);
   }
-  else if (user_input == "redo")
+  else if (user_input == "redo" &&
+           current_state == &ChessEngine::engine_vs_player_state)
   {
     game_board_state.undo_move();
-    if (game_board_state.color_to_move == player_color &&
-        current_state == &ChessEngine::engine_vs_player_state)
+    search_engine.pop_last_move_eval();
+    if (game_board_state.color_to_move == player_color)
     {
       game_board_state.undo_move();
     }
   }
   else if (user_input == "reset")
   {
-    game_board_state.reset_board();
-    exit_state = true;
+    reset_game();
   }
   else
   {
@@ -403,5 +406,12 @@ void ChessEngine::print_applied_moves()
     // Add move back to previous move stack.
     game_board_state.previous_move_stack.push(move);
   }
+}
+
+void ChessEngine::reset_game()
+{
+  search_engine.clear_previous_move_evals();
+  game_board_state.reset_board();
+  exit_state = true;
 }
 } // namespace engine

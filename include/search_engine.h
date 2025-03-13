@@ -9,8 +9,8 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <future>
-#include <limits>
 #include <thread>
 
 namespace engine::parts
@@ -30,7 +30,10 @@ public:
   int max_search_depth;
 
   // Show performance matrix of the search.
-  bool show_performance;
+  bool show_performance = false;
+
+  // Show move evaluations.
+  bool show_move_evaluations = false;
 
   // CONSTRUCTORS
   /**
@@ -44,18 +47,30 @@ public:
   /**
    * @brief Finds the best move for the engine and applies it to the board.
    *
-   * @param max_search_depth Max depth to search.
-   * @param show_performance Show performance matrix of the search.
-   *
    * @return True if a move is found where the king is not checked.
    */
   auto execute_best_move() -> bool;
 
+  /**
+   * @brief Clears the previous move evaluations.
+   */
+  void clear_previous_move_evals();
+
+  /**
+   * @brief Gets the last move evaluation score.
+   * @note If no moves have been evaluated, it returns 0.
+   *
+   * @return Last move evaluation score.
+   */
+  auto last_move_eval() -> int;
+
+  /**
+   * @brief Pops the last move evaluation score.
+   */
+  void pop_last_move_eval();
+
 private:
   // PROPERTIES
-
-  // Use for starting values of alpha and beta;
-  const int INF = std::numeric_limits<int>::max();
 
   // Number of leaf nodes visited.
   std::atomic<int> leaf_nodes_visited = 0;
@@ -72,6 +87,9 @@ private:
   // The max depth the current iterative search will reach.
   int max_iterative_search_depth;
 
+  // The evaluation score of the previous moves.
+  std::stack<int> previous_move_evals;
+
   // FUNCTIONS
 
   /**
@@ -82,6 +100,18 @@ private:
   void evaluate_possible_moves(std::vector<std::pair<Move, int>> &move_scores);
 
   /**
+   * @brief Encapsulates the iterative deepening search for each move to apply
+   * aspirtation window heuristic.
+   *
+   * @param board_state BoardState object to search.
+   * @param depth Current depth of search.
+   *
+   * @return Evaluation score from search branch.
+   */
+  auto run_search_with_aspiration_window(BoardState &board_state,
+                                         int depth) -> int;
+
+  /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
    *
@@ -89,14 +119,13 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
-   * @param maximise Determines if the current turn will try to maximise
-   * score.
+   * @param null_move_line Flag to indicate if the search line is from a null
+   * move.
    *
    * @return Evaluation score from search branch.
    */
   auto minimax_alpha_beta_search(BoardState &board_state, int alpha, int beta,
-                                 int depth,
-                                 bool previous_move_is_null = false) -> int;
+                                 int depth, bool null_move_line) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -117,10 +146,12 @@ private:
    * @param best_move_index Index of best move.
    * @param move_index Index of current move.
    * @param possible_moves Vector of possible moves.
+   * @param null_move_line Flag to indicate if the search line is from a null
+   * move.
    */
   void max_search(BoardState &board_state, int &alpha, int &beta, int &max_eval,
                   int &eval, int &depth, int &best_move_index, int &move_index,
-                  std::vector<Move> &possible_moves);
+                  std::vector<Move> &possible_moves, bool &null_move_line);
 
   /**
    * @brief Min search procedure for each possible move.
