@@ -184,7 +184,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
   if (board_state.color_to_move == PieceColor::BLACK &&
       !board_state.black_king_on_board)
   {
-    return -INF;
+    return INF;
   }
 
   int original_alpha = alpha;
@@ -219,7 +219,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
         exit(0);
       }
 
-      if (alpha >= beta)
+      if (alpha > beta)
       {
         return tt_value;
       }
