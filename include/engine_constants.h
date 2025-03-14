@@ -51,7 +51,7 @@ const int TO_POSITION_INDEX = 5;
 const int PROMOTION_INDEX = 6;
 
 // Max transposition table size.
-const int MAX_TRANSPOSITION_TABLE_SIZE = 10000000;
+const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;
 
 // Performance matrix conversions.
 const int NODES_TO_KILONODES = 1000;
@@ -81,8 +81,8 @@ const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 
 // Null Move Constants.
-const int NULL_MOVE_REDUCTION = 3;
-const int MIN_NULL_MOVE_DEPTH = 5;
+const int NULL_MOVE_REDUCTION = 2;
+const int MIN_NULL_MOVE_DEPTH = 4;
 
 // Game state constants.
 const int START_MAIN_PIECES_COUNT = 12;

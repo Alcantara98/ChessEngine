@@ -157,8 +157,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       alpha = last_move_eval() - window_increment;
       beta = last_move_eval() + window_increment;
     }
-    eval =
-        -minimax_alpha_beta_search(board_state, alpha, beta, depth - 1, false);
+    eval = -negamax_alpha_beta_search(board_state, -INF, INF, depth - 1, false);
 
     // Return eval if it is within the window.
     if (eval < beta && eval > alpha)
@@ -170,7 +169,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
   return eval;
 }
 
-auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
+auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool null_move_line) -> int
 {
@@ -219,7 +218,7 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
         exit(0);
       }
 
-      if (alpha > beta)
+      if (alpha >= beta)
       {
         return tt_value;
       }
@@ -255,23 +254,17 @@ auto SearchEngine::minimax_alpha_beta_search(BoardState &board_state, int alpha,
       move_generator::calculate_possible_moves(board_state);
   int max_eval = -INF;
   int best_move_index = 0;
-  // Start minimax search.
+
+  // If there is a best move from the transposition table, move it to the front
+  // to be searched first, causing a cutoff if it is a good move.
   if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
   {
-    // Search the best move first.
-    max_search(board_state, alpha, beta, max_eval, eval, depth, best_move_index,
-               entry_best_move, possible_moves, null_move_line);
+    std::swap(possible_moves[0], possible_moves[entry_best_move]);
   }
-  for (int index = 0; index < possible_moves.size(); ++index)
-  {
-    // Search the rest of the moves.
-    max_search(board_state, alpha, beta, max_eval, eval, depth, best_move_index,
-               index, possible_moves, null_move_line);
-    if (alpha >= beta)
-    {
-      break;
-    }
-  }
+
+  // Search and evaluate each move.
+  run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
+                        best_move_index, possible_moves, null_move_line);
 
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
                                      beta, best_move_index);
@@ -286,23 +279,30 @@ void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
       { return move_a.second > move_b.second; });
 }
 
-void SearchEngine::max_search(BoardState &board_state, int &alpha, int &beta,
-                              int &max_eval, int &eval, int &depth,
-                              int &best_move_index, int &move_index,
-                              std::vector<Move> &possible_moves,
-                              bool &null_move_line)
+void SearchEngine::run_negamax_procedure(BoardState &board_state, int &alpha,
+                                         int &beta, int &max_eval, int &eval,
+                                         int &depth, int &best_move_index,
+                                         std::vector<Move> &possible_moves,
+                                         bool &null_move_line)
 {
-  board_state.apply_move(possible_moves[move_index]);
-  eval = -minimax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                    null_move_line);
-  if (eval > max_eval)
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
-    max_eval = eval;
-    best_move_index = move_index;
+    board_state.apply_move(possible_moves[move_index]);
+    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                      null_move_line);
+    if (eval > max_eval)
+    {
+      max_eval = eval;
+      best_move_index = move_index;
+    }
+    max_eval = std::max(max_eval, eval);
+    alpha = std::max(eval, alpha);
+    board_state.undo_move();
+    if (alpha >= beta)
+    {
+      break;
+    }
   }
-  max_eval = std::max(max_eval, eval);
-  alpha = std::max(eval, alpha);
-  board_state.undo_move();
 }
 
 void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
@@ -311,7 +311,7 @@ void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
   // If previous move is a null move, skip this to prevent double null
   // moves. This will prevent the search from being too shallow.
   board_state.apply_null_move();
-  eval = -minimax_alpha_beta_search(board_state, -beta, -alpha,
+  eval = -negamax_alpha_beta_search(board_state, -beta, -alpha,
                                     depth - NULL_MOVE_REDUCTION, true);
   board_state.undo_null_move();
 }
