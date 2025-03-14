@@ -51,6 +51,10 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
       }
     }
   }
+  // Put captures at the front of the list.
+  std::stable_partition(possible_moves.begin(), possible_moves.end(),
+                        [](const Move &move)
+                        { return move.captured_piece != nullptr; });
   return std::move(possible_moves);
 }
 
