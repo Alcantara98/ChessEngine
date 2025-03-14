@@ -288,6 +288,8 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state, int &alpha,
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     board_state.apply_move(possible_moves[move_index]);
+    // We only want to know if there is an eval greater than beta, hence make
+    // the search window tight.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       null_move_line);
     if (eval > max_eval)
@@ -311,7 +313,7 @@ void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
   // If previous move is a null move, skip this to prevent double null
   // moves. This will prevent the search from being too shallow.
   board_state.apply_null_move();
-  eval = -negamax_alpha_beta_search(board_state, -beta, -alpha,
+  eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
                                     depth - NULL_MOVE_REDUCTION, true);
   board_state.undo_null_move();
 }
