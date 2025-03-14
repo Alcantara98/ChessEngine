@@ -51,7 +51,7 @@ const int TO_POSITION_INDEX = 5;
 const int PROMOTION_INDEX = 6;
 
 // Max transposition table size.
-const int MAX_TRANSPOSITION_TABLE_SIZE = 10000000;
+const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;
 
 // Performance matrix conversions.
 const int NODES_TO_KILONODES = 1000;
@@ -75,14 +75,21 @@ const int MAX_MOVES_KNIGHT = 8;
 
 // Evaluation points.
 const int VERY_SMALL_EVAL_VALUE = 5;
-const int SMALL_EVVAL_VALUE = 10;
+const int SMALL_EVAL_VALUE = 10;
 const int MEDIUM_EVAL_VALUE = 20;
 const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 
 // Null Move Constants.
-const int NULL_MOVE_REDUCTION = 3;
-const int MIN_NULL_MOVE_DEPTH = 5;
+const int NULL_MOVE_REDUCTION = 2;
+const int MIN_NULL_MOVE_DEPTH = 4;
+
+// Game state constants.
+const int START_MAIN_PIECES_COUNT = 12;
+const int START_QUEENS_COUNT = 2;
+const int END_GAME_CONDITION_TWO_QUEENS = 2;
+const int END_GAME_CONDITION_ONE_QUEEN = 5;
+const int END_GAME_CONDITION_NO_QUEENS = 8;
 
 // Aspiration Window Constants.
 const std::array<int, 3> ASPIRATION_WINDOWS = {

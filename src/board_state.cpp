@@ -21,7 +21,12 @@ BoardState::BoardState(const BoardState &other)
     : color_to_move(other.color_to_move),
       previous_move_stack(other.previous_move_stack),
       zobrist_keys(other.zobrist_keys),
-      zobrist_side_to_move(other.zobrist_side_to_move)
+      zobrist_side_to_move(other.zobrist_side_to_move),
+      white_king_on_board(other.white_king_on_board),
+      black_king_on_board(other.black_king_on_board),
+      queens_on_board(other.queens_on_board),
+      number_of_main_pieces_left(other.number_of_main_pieces_left),
+      is_end_game(other.is_end_game)
 {
   for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
   {
@@ -102,6 +107,11 @@ void BoardState::reset_board()
     undo_move();
   }
   color_to_move = PieceColor::WHITE;
+  white_king_on_board = true;
+  black_king_on_board = true;
+  queens_on_board = START_QUEENS_COUNT;
+  number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
+  is_end_game = false;
   clear_pointers();
   setup_board();
 }
@@ -157,23 +167,49 @@ void BoardState::apply_move(Move &move)
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
   {
-    // Castle move if king moved two squares, so move rooks.
-    switch (move.to_x - move.from_x)
+    // Keep track of the king's positions for evaluation.
+    if (move.moving_piece->piece_color == PieceColor::WHITE)
     {
-    case 2:
-      // King Side Castle.
-      chess_board[XH_FILE][move.to_y]->piece_has_moved = true;
-      std::swap(chess_board[XH_FILE][move.to_y],
-                chess_board[XF_FILE][move.to_y]);
-      break;
-    case -2:
-      // Queen Side Castle.
-      chess_board[XA_FILE][move.to_y]->piece_has_moved = true;
-      std::swap(chess_board[XA_FILE][move.to_y],
-                chess_board[XD_FILE][move.to_y]);
-      break;
-    default:
-      break;
+      white_king_x_position = move.to_x;
+      white_king_y_position = move.to_y;
+    }
+    else
+    {
+      black_king_x_position = move.to_x;
+      black_king_y_position = move.to_y;
+    }
+
+    int king_move_distance = move.to_x - move.from_x;
+    if (king_move_distance == 2 || king_move_distance == -2)
+    {
+      // Keep track of castling for evaluation.
+      if (move.moving_piece->piece_color == PieceColor::WHITE)
+      {
+        white_has_castled = true;
+      }
+      else
+      {
+        black_has_castled = true;
+      }
+
+      // If castle move, move rook to new square.
+      switch (king_move_distance)
+      {
+      case 2:
+        // King Side Castle.
+        chess_board[XH_FILE][move.to_y]->piece_has_moved = true;
+        std::swap(chess_board[XH_FILE][move.to_y],
+                  chess_board[XF_FILE][move.to_y]);
+        break;
+      case -2:
+        // Queen Side Castle.
+        chess_board[XA_FILE][move.to_y]->piece_has_moved = true;
+        std::swap(chess_board[XA_FILE][move.to_y],
+                  chess_board[XD_FILE][move.to_y]);
+        break;
+      default:
+        break;
+      }
     }
   }
 
@@ -206,6 +242,7 @@ void BoardState::apply_move(Move &move)
 
   // Store move in previous moves stack for undoing moves.
   previous_move_stack.push(move);
+  manage_piece_counts_on_apply(move);
 }
 
 void BoardState::undo_move()
@@ -225,23 +262,49 @@ void BoardState::undo_move()
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
   {
-    // Castle move if king moved two squares.
-    switch (move.to_x - move.from_x)
+    // Keep track of the king's positions for evaluation.
+    if (move.moving_piece->piece_color == PieceColor::WHITE)
     {
-    case 2:
-      // King Side Castle.
-      std::swap(chess_board[XF_FILE][move.to_y],
-                chess_board[XH_FILE][move.to_y]);
-      chess_board[XH_FILE][move.to_y]->piece_has_moved = false;
-      break;
-    case -2:
-      // Queen Side Castle.
-      std::swap(chess_board[XD_FILE][move.to_y],
-                chess_board[XA_FILE][move.to_y]);
-      chess_board[XA_FILE][move.to_y]->piece_has_moved = false;
-      break;
-    default:
-      break;
+      white_king_x_position = move.from_x;
+      white_king_y_position = move.from_y;
+    }
+    else
+    {
+      black_king_x_position = move.from_x;
+      black_king_y_position = move.from_y;
+    }
+
+    int king_move_distance = move.to_x - move.from_x;
+    if (king_move_distance == 2 || king_move_distance == -2)
+    {
+      // Keep track of castling for evaluation.
+      if (move.moving_piece->piece_color == PieceColor::WHITE)
+      {
+        white_has_castled = false;
+      }
+      else
+      {
+        black_has_castled = false;
+      }
+
+      // If castle move, move rook back to original square.
+      switch (king_move_distance)
+      {
+      case 2:
+        // King Side Castle.
+        std::swap(chess_board[XF_FILE][move.to_y],
+                  chess_board[XH_FILE][move.to_y]);
+        chess_board[XH_FILE][move.to_y]->piece_has_moved = false;
+        break;
+      case -2:
+        // Queen Side Castle.
+        std::swap(chess_board[XD_FILE][move.to_y],
+                  chess_board[XA_FILE][move.to_y]);
+        chess_board[XA_FILE][move.to_y]->piece_has_moved = false;
+        break;
+      default:
+        break;
+      }
     }
   }
 
@@ -274,6 +337,7 @@ void BoardState::undo_move()
 
   // Remove move from moves stack, move is undone.
   previous_move_stack.pop();
+  manage_piece_counts_on_undo(move);
 }
 
 void BoardState::apply_null_move()
@@ -513,5 +577,89 @@ auto BoardState::square_is_attacked_by_king(
                chess_board[new_x][new_y]->piece_type == PieceType::KING &&
                chess_board[new_x][new_y]->piece_color != color_being_attacked;
       });
+}
+
+void BoardState::manage_piece_counts_on_apply(Move &move)
+{
+  if (move.captured_piece == nullptr)
+  {
+    return;
+  }
+
+  switch (move.captured_piece->piece_type)
+  {
+  case PieceType::EMPTY:
+    break;
+  case PieceType::PAWN:
+    break;
+  case PieceType::KING:
+    if (move.captured_piece->piece_color == PieceColor::WHITE)
+    {
+      white_king_on_board = false;
+    }
+    else
+    {
+      black_king_on_board = false;
+    }
+    break;
+  case PieceType::QUEEN:
+    --queens_on_board;
+    is_end_game_check();
+    break;
+  default:
+    --number_of_main_pieces_left;
+    is_end_game_check();
+    break;
+  }
+}
+
+void BoardState::manage_piece_counts_on_undo(Move &move)
+{
+  if (move.captured_piece == nullptr)
+  {
+    return;
+  }
+
+  switch (move.captured_piece->piece_type)
+  {
+  case PieceType::EMPTY:
+    break;
+  case PieceType::PAWN:
+    break;
+  case PieceType::KING:
+    if (move.captured_piece->piece_color == PieceColor::WHITE)
+    {
+      white_king_on_board = true;
+    }
+    else
+    {
+      black_king_on_board = true;
+    }
+    break;
+  case PieceType::QUEEN:
+    queens_on_board++;
+    is_end_game_check();
+    break;
+  default:
+    ++number_of_main_pieces_left;
+    is_end_game_check();
+    break;
+  }
+}
+
+void BoardState::is_end_game_check()
+{
+  if (queens_on_board == 2)
+  {
+    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_TWO_QUEENS;
+  }
+  else if (queens_on_board == 1)
+  {
+    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_ONE_QUEEN;
+  }
+  else
+  {
+    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_NO_QUEENS;
+  }
 }
 } // namespace engine::parts

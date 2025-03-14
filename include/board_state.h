@@ -36,6 +36,27 @@ public:
   // Represents which color is to move.
   PieceColor color_to_move = PieceColor::WHITE;
 
+  // EVALUATION HELPERS
+
+  // Keep track of the number of pieces left on the board.
+  bool white_king_on_board = true;
+  bool black_king_on_board = true;
+  int queens_on_board = START_QUEENS_COUNT;
+  int number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
+
+  // King positions for evaluation.
+  int white_king_x_position = XE_FILE;
+  int white_king_y_position = Y1_RANK;
+  int black_king_x_position = XE_FILE;
+  int black_king_y_position = Y8_RANK;
+
+  // Has castling occurred.
+  bool white_has_castled = false;
+  bool black_has_castled = false;
+
+  // Game state.
+  bool is_end_game = false;
+
   // CONSTRUCTORS
 
   /**
@@ -249,6 +270,26 @@ private:
    */
   auto square_is_attacked_by_king(int &x_position, int &y_position,
                                   PieceColor &color_being_attacked) -> bool;
+
+  /**
+   * @brief Manages the piece counts after a move.
+   *
+   * @param move Manage piece counts for this move.
+   */
+  void manage_piece_counts_on_apply(Move &move);
+
+  /**
+   * @brief Manages the piece counts after undoing a move.
+   *
+   * @param move Manage piece counts for this move.
+   */
+  void manage_piece_counts_on_undo(Move &move);
+
+  /**
+   * @brief Checks if the game is in an end game state and updates the
+   * is_end_game property.
+   */
+  void is_end_game_check();
 };
 } // namespace engine::parts
 
