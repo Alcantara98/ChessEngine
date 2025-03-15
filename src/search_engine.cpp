@@ -207,13 +207,6 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       }
       break;
     }
-    // If eval is less than current_iterative_best_move_score and beta, then
-    // the actual eval is not going to be greater than current
-    // best move score. Hence, break.
-    if (eval < current_iterative_best_move_score && eval < beta)
-    {
-      break;
-    }
   }
 
   return eval;
