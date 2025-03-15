@@ -314,6 +314,14 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
                         best_move_index, possible_moves, null_move_line);
 
+  // If search has stopped, don't save the states in the transposition
+  // table. This will cause invalid states to be stored with eval scores of 0.
+  // This may be saved as exact values in the transposition table, causing
+  // incorrect cutoffs.
+  if (stop_search_flag)
+  {
+    return 0;
+  }
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
                                      beta, best_move_index);
   return max_eval;
