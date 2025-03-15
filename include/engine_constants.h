@@ -59,6 +59,7 @@ const double MILLISECONDS_TO_SECONDS = 1000.0;
 
 // Search Engine constants.
 const int MAX_SEARCH_DEPTH = 30;
+const int MAX_SEARCH_TIME = 600000;
 // Use for starting values of alpha and beta;
 const int INF = std::numeric_limits<int>::max();
 
@@ -74,6 +75,7 @@ const int KING_VALUE = 20000;
 const int MAX_MOVES_KNIGHT = 8;
 
 // Evaluation points.
+const int EXTREMELY_SMALL_EVAL_VALUE = 2;
 const int VERY_SMALL_EVAL_VALUE = 5;
 const int SMALL_EVAL_VALUE = 10;
 const int MEDIUM_EVAL_VALUE = 20;
@@ -93,7 +95,7 @@ const int END_GAME_CONDITION_NO_QUEENS = 8;
 
 // Aspiration Window Constants.
 const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {PAWN_VALUE + 1, (PAWN_VALUE * 2) + 1, INF}};
+    {(PAWN_VALUE) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 2}};
 
 // Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {

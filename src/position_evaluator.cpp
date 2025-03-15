@@ -288,6 +288,7 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
   // Position value - x coordinate.
   if (!board_state.is_end_game)
   {
+    evaluate_king_safety(x_position, y_position, king_piece, eval, board_state);
     if (king_piece.piece_color == PieceColor::WHITE)
     {
       eval += KING_POSITION_EVAL_MAP[x_position];
@@ -296,10 +297,6 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
     {
       eval -= KING_POSITION_EVAL_MAP[x_position];
     }
-  }
-  else
-  {
-    evaluate_king_safety(x_position, y_position, king_piece, eval, board_state);
   }
 }
 

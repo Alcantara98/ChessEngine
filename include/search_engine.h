@@ -29,6 +29,9 @@ public:
   // Max depth to search.
   int max_search_depth;
 
+  // Max time to search in milliseconds.
+  int max_search_time_milliseconds;
+
   // Show performance matrix of the search.
   bool show_performance = false;
 
@@ -90,6 +93,20 @@ private:
   // The evaluation score of the previous moves.
   std::stack<int> previous_move_evals;
 
+  // Flag to stop the iterative search.
+  bool stop_search_flag = false;
+
+  // For stopping the search timeout thread if search reaches max depth first
+  // before timelimit is reached.
+  std::condition_variable search_timeout_cv;
+  std::mutex search_timeout_mutex;
+
+  // The best score of current iterative search. Reset after each iteration.
+  // NOTE: This is used to stop other threads from widening the search window in
+  // the aspiration window function unnecessarily. Do not use this score to
+  // determine the best move.
+  std::atomic<int> current_iterative_best_move_score = -INF;
+
   // FUNCTIONS
 
   /**
@@ -102,6 +119,16 @@ private:
   /**
    * @brief Encapsulates the iterative deepening search for each move to apply
    * aspirtation window heuristic.
+   *
+   * @details Aspiration window heuristic is used to reduce the search space by
+   * only searching moves that are within a certain range of the previous
+   * evaluation score (previous evaluation score at the start is 0).
+   * If the evaluation score is within the window, the search stops and returns
+   * the score.
+   * If the evaluation score is outside the window, re-search the move with a
+   * larger window.
+   * Window size is increased 2x if the search is outside the window, with the
+   * last window being the full window (alpha = -INF, beta = INF).
    *
    * @param board_state BoardState object to search.
    * @param depth Current depth of search.
@@ -191,6 +218,14 @@ private:
       int iterative_depth,
       std::chrono::time_point<std::chrono::steady_clock> search_start_time,
       std::chrono::time_point<std::chrono::steady_clock> search_end_time);
+
+  /**
+   * @brief Initiates the search timeout.
+   *
+   * @details The search timeout is used to stop the search if it exceeds the
+   * allowed search time. It will do so by setting the stop_search_flag to true.
+   */
+  void initiate_search_timeout();
 };
 } // namespace engine::parts
 

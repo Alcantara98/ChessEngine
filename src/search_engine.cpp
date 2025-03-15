@@ -15,7 +15,11 @@ SearchEngine::SearchEngine(BoardState &board_state)
 auto SearchEngine::execute_best_move() -> bool
 {
   std::vector<std::pair<Move, int>> move_scores;
+  std::thread search_timeout_thread(&SearchEngine::initiate_search_timeout,
+                                    this);
   evaluate_possible_moves(move_scores);
+  search_timeout_thread.join();
+  stop_search_flag = false;
   sort_moves(move_scores);
 
   if (show_move_evaluations)
@@ -79,12 +83,13 @@ void SearchEngine::evaluate_possible_moves(
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
 
-  // Search to max_search_depth with iterative deepening.
+  // Search to until stop flag is set, or max search depth is reached.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
+    // Reset current iterative search best move score to -INF for new iteration.
+    current_iterative_best_move_score = -INF;
     max_iterative_search_depth = iterative_depth;
-    move_scores.clear();
 
     std::vector<std::thread> search_threads;
     std::vector<std::promise<int>> promises(possible_moves.size());
@@ -99,7 +104,7 @@ void SearchEngine::evaluate_possible_moves(
       // Calculate possible moves again for each thread.
       // NOTE: This is because moves contain references to pieces from the
       // board state. If game_board_state moves are used, threads will modify
-      // its pieces.
+      // its pieces making it invalid.
       std::vector<Move> thread_possible_moves =
           move_generator::calculate_possible_moves(
               thread_board_states[move_index]);
@@ -125,42 +130,87 @@ void SearchEngine::evaluate_possible_moves(
       thread.join();
     }
 
-    // Get results from threads.
-    for (int index = 0; index < possible_moves.size(); ++index)
+    if (!stop_search_flag)
     {
-      move_scores.emplace_back(possible_moves[index], futures[index].get());
+      // Get results from threads.
+      move_scores.clear();
+      for (int index = 0; index < possible_moves.size(); ++index)
+      {
+        move_scores.emplace_back(possible_moves[index], futures[index].get());
+      }
+    }
+    else
+    {
+      return;
     }
 
     auto search_end_time = std::chrono::steady_clock::now();
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
                                        search_end_time);
   }
+  // Notify the timeout thread that the search is complete.
+  std::lock_guard<std::mutex> lock(search_timeout_mutex);
+  search_timeout_cv.notify_one();
 }
 
 auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
                                                      int depth) -> int
 {
-  int alpha;
-  int beta;
-  int eval = 0;
+  // These values are set to ensure that alpha and beta will be initialized
+  // properly.
+  int alpha = INF;
+  int beta = -INF;
+  int eval = last_move_eval();
 
   // Try aspiration windows until a valid window is found.
   for (int window_increment : ASPIRATION_WINDOWS)
   {
-    if (window_increment == INF)
+    if (std::abs(last_move_eval()) == INF)
     {
       alpha = -INF;
       beta = INF;
     }
     else
     {
-      alpha = last_move_eval() - window_increment;
       beta = last_move_eval() + window_increment;
+      alpha = last_move_eval() - window_increment;
     }
-    eval = -negamax_alpha_beta_search(board_state, -INF, INF, depth - 1, false);
+
+    // If current best move eval is greater than alpha, then there is no point
+    // finding values below it. Decrease the window so the alpha is the best
+    // move so far.
+    if (current_iterative_best_move_score > alpha)
+    {
+      alpha = current_iterative_best_move_score;
+    }
+    // If current best move eval is already greater than beta, then just
+    // extend the window to infinity since we want a value greater than
+    // current_iterative_best_move_score.
+    if (current_iterative_best_move_score > beta)
+    {
+      beta = INF;
+    }
+    eval =
+        -negamax_alpha_beta_search(board_state, alpha, beta, depth - 1, false);
+
+    if (stop_search_flag)
+    {
+      break;
+    }
 
     // Return eval if it is within the window.
-    if (eval < beta && eval > alpha)
+    if (eval <= beta && eval >= alpha)
+    {
+      if (eval > current_iterative_best_move_score)
+      {
+        current_iterative_best_move_score = eval;
+      }
+      break;
+    }
+    // If eval is less than current_iterative_best_move_score and beta, then
+    // the actual eval is not going to be greater than current
+    // best move score. Hence, break.
+    if (eval < current_iterative_best_move_score && eval < beta)
     {
       break;
     }
@@ -173,6 +223,10 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool null_move_line) -> int
 {
+  if (stop_search_flag)
+  {
+    return 0;
+  }
   // If the king is no longer in the board, checkmate has occurred.
   // Return -INF evaluation for the side that has lost its king.
   if (board_state.color_to_move == PieceColor::WHITE &&
@@ -183,7 +237,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
   if (board_state.color_to_move == PieceColor::BLACK &&
       !board_state.black_king_on_board)
   {
-    return INF;
+    return -INF;
   }
 
   int original_alpha = alpha;
@@ -239,11 +293,12 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
 
   // Try a null move.
   if (!null_move_line &&
-      (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH)
+      (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
+      !board_state.is_end_game)
   {
     do_null_move_search(board_state, alpha, beta, depth, eval);
-    // If null move (which is theoretically a losing move) is greater than beta,
-    // then return null move eval.
+    // If null move (which is theoretically a losing move) is greater than
+    // beta, then return null move eval.
     if (eval >= beta)
     {
       return eval;
@@ -255,8 +310,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
   int max_eval = -INF;
   int best_move_index = 0;
 
-  // If there is a best move from the transposition table, move it to the front
-  // to be searched first, causing a cutoff if it is a good move.
+  // If there is a best move from the transposition table, move it to the
+  // front to be searched first, causing a cutoff if it is a good move.
   if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
   {
     std::swap(possible_moves[0], possible_moves[entry_best_move]);
@@ -366,5 +421,16 @@ void SearchEngine::reset_and_print_performance_matrix(
   // Reset performance metrics.
   nodes_visited = 0;
   leaf_nodes_visited = 0;
+}
+
+void SearchEngine::initiate_search_timeout()
+{
+  std::unique_lock<std::mutex> lock(search_timeout_mutex);
+  if (search_timeout_cv.wait_for(
+          lock, std::chrono::milliseconds(max_search_time_milliseconds)) ==
+      std::cv_status::timeout)
+  {
+    stop_search_flag = true;
+  }
 }
 } // namespace engine::parts

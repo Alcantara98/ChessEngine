@@ -134,19 +134,23 @@ void ChessEngine::set_up_engine()
   std::string user_message;
 
   // Get user input for engine settings.
-  user_message = "Please Enter Engine Depth (1-30): ";
+  user_message = "Please Enter Engine Depth";
   int search_depth = getValidIntInput(user_message, 1, parts::MAX_SEARCH_DEPTH);
   search_engine.max_search_depth = search_depth;
 
-  user_message = "Show Performance (y = Yes, n = No): ";
+  user_message = "Enter Search Time for Each Move in Milliseconds";
+  int search_time = getValidIntInput(user_message, 1, parts::MAX_SEARCH_TIME);
+  search_engine.max_search_time_milliseconds = search_time;
+
+  user_message = "Show Performance?";
   char show_performance_char = getValidCharInput(user_message, "yn");
   search_engine.show_performance = show_performance_char == 'y';
 
-  user_message = "Show All Move Evaluations (y = Yes, n = No): ";
+  user_message = "Show All Move Evaluations?";
   char show_move_evaluations_char = getValidCharInput(user_message, "yn");
   search_engine.show_move_evaluations = show_move_evaluations_char == 'y';
 
-  user_message = "Please Enter Player Color (w = White, b = Black):";
+  user_message = "Enter Player Color (w = White, b = Black)";
   char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
@@ -294,7 +298,7 @@ auto ChessEngine::getValidIntInput(const std::string &user_message, int min,
 
   while (!exit_state)
   {
-    printf("%s", user_message.c_str());
+    printf("%s (%d-%d): ", user_message.c_str(), min, max);
 
     // Get user input.
     std::cin >> user_input;
@@ -326,7 +330,7 @@ auto ChessEngine::getValidCharInput(const std::string &user_message,
 
   while (!exit_state)
   {
-    printf("%s", user_message.c_str());
+    printf("%s (%s): ", user_message.c_str(), valid_chars.c_str());
 
     // Get user input.
     std::cin >> user_input;
