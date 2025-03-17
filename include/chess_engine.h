@@ -11,7 +11,7 @@
 namespace engine
 {
 /**
- * @brief Class that combineas all the components of the chess engine.
+ * @brief Class that combines all the components of the chess engine.
  */
 class ChessEngine
 {
@@ -19,7 +19,7 @@ public:
   // CONSTRUCTORS
 
   /**
-   * @brief Default Constructor - Initialises the Chess Engine.
+   * @brief Default Constructor - Initializes the Chess Engine.
    */
   ChessEngine();
 
@@ -33,28 +33,28 @@ public:
 private:
   // PROPERTIES
 
-  // Board state object.
+  /// @brief Board state object.
   parts::BoardState game_board_state;
 
-  // Best move finder object.
+  /// @brief Best move finder object.
   parts::SearchEngine search_engine;
 
-  // Move interface object.
+  /// @brief Move interface object.
   parts::MoveInterface move_interface;
 
-  // Player color.
+  /// @brief Player color.
   parts::PieceColor player_color = parts::PieceColor::NONE;
 
-  // Flag to go exit current state.
+  /// @brief Flag to exit current state.
   bool exit_state = false;
 
-  // Flag to check if game is over.
+  /// @brief Flag to check if game is over.
   bool game_over = false;
 
-  // Current state. Uses main_menu_state by default.
+  /// @brief Current state. Uses main_menu_state by default.
   void (ChessEngine::*current_state)() = &ChessEngine::main_menu_state;
 
-  // Current state name.
+  /// @brief Current state name.
   std::string current_state_name = parts::MAIN_MENU_STATE;
 
   // FUNCTIONS
@@ -142,6 +142,8 @@ private:
    *
    * @note If the king is checked and all possible moves result in a checked
    * king, it is a checkmate.
+   *
+   * @return True if the current player is in checkmate, false otherwise.
    */
   auto is_checkmate() -> bool;
 
@@ -150,6 +152,8 @@ private:
    *
    * @note If the king is not checked and all possible moves result in a checked
    * king, it is a stalemate.
+   *
+   * @return True if the current player is in stalemate, false otherwise.
    */
   auto is_stalemate() -> bool;
 

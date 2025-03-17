@@ -24,22 +24,23 @@ class SearchEngine
 
 public:
   // PROPERTIES
-  // Determines which color to maximise for.
+
+  /// @brief Determines which color to maximise for.
   PieceColor engine_color = PieceColor::WHITE;
 
-  // Max depth to search.
+  /// @brief Max depth to search.
   int max_search_depth;
 
-  // Max time to search in milliseconds.
+  /// @brief Max time to search in milliseconds.
   int max_search_time_milliseconds;
 
-  // Show performance matrix of the search.
+  /// @brief Show performance matrix of the search.
   bool show_performance = false;
 
-  // Show move evaluations.
+  /// @brief Show move evaluations.
   bool show_move_evaluations = false;
 
-  // Flag to run search with aspiration window.
+  /// @brief Flag to run search with aspiration window.
   bool use_aspiration_window = true;
 
   // CONSTRUCTORS
@@ -52,6 +53,7 @@ public:
   SearchEngine(BoardState &board_state);
 
   // FUNCTIONS
+
   /**
    * @brief Finds the best move for the engine and applies it to the board.
    *
@@ -81,36 +83,39 @@ public:
 private:
   // PROPERTIES
 
-  // Number of leaf nodes visited.
+  /// @brief Number of leaf nodes visited.
   std::atomic<int> leaf_nodes_visited = 0;
 
-  // Number of nodes visited.
+  /// @brief Number of nodes visited.
   std::atomic<int> nodes_visited = 0;
 
-  // See BoardState.
+  /// @brief See BoardState.
   BoardState &game_board_state;
 
-  // Transposition Table object.
+  /// @brief Transposition Table object.
   TranspositionTable transposition_table;
 
-  // The max depth the current iterative search will reach.
+  /// @brief The max depth that the current iterative search will reach.
+  /// NOTE: Not to be confused with max_search_depth. This is the depth the
+  /// current iteration will reach.
   int max_iterative_search_depth;
 
-  // The evaluation score of the previous moves.
+  /// @brief The evaluation score of the previous moves.
   std::stack<int> previous_move_evals;
 
-  // Flag to stop the iterative search.
+  /// @brief Flag to stop the iterative search.
   bool stop_search_flag = false;
 
-  // For stopping the search timeout thread if search reaches max depth first
-  // before timelimit is reached.
+  /// @brief For stopping the search timeout thread if search reaches max depth
+  /// first before timelimit is reached.
   std::condition_variable search_timeout_cv;
   std::mutex search_timeout_mutex;
 
-  // The best score of current iterative search. Reset after each iteration.
-  // NOTE: This is used to stop other threads from widening the search window in
-  // the aspiration window function unnecessarily. Do not use this score to
-  // determine the best move.
+  /// @brief The best score of current iterative search. Reset after each
+  /// iteration.
+  /// NOTE: This is used to stop other threads from widening the
+  /// search window in the aspiration window function unnecessarily. Do not use
+  /// this score to determine the best move.
   std::atomic<int> current_iterative_best_move_score = -INF;
 
   // FUNCTIONS
