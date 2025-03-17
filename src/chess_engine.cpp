@@ -276,6 +276,7 @@ auto ChessEngine::handle_board_undo_reset_commands(
   else if (user_input == "redo" &&
            current_state == &ChessEngine::engine_vs_player_state)
   {
+    search_engine.transposition_table.clear();
     game_board_state.undo_move();
     search_engine.pop_last_move_eval();
     if (game_board_state.color_to_move == player_color)

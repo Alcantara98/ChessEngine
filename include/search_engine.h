@@ -43,6 +43,9 @@ public:
   /// @brief Flag to run search with aspiration window.
   bool use_aspiration_window = true;
 
+  /// @brief Transposition Table object.
+  TranspositionTable transposition_table;
+
   // CONSTRUCTORS
   /**
    * @brief Default Constructor - takes a chess board state.
@@ -91,9 +94,6 @@ private:
 
   /// @brief See BoardState.
   BoardState &game_board_state;
-
-  /// @brief Transposition Table object.
-  TranspositionTable transposition_table;
 
   /// @brief The max depth that the current iterative search will reach.
   /// NOTE: Not to be confused with max_search_depth. This is the depth the
