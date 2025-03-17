@@ -200,6 +200,16 @@ void ChessEngine::handle_player_turn()
     {
       break;
     }
+    if (user_input == "use-window")
+    {
+      search_engine.use_aspiration_window = true;
+      continue;
+    }
+    if (user_input == "no-window")
+    {
+      search_engine.use_aspiration_window = false;
+      continue;
+    }
     if (user_input == "print-moves")
     {
       printf("\nMoves Played:\n");

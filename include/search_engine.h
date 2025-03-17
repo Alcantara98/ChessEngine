@@ -38,6 +38,9 @@ public:
   // Show move evaluations.
   bool show_move_evaluations = false;
 
+  // Flag to run search with aspiration window.
+  bool use_aspiration_window = true;
+
   // CONSTRUCTORS
   /**
    * @brief Default Constructor - takes a chess board state.

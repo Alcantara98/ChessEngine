@@ -58,7 +58,7 @@ const int NODES_TO_KILONODES = 1000;
 const double MILLISECONDS_TO_SECONDS = 1000.0;
 
 // Search Engine constants.
-const int MAX_SEARCH_DEPTH = 30;
+const int MAX_SEARCH_DEPTH = 100;
 const int MAX_SEARCH_TIME = 600000;
 // Use for starting values of alpha and beta;
 const int INF = std::numeric_limits<int>::max();
@@ -93,9 +93,13 @@ const int END_GAME_CONDITION_TWO_QUEENS = 2;
 const int END_GAME_CONDITION_ONE_QUEEN = 5;
 const int END_GAME_CONDITION_NO_QUEENS = 8;
 
+// Checksum Constants.
+const uint32_t CHECKSUM_SEED = 0x811C9DC5;
+const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
+
 // Aspiration Window Constants.
 const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {(PAWN_VALUE) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 2}};
+    {(PAWN_VALUE / 4) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
 
 // Position evaluation map for pieces.
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
@@ -160,8 +164,8 @@ const std::string GAME_OVER_HELP_MESSAGE =
 
 const std::string HELP_MESSAGE =
     "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
-    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n -  "
-    "print-moves\n -  enter a move\n\n";
+    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n  - "
+    "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

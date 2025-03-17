@@ -118,8 +118,18 @@ void SearchEngine::evaluate_possible_moves(
       search_threads.emplace_back(
           [this, &promises, move_index, iterative_depth, &thread_board_states]()
           {
-            int eval = run_search_with_aspiration_window(
-                thread_board_states[move_index], iterative_depth);
+            int eval;
+            if (use_aspiration_window)
+            {
+              eval = run_search_with_aspiration_window(
+                  thread_board_states[move_index], iterative_depth);
+            }
+            else
+            {
+              eval = -negamax_alpha_beta_search(thread_board_states[move_index],
+                                                -INF, INF, iterative_depth - 1,
+                                                false);
+            }
             promises[move_index].set_value(eval);
           });
     }
@@ -156,10 +166,8 @@ void SearchEngine::evaluate_possible_moves(
 auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
                                                      int depth) -> int
 {
-  // These values are set to ensure that alpha and beta will be initialized
-  // properly.
-  int alpha = INF;
-  int beta = -INF;
+  int alpha;
+  int beta;
   int eval = last_move_eval();
 
   // Try aspiration windows until a valid window is found.
@@ -172,13 +180,13 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     }
     else
     {
-      beta = last_move_eval() + window_increment;
-      alpha = last_move_eval() - window_increment;
+      beta = eval + window_increment;
+      alpha = eval - window_increment;
     }
 
-    // If current best move eval is greater than alpha, then there is no point
-    // finding values below it. Decrease the window so the alpha is the best
-    // move so far.
+    // If current best move eval is greater than alpha, then there is no
+    // point finding values below it. Decrease the window so the alpha is the
+    // best move so far.
     if (current_iterative_best_move_score > alpha)
     {
       alpha = current_iterative_best_move_score;
@@ -190,8 +198,9 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     {
       beta = INF;
     }
-    eval =
-        -negamax_alpha_beta_search(board_state, alpha, beta, depth - 1, false);
+
+    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                      false);
 
     if (stop_search_flag)
     {
@@ -199,7 +208,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     }
 
     // Return eval if it is within the window.
-    if (eval <= beta && eval >= alpha)
+    if (eval < beta && eval > alpha || stop_search_flag)
     {
       if (eval > current_iterative_best_move_score)
       {
@@ -207,8 +216,15 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       }
       break;
     }
-  }
 
+    // If current best move is a fail-low (eval <= alpha), a re-search will only
+    // find lower evals than current one. So if current best move is already
+    // greater than current eval, there is no point finding smaller evaluations.
+    if (eval <= alpha && current_iterative_best_move_score > eval)
+    {
+      break;
+    }
+  }
   return eval;
 }
 

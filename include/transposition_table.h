@@ -30,6 +30,9 @@ struct TranspositionTableEntry
 
   // Index of the best move in the board state.
   int best_move_index;
+
+  // Checksum of the entry.
+  uint32_t checksum;
 };
 
 class TranspositionTable
@@ -85,6 +88,10 @@ private:
 
   // Transposition table represented as an array.
   TranspositionTableEntry *tt_table;
+
+  // Calculate the checksum of the entry.
+  static auto calculate_checksum(uint64_t hash, int depth, int eval_score,
+                                 int flag, int best_move_index) -> uint32_t;
 };
 } // namespace engine::parts
 
