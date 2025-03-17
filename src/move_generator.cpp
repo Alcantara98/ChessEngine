@@ -317,17 +317,10 @@ void generate_knight_moves(BoardState &board_state, int x_position,
   Piece *knight_piece = board[x_position][y_position];
   bool first_move = !knight_piece->piece_has_moved;
 
-  std::vector<int> x_pos_list = {x_position - 2, x_position - 2, x_position - 1,
-                                 x_position - 1, x_position + 1, x_position + 1,
-                                 x_position + 2, x_position + 2};
-  std::vector<int> y_pos_list = {y_position - 1, y_position + 1, y_position - 2,
-                                 y_position + 2, y_position - 2, y_position + 2,
-                                 y_position - 1, y_position + 1};
-
-  for (int index = 0; index < MAX_MOVES_KNIGHT; ++index)
+  for (auto move : KNIGHT_MOVES)
   {
-    int new_x = x_pos_list[index];
-    int new_y = y_pos_list[index];
+    int new_x = x_position + move[0];
+    int new_y = y_position + move[1];
     // Continue if coordinate is out of the chess board.
     if (new_x < X_MIN || new_x > X_MAX || new_y < Y_MIN || new_y > Y_MAX)
     {

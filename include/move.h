@@ -36,7 +36,8 @@ struct Move
   /// @brief Specifies whether a pawn moved two squares forward on this move.
   bool pawn_moved_two_squares;
 
-  /// @brief If a pawn moved two squares, these are the coordinates the pawn moved to.
+  /// @brief If a pawn moved two squares, these are the coordinates the pawn
+  /// moved to.
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
   // CONSTRUCTORS
