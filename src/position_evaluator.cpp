@@ -268,7 +268,7 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
                    BoardState &board_state)
 {
   // Piece value.
-  if (king_piece.piece_color == PieceColor::WHITE)
+  if (king_piece.piece_color == PieceColor::WHITE && !board_state.is_end_game)
   {
     eval += KING_VALUE;
     if (board_state.white_has_castled)
@@ -279,7 +279,7 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
   else
   {
     eval -= KING_VALUE;
-    if (board_state.black_has_castled)
+    if (board_state.black_has_castled && !board_state.is_end_game)
     {
       eval -= LARGE_EVAL_VALUE;
     }
@@ -288,6 +288,7 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
   // Position value - x coordinate.
   if (!board_state.is_end_game)
   {
+    evaluate_king_safety(x_position, y_position, king_piece, eval, board_state);
     if (king_piece.piece_color == PieceColor::WHITE)
     {
       eval += KING_POSITION_EVAL_MAP[x_position];
@@ -296,10 +297,6 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
     {
       eval -= KING_POSITION_EVAL_MAP[x_position];
     }
-  }
-  else
-  {
-    evaluate_king_safety(x_position, y_position, king_piece, eval, board_state);
   }
 }
 

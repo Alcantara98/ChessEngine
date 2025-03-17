@@ -36,13 +36,13 @@ struct Piece
 {
   // PROPERTIES
 
-  // Type of piece.
+  /// @brief Type of piece.
   PieceType piece_type;
 
-  // Color of piece.
+  /// @brief Color of piece.
   PieceColor piece_color;
 
-  // Whether the piece has moved.
+  /// @brief Whether the piece has moved.
   bool piece_has_moved;
 
   // CONSTRUCTORS

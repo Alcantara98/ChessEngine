@@ -12,31 +12,32 @@ struct Move
 {
   // PROPERTIES
 
-  // The piece that is moving.
+  /// @brief The piece that is moving.
   Piece *moving_piece;
 
-  // The piece that is captured by moving_piece.
+  /// @brief The piece that is captured by moving_piece.
   Piece *captured_piece;
 
-  // If pawn is promoted, it will be promoted to this piece type.
+  /// @brief If pawn is promoted, it will be promoted to this piece type.
   PieceType promotion_piece_type;
 
-  // moving_piece coordinates before applying this move.
+  /// @brief moving_piece coordinates before applying this move.
   int from_x, from_y;
 
-  // moving_piece coordinates after applying this move.
+  /// @brief moving_piece coordinates after applying this move.
   int to_x, to_y;
 
-  // True if moveing_piece (has to be a pawn) captures En Passant.
+  /// @brief True if moving_piece (has to be a pawn) captures En Passant.
   bool capture_is_en_passant;
 
-  // Specifies whether this is the moving_piece's first move.
+  /// @brief Specifies whether this is the moving_piece's first move.
   bool first_move_of_moving_piece;
 
-  // Specifies whether a pawn moved two squares forward on this move.
+  /// @brief Specifies whether a pawn moved two squares forward on this move.
   bool pawn_moved_two_squares;
 
-  // If a pawn moved two squares, these are the coordinates the pawn moved to.
+  /// @brief If a pawn moved two squares, these are the coordinates the pawn
+  /// moved to.
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
   // CONSTRUCTORS
@@ -50,7 +51,7 @@ struct Move
    * @param captured_piece The piece that is captured by moving_piece.
    * @param promotion_piece_type If pawn is promoted, it will be promoted to
    * this piece type.
-   * @param capture_is_en_passant True if moveing_piece (has to be a pawn)
+   * @param capture_is_en_passant True if moving_piece (has to be a pawn)
    * captures En Passant.
    * @param first_move_of_moving_piece True if this is the moving_piece's first
    * move.
@@ -91,7 +92,7 @@ struct Move
    * @param moving_piece The piece that is moving.
    * @param captured_piece The piece that is captured by moving_piece.
    * @param first_move_of_moving_piece True if this is the moving_piece's first
-   * @param capture_is_en_passant True if moveing_piece (has to be a pawn)
+   * @param capture_is_en_passant True if moving_piece (has to be a pawn)
    * captures En Passant.
    */
   Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,

@@ -16,32 +16,45 @@ struct TranspositionTableEntry
 {
   // PROPERTIES
 
-  // Hash of the board state.
+  /// @brief Hash of the board state.
   uint64_t hash;
 
-  // Maximum depth of the search.
+  /// @brief Maximum depth of the search.
   int search_depth;
 
-  // Value of the board state.
+  /// @brief Value of the board state.
   int eval_score;
 
-  // Flag of the value. 0 = exact, 1 = lower bound, 2 = upper bound.
+  /// @brief Flag of the value. 0 = exact, 1 = lower bound, 2 = upper bound.
   int flag;
 
-  // Index of the best move in the board state.
+  /// @brief Index of the best move in the board state.
   int best_move_index;
+
+  /// @brief Checksum of the entry.
+  uint32_t checksum;
 };
 
+/**
+ * @brief Class that creates and manages the transposition table for storing and
+ * retrieving board states and their evaluations.
+ */
 class TranspositionTable
 {
 public:
   // CONSTRUCTORS
 
   /**
-   * @brief Construct a new Transposition Table object
+   * @brief Construct a new Transposition Table object with a specified maximum
+   * size.
+   *
+   * @param max_size Maximum number of entries in the transposition table.
    */
   TranspositionTable(uint64_t max_size);
 
+  /**
+   * @brief Destroy the Transposition Table object and free allocated memory.
+   */
   ~TranspositionTable();
 
   // FUNCTIONS
@@ -80,11 +93,25 @@ public:
 private:
   // PROPERTIES
 
-  // Size of the transposition table.
+  /// @brief Size of the transposition table.
   uint64_t max_size;
 
-  // Transposition table represented as an array.
+  /// @brief Transposition table represented as an array.
   TranspositionTableEntry *tt_table;
+
+  /**
+   * @brief Calculate the checksum of the entry.
+   *
+   * @param hash Hash of the board state.
+   * @param depth Depth searched for this position.
+   * @param eval_score Evaluation score of the board state.
+   * @param flag Flag of the value.
+   * @param best_move_index Index of the best move in the board state.
+   *
+   * @return Calculated checksum.
+   */
+  static auto calculate_checksum(uint64_t hash, int depth, int eval_score,
+                                 int flag, int best_move_index) -> uint32_t;
 };
 } // namespace engine::parts
 

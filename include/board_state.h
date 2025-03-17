@@ -15,7 +15,7 @@
 
 namespace engine::parts
 {
-// 8 x 8 array type to represent a chess board.
+/// @brief 8 x 8 array type to represent a chess board.
 using chess_board_type =
     std::array<std::array<Piece *, BOARD_HEIGHT>, BOARD_WIDTH>;
 
@@ -27,34 +27,48 @@ class BoardState
 public:
   // PROPERTIES
 
-  // 8 x 8 array to represent a chess board.
+  /// @brief 8 x 8 array to represent a chess board.
   chess_board_type chess_board;
 
-  // Stack to keep track of previous moves.
+  /// @brief Stack to keep track of previous moves.
   std::stack<Move> previous_move_stack;
 
-  // Represents which color is to move.
+  /// @brief Represents which color is to move.
   PieceColor color_to_move = PieceColor::WHITE;
 
-  // EVALUATION HELPERS
+  // EVALUATION HELPER PROPERTIES
 
-  // Keep track of the number of pieces left on the board.
+  /// @brief Flag to check if the white king is on the board.
   bool white_king_on_board = true;
+
+  /// @brief Flag to check if the black king is on the board.
   bool black_king_on_board = true;
+
+  /// @brief Number of queens on the board.
   int queens_on_board = START_QUEENS_COUNT;
+
+  /// @brief Number of main pieces left on the board (Rooks, Bishops, Knights).
   int number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
 
-  // King positions for evaluation.
+  /// @brief White King's file position.
   int white_king_x_position = XE_FILE;
+
+  /// @brief White King's rank position.
   int white_king_y_position = Y1_RANK;
+
+  /// @brief Black King's file position.
   int black_king_x_position = XE_FILE;
+
+  /// @brief Black King's rank position.
   int black_king_y_position = Y8_RANK;
 
-  // Has castling occurred.
+  /// @brief Flag to check if the white king has castled.
   bool white_has_castled = false;
+
+  /// @brief Flag to check if the black king has castled.
   bool black_has_castled = false;
 
-  // Game state.
+  /// @brief Game state.
   bool is_end_game = false;
 
   // CONSTRUCTORS
@@ -171,29 +185,29 @@ public:
 private:
   // PROPERTIES
 
-  // PieceType to Char mapping for white pieces.
+  /// @brief PieceType to Char mapping for white pieces.
   const std::unordered_map<PieceType, char> white_piece_to_char_map = {
       {PieceType::EMPTY, '-'},  {PieceType::KING, 'K'},
       {PieceType::QUEEN, 'Q'},  {PieceType::ROOK, 'R'},
       {PieceType::BISHOP, 'B'}, {PieceType::KNIGHT, 'N'},
       {PieceType::PAWN, 'P'}};
 
-  // PieceType to Char mapping for black pieces.
+  /// @brief PieceType to Char mapping for black pieces.
   const std::unordered_map<PieceType, char> black_piece_to_char_map = {
       {PieceType::EMPTY, '-'},  {PieceType::KING, 'k'},
       {PieceType::QUEEN, 'q'},  {PieceType::ROOK, 'r'},
       {PieceType::BISHOP, 'b'}, {PieceType::KNIGHT, 'n'},
       {PieceType::PAWN, 'p'}};
 
-  // Zobrist keys
+  /// @brief Zobrist keys.
   std::array<std::array<std::array<size_t, NUM_OF_COLORS>, NUM_OF_PIECE_TYPES>,
              NUM_OF_SQUARES>
       zobrist_keys;
 
-  // Zobrist key for the side to move.
+  /// @brief Zobrist key for the side to move.
   size_t zobrist_side_to_move;
 
-  // All empty squares point to the same Piece instance.
+  /// @brief All empty squares point to the same Piece instance.
   Piece empty_piece;
 
   // FUNCTIONS

@@ -9,14 +9,14 @@
 
 namespace engine::parts
 {
-// Board dimensions.
+// BOARD DIMENSIONS
 const int BOARD_WIDTH = 8;
 const int BOARD_HEIGHT = 8;
 const int NUM_OF_SQUARES = 64;
 const int NUM_OF_PIECE_TYPES = 6;
 const int NUM_OF_COLORS = 2;
 
-// Board positions.
+// BOARD POSITIONS
 const int XA_FILE = 0;
 const int XB_FILE = 1;
 const int XC_FILE = 2;
@@ -38,11 +38,11 @@ const int Y_MAX = 7;
 const int X_MIN = 0;
 const int X_MAX = 7;
 
-// Board directions.
+// BOARD DIRECTIONS
 const int POSITIVE_DIRECTION = 1;
 const int NEGATIVE_DIRECTION = -1;
 
-// User input regex match index.
+// USER INPUT REGEX MATCH INDEXES
 const int CASTLE_MOVE_INDEX = 1;
 const int PIECE_TYPE_INDEX = 2;
 const int FROM_POSITION_INDEX = 3;
@@ -50,19 +50,22 @@ const int CAPTURE_MOVE_INDEX = 4;
 const int TO_POSITION_INDEX = 5;
 const int PROMOTION_INDEX = 6;
 
-// Max transposition table size.
+// MAX TRANSPOSITION TABLE CONSTANTS
 const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;
+const int FAILED_LOW = -1;
+const int FAILED_HIGH = 1;
+const int EXACT = 0;
 
-// Performance matrix conversions.
+// PERFORMANCE MATRIX CONVERSIONS
 const int NODES_TO_KILONODES = 1000;
 const double MILLISECONDS_TO_SECONDS = 1000.0;
 
-// Search Engine constants.
-const int MAX_SEARCH_DEPTH = 30;
-// Use for starting values of alpha and beta;
+// SEARCH ENGINE CONSTANTS
+const int MAX_SEARCH_DEPTH = 100;
+const int MAX_SEARCH_TIME = 600000;
 const int INF = std::numeric_limits<int>::max();
 
-// Piece values.
+// PIECE VALUES
 const int PAWN_VALUE = 100;
 const int KNIGHT_VALUE = 320;
 const int BISHOP_VALUE = 330;
@@ -70,38 +73,40 @@ const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
 
-// Max number of moves for a piece.
-const int MAX_MOVES_KNIGHT = 8;
-
-// Evaluation points.
+// EVALUATION POINTS
+const int EXTREMELY_SMALL_EVAL_VALUE = 2;
 const int VERY_SMALL_EVAL_VALUE = 5;
 const int SMALL_EVAL_VALUE = 10;
 const int MEDIUM_EVAL_VALUE = 20;
 const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 
-// Null Move Constants.
+// NULL MOVE CONSTANTS
 const int NULL_MOVE_REDUCTION = 2;
 const int MIN_NULL_MOVE_DEPTH = 4;
 
-// Game state constants.
+// GAME STATE CONSTANTS
 const int START_MAIN_PIECES_COUNT = 12;
 const int START_QUEENS_COUNT = 2;
 const int END_GAME_CONDITION_TWO_QUEENS = 2;
 const int END_GAME_CONDITION_ONE_QUEEN = 5;
 const int END_GAME_CONDITION_NO_QUEENS = 8;
 
-// Aspiration Window Constants.
-const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {PAWN_VALUE + 1, (PAWN_VALUE * 2) + 1, INF}};
+// CHECKSUM CONSTANTS
+const uint32_t CHECKSUM_SEED = 0x811C9DC5;
+const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
 
-// Position evaluation map for pieces.
+// ASPIRATION WINDOW CONSTANTS
+const std::array<int, 3> ASPIRATION_WINDOWS = {
+    {(PAWN_VALUE / 4) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
+
+// POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
     {5, 10, 20, 30, 30, 20, 10, 5}};
 
 const std::array<int, 8> KING_POSITION_EVAL_MAP = {{5, 20, 0, 0, 0, 0, 20, 5}};
 
-// Direction Maps for Pieces
+// DIRECTION MAPS FOR PIECES
 const std::array<std::array<int, 2>, 8> QUEEN_DIRECTIONS = {
     {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 
@@ -123,34 +128,31 @@ const std::array<std::array<int, 2>, 8> KING_MOVES = {{{-1, -1},
                                                        {+1, 0},
                                                        {+1, +1}}};
 
-// Map to convert string piece type to PieceType.
+// PIECE TYPE MAPPINGS
 const std::map<char, parts::PieceType> STRING_TO_PIECE_TYPE = {
     {'k', parts::PieceType::KING},   {'q', parts::PieceType::QUEEN},
     {'r', parts::PieceType::ROOK},   {'b', parts::PieceType::BISHOP},
     {'n', parts::PieceType::KNIGHT}, {'p', parts::PieceType::PAWN}};
 
-// Map to convert PieceType to string piece type.
 const std::map<parts::PieceType, char> PIECE_TYPE_TO_STRING = {
     {parts::PieceType::KING, 'k'},   {parts::PieceType::QUEEN, 'q'},
     {parts::PieceType::ROOK, 'r'},   {parts::PieceType::BISHOP, 'b'},
     {parts::PieceType::KNIGHT, 'n'}, {parts::PieceType::PAWN, 'p'}};
 
-// Map to convert algebraic coordinates to int.
 const std::map<char, int> ALGEBRAIC_TO_INT = {{'a', 0}, {'b', 1}, {'c', 2},
                                               {'d', 3}, {'e', 4}, {'f', 5},
                                               {'g', 6}, {'h', 7}};
 
-// Map to convert int to algebraic coordinates.
 const std::map<int, char> INT_TO_ALGEBRAIC = {{0, 'a'}, {1, 'b'}, {2, 'c'},
                                               {3, 'd'}, {4, 'e'}, {5, 'f'},
                                               {6, 'g'}, {7, 'h'}};
 
-// State names.
+// STATE NAMES
 const std::string MAIN_MENU_STATE = "Main Menu";
 const std::string PLAYER_VS_PLAYER_STATE = "Player vs Player";
 const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
 
-// Interface messages.
+// INTERFACE MESSAGES
 const std::string GAME_OVER_HELP_MESSAGE =
     "\n-- Game Over-- \n\nCommand Options :\n  - menu\n  - exit\n  - undo\n  - "
     "reset\n  - play-engine\n  - play-player\n  - print-moves\n  - "
@@ -158,8 +160,8 @@ const std::string GAME_OVER_HELP_MESSAGE =
 
 const std::string HELP_MESSAGE =
     "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
-    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n -  "
-    "print-moves\n -  enter a move\n\n";
+    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n  - "
+    "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

@@ -317,17 +317,10 @@ void generate_knight_moves(BoardState &board_state, int x_position,
   Piece *knight_piece = board[x_position][y_position];
   bool first_move = !knight_piece->piece_has_moved;
 
-  std::vector<int> x_pos_list = {x_position - 2, x_position - 2, x_position - 1,
-                                 x_position - 1, x_position + 1, x_position + 1,
-                                 x_position + 2, x_position + 2};
-  std::vector<int> y_pos_list = {y_position - 1, y_position + 1, y_position - 2,
-                                 y_position + 2, y_position - 2, y_position + 2,
-                                 y_position - 1, y_position + 1};
-
-  for (int index = 0; index < MAX_MOVES_KNIGHT; ++index)
+  for (auto move : KNIGHT_MOVES)
   {
-    int new_x = x_pos_list[index];
-    int new_y = y_pos_list[index];
+    int new_x = x_position + move[0];
+    int new_y = y_position + move[1];
     // Continue if coordinate is out of the chess board.
     if (new_x < X_MIN || new_x > X_MAX || new_y < Y_MIN || new_y > Y_MAX)
     {
@@ -353,14 +346,11 @@ void generate_bishop_moves(BoardState &board_state, int x_position,
                            int y_position, std::vector<Move> &possible_moves)
 {
   // Each respective pair of x and y directions represent a diagonal.
-  rook_bishop_move_helper(board_state, x_position, y_position, 1, 1,
-                          possible_moves);
-  rook_bishop_move_helper(board_state, x_position, y_position, 1, -1,
-                          possible_moves);
-  rook_bishop_move_helper(board_state, x_position, y_position, -1, 1,
-                          possible_moves);
-  rook_bishop_move_helper(board_state, x_position, y_position, -1, -1,
-                          possible_moves);
+  for (auto direction : BISHOP_DIRECTIONS)
+  {
+    rook_bishop_move_helper(board_state, x_position, y_position, direction[0],
+                            direction[1], possible_moves);
+  }
 }
 
 void generate_rook_moves(BoardState &board_state, int x_position,
@@ -368,14 +358,11 @@ void generate_rook_moves(BoardState &board_state, int x_position,
 {
   // Each respective pair of x and y directions represent horizontal or
   // vertical moves.
-  rook_bishop_move_helper(board_state, x_position, y_position, 1, 0,
-                          possible_moves);
-  rook_bishop_move_helper(board_state, x_position, y_position, -1, 0,
-                          possible_moves);
-  rook_bishop_move_helper(board_state, x_position, y_position, 0, 1,
-                          possible_moves);
-  rook_bishop_move_helper(board_state, x_position, y_position, 0, -1,
-                          possible_moves);
+  for (auto direction : ROOK_DIRECTIONS)
+  {
+    rook_bishop_move_helper(board_state, x_position, y_position, direction[0],
+                            direction[1], possible_moves);
+  }
 }
 
 void generate_queen_moves(BoardState &board_state, int x_position,

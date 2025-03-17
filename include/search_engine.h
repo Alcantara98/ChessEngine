@@ -16,38 +16,49 @@
 namespace engine::parts
 {
 /**
- * @brief Class to find the best move for the current board state.
+ * @brief Class to find the best move for the current board state using various
+ * search algorithms and heuristics.
  */
 class SearchEngine
 {
 
 public:
   // PROPERTIES
-  // Determines which color to maximise for.
+
+  /// @brief Determines which color to maximise for.
   PieceColor engine_color = PieceColor::WHITE;
 
-  // Max depth to search.
+  /// @brief Max depth to search.
   int max_search_depth;
 
-  // Show performance matrix of the search.
+  /// @brief Max time to search in milliseconds.
+  int max_search_time_milliseconds;
+
+  /// @brief Show performance matrix of the search.
   bool show_performance = false;
 
-  // Show move evaluations.
+  /// @brief Show move evaluations.
   bool show_move_evaluations = false;
+
+  /// @brief Flag to run search with aspiration window.
+  bool use_aspiration_window = true;
 
   // CONSTRUCTORS
   /**
    * @brief Default Constructor - takes a chess board state.
    *
-   * @param board_state BoardState object.
+   * @param board_state BoardState object representing the current state of the
+   * chess board.
    */
   SearchEngine(BoardState &board_state);
 
   // FUNCTIONS
+
   /**
    * @brief Finds the best move for the engine and applies it to the board.
    *
-   * @return True if a move is found where the king is not checked.
+   * @return True if a move is found where the king is not in checked, false
+   * otherwise.
    */
   auto execute_best_move() -> bool;
 
@@ -72,23 +83,40 @@ public:
 private:
   // PROPERTIES
 
-  // Number of leaf nodes visited.
+  /// @brief Number of leaf nodes visited.
   std::atomic<int> leaf_nodes_visited = 0;
 
-  // Number of nodes visited.
+  /// @brief Number of nodes visited.
   std::atomic<int> nodes_visited = 0;
 
-  // See BoardState.
+  /// @brief See BoardState.
   BoardState &game_board_state;
 
-  // Transposition Table object.
+  /// @brief Transposition Table object.
   TranspositionTable transposition_table;
 
-  // The max depth the current iterative search will reach.
+  /// @brief The max depth that the current iterative search will reach.
+  /// NOTE: Not to be confused with max_search_depth. This is the depth the
+  /// current iteration will reach.
   int max_iterative_search_depth;
 
-  // The evaluation score of the previous moves.
+  /// @brief The evaluation score of the previous moves.
   std::stack<int> previous_move_evals;
+
+  /// @brief Flag to stop the iterative search.
+  bool stop_search_flag = false;
+
+  /// @brief For stopping the search timeout thread if search reaches max depth
+  /// first before timelimit is reached.
+  std::condition_variable search_timeout_cv;
+  std::mutex search_timeout_mutex;
+
+  /// @brief The best score of current iterative search. Reset after each
+  /// iteration.
+  /// NOTE: This is used to stop other threads from widening the
+  /// search window in the aspiration window function unnecessarily. Do not use
+  /// this score to determine the best move.
+  std::atomic<int> current_iterative_best_move_score = -INF;
 
   // FUNCTIONS
 
@@ -101,7 +129,17 @@ private:
 
   /**
    * @brief Encapsulates the iterative deepening search for each move to apply
-   * aspirtation window heuristic.
+   * aspiration window heuristic.
+   *
+   * @details Aspiration window heuristic is used to reduce the search space by
+   * only searching moves that are within a certain range of the previous
+   * evaluation score (previous evaluation score at the start is 0).
+   * If the evaluation score is within the window, the search stops and returns
+   * the score.
+   * If the evaluation score is outside the window, re-search the move with a
+   * larger window.
+   * Window size is increased 2x if the search is outside the window, with the
+   * last window being the full window (alpha = -INF, beta = INF).
    *
    * @param board_state BoardState object to search.
    * @param depth Current depth of search.
@@ -114,6 +152,10 @@ private:
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
+   *
+   * @note Exactly the same algorithm as minimax_alpha_beta_search. Minimizing
+   * node is essentially the same as a maximizing node, but with the scores and
+   * bounds negated.
    *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
@@ -157,6 +199,15 @@ private:
   /**
    * @brief Min search procedure for each possible move.
    *
+   * @details The theory behind null move search is that if the current player
+   * can make a null move (skip their turn) and still have a good position (eval
+   * > beta), then the opponent's position is bad and we can cut off without
+   * searching any moves. In return, we decrease the maximum depth of the search
+   * by 1 making the search faster.
+   *
+   * @note We currently only allow one null move per search line. Too many null
+   * moves can make the search too shallow and return bull shit evaluations.
+   *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
@@ -191,6 +242,14 @@ private:
       int iterative_depth,
       std::chrono::time_point<std::chrono::steady_clock> search_start_time,
       std::chrono::time_point<std::chrono::steady_clock> search_end_time);
+
+  /**
+   * @brief Initiates the search timeout.
+   *
+   * @details The search timeout is used to stop the search if it exceeds the
+   * allowed search time. It will do so by setting the stop_search_flag to true.
+   */
+  void initiate_search_timeout();
 };
 } // namespace engine::parts
 

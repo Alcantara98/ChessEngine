@@ -39,18 +39,18 @@ public:
                      const std::string &move_string) -> bool;
 
   /**
-   * @brief Converts a Move into a string(modern chess move notation).
+   * @brief Converts a Move into a string (modern chess move notation).
    *
    * @param move Move to convert into a string.
    *
-   * @return Returns a string reprsenting the move.
+   * @return Returns a string representing the move.
    */
   static auto move_to_string(const Move &move) -> std::string;
 
 private:
   // PROPERTIES
 
-  // Reference of the board state;
+  /// @brief Reference of the board state.
   BoardState &game_board_state;
 
   // FUNCTIONS
