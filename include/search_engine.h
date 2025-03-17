@@ -140,6 +140,10 @@ private:
    * larger window.
    * Window size is increased 2x if the search is outside the window, with the
    * last window being the full window (alpha = -INF, beta = INF).
+   * This will reduce the search space and make the search faster if the exact
+   * eval is within the window we choose. If the eval is not within the window,
+   * the search will be slower as we have to re-search with a larger window.
+   * Improve window selection!
    *
    * @param board_state BoardState object to search.
    * @param depth Current depth of search.
@@ -202,8 +206,9 @@ private:
    * @details The theory behind null move search is that if the current player
    * can make a null move (skip their turn) and still have a good position (eval
    * > beta), then the opponent's position is bad and we can cut off without
-   * searching any moves. In return, we decrease the maximum depth of the search
-   * by 1 making the search faster.
+   * searching any moves (If we actually make a move, their position will be
+   * even worse). In return, we decrease the maximum depth of the search by 1
+   * making the search faster.
    *
    * @note We currently only allow one null move per search line. Too many null
    * moves can make the search too shallow and return bull shit evaluations.
