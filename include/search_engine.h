@@ -16,7 +16,8 @@
 namespace engine::parts
 {
 /**
- * @brief Class to find the best move for the current board state.
+ * @brief Class to find the best move for the current board state using various
+ * search algorithms and heuristics.
  */
 class SearchEngine
 {
@@ -45,7 +46,8 @@ public:
   /**
    * @brief Default Constructor - takes a chess board state.
    *
-   * @param board_state BoardState object.
+   * @param board_state BoardState object representing the current state of the
+   * chess board.
    */
   SearchEngine(BoardState &board_state);
 
@@ -53,7 +55,8 @@ public:
   /**
    * @brief Finds the best move for the engine and applies it to the board.
    *
-   * @return True if a move is found where the king is not checked.
+   * @return True if a move is found where the king is not in checked, false
+   * otherwise.
    */
   auto execute_best_move() -> bool;
 
@@ -121,7 +124,7 @@ private:
 
   /**
    * @brief Encapsulates the iterative deepening search for each move to apply
-   * aspirtation window heuristic.
+   * aspiration window heuristic.
    *
    * @details Aspiration window heuristic is used to reduce the search space by
    * only searching moves that are within a certain range of the previous
@@ -144,6 +147,10 @@ private:
   /**
    * @brief Recursive function to find the best move using minimax algorithm
    * with alpha beta pruning.
+   *
+   * @note Exactly the same algorithm as minimax_alpha_beta_search. Minimizing
+   * node is essentially the same as a maximizing node, but with the scores and
+   * bounds negated.
    *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
@@ -186,6 +193,15 @@ private:
 
   /**
    * @brief Min search procedure for each possible move.
+   *
+   * @details The theory behind null move search is that if the current player
+   * can make a null move (skip their turn) and still have a good position (eval
+   * > beta), then the opponent's position is bad and we can cut off without
+   * searching any moves. In return, we decrease the maximum depth of the search
+   * by 1 making the search faster.
+   *
+   * @note We currently only allow one null move per search line. Too many null
+   * moves can make the search too shallow and return bull shit evaluations.
    *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.

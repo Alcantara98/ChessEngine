@@ -83,7 +83,7 @@ void SearchEngine::evaluate_possible_moves(
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
 
-  // Search to until stop flag is set, or max search depth is reached.
+  // Search until stop_search_flag is true, or max_search_depth is reached.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
@@ -104,7 +104,8 @@ void SearchEngine::evaluate_possible_moves(
       // Calculate possible moves again for each thread.
       // NOTE: This is because moves contain references to pieces from the
       // board state. If game_board_state moves are used, threads will modify
-      // its pieces making it invalid.
+      // its pieces, causing issues (piece_has_moved_flag for example may become
+      // true, and if it is a pawn, it can no longer move 2 squares forward).
       std::vector<Move> thread_possible_moves =
           move_generator::calculate_possible_moves(
               thread_board_states[move_index]);
@@ -208,7 +209,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     }
 
     // Return eval if it is within the window.
-    if (eval < beta && eval > alpha || stop_search_flag)
+    if (eval < beta && eval > alpha)
     {
       if (eval > current_iterative_best_move_score)
       {
@@ -267,12 +268,12 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
     {
       switch (tt_flag)
       {
-      case 0:
+      case EXACT:
         return tt_value;
-      case 1:
+      case FAILED_HIGH:
         alpha = std::max(alpha, tt_value);
         break;
-      case -1:
+      case FAILED_LOW:
         beta = std::min(beta, tt_value);
         break;
       default:
@@ -281,6 +282,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
         exit(0);
       }
 
+      // Check if we still fail high or low with the current alpha and beta.
+      // If flag is FAILED_HIGH, (tt_value >= beta)
+      // If flag is FAILED_LOW, (tt_value <= alpha)
       if (alpha >= beta)
       {
         return tt_value;
@@ -306,7 +310,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
       !board_state.is_end_game)
   {
     do_null_move_search(board_state, alpha, beta, depth, eval);
-    // If null move (which is theoretically a losing move) is greater than
+    // If a null move (which is theoretically a losing move) is greater than
     // beta, then return null move eval.
     if (eval >= beta)
     {
@@ -320,7 +324,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
   int best_move_index = 0;
 
   // If there is a best move from the transposition table, move it to the
-  // front to be searched first, causing a cutoff if it is a good move.
+  // front to be searched first, causing more alpha beta pruning to occur.
   if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
   {
     std::swap(possible_moves[0], possible_moves[entry_best_move]);
@@ -399,15 +403,15 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
   int tt_flag_to_store;
   if (max_eval >= beta)
   {
-    tt_flag_to_store = 1;
+    tt_flag_to_store = FAILED_HIGH;
   }
   else if (max_eval <= alpha)
   {
-    tt_flag_to_store = -1;
+    tt_flag_to_store = FAILED_LOW;
   }
   else
   {
-    tt_flag_to_store = 0;
+    tt_flag_to_store = EXACT;
   }
   transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
                             best_move_index);

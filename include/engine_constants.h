@@ -50,8 +50,11 @@ const int CAPTURE_MOVE_INDEX = 4;
 const int TO_POSITION_INDEX = 5;
 const int PROMOTION_INDEX = 6;
 
-// Max transposition table size.
+// Max transposition table constants.
 const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;
+const int FAILED_LOW = -1;
+const int FAILED_HIGH = 1;
+const int EXACT = 0;
 
 // Performance matrix conversions.
 const int NODES_TO_KILONODES = 1000;
