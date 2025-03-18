@@ -19,6 +19,18 @@ void SearchEngine::handle_engine_turn()
 
 void SearchEngine::stop_engine_turn() { search_thread_handler.stop_thread(); }
 
+void SearchEngine::start_engine_pondering()
+{
+  engine_is_pondering = true;
+  ponder_thread_handler.start_thread(MAX_SEARCH_TIME);
+}
+
+void SearchEngine::stop_engine_pondering()
+{
+  ponder_thread_handler.stop_thread();
+  engine_is_pondering = false;
+}
+
 void SearchEngine::clear_previous_move_evals()
 {
   while (!previous_move_evals.empty())
@@ -158,6 +170,76 @@ void SearchEngine::start_iterative_search_evaluation(
       }
     }
     else
+    {
+      return;
+    }
+
+    auto search_end_time = std::chrono::steady_clock::now();
+    reset_and_print_performance_matrix(iterative_depth, search_start_time,
+                                       search_end_time);
+  }
+}
+
+void SearchEngine::start_iterative_search_pondering()
+{
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(game_board_state);
+
+  // Search until running_search_flag is false, or max_search_depth is reached.
+  for (int iterative_depth = 1; iterative_depth <= MAX_SEARCH_DEPTH;
+       ++iterative_depth)
+  {
+    // Reset current iterative search best move score to -INF for new iteration.
+    current_iterative_best_move_score = -INF;
+    max_iterative_search_depth = iterative_depth;
+
+    std::vector<std::thread> search_threads;
+    std::vector<BoardState> thread_board_states(possible_moves.size(),
+                                                BoardState(game_board_state));
+
+    auto search_start_time = std::chrono::steady_clock::now();
+    // Search each move in a separate thread.
+    for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+    {
+      // Calculate possible moves again for each thread.
+      // NOTE: This is because moves contain references to pieces from the
+      // board state. If game_board_state moves are used, threads will modify
+      // its pieces, causing issues (piece_has_moved_flag for example may become
+      // true, and if it is a pawn, it can no longer move 2 squares forward).
+      std::vector<Move> thread_possible_moves =
+          move_generator::calculate_possible_moves(
+              thread_board_states[move_index]);
+
+      // Apply move to the board state for the thread.
+      thread_board_states[move_index].apply_move(
+          thread_possible_moves[move_index]);
+
+      // Start thread and search.
+      search_threads.emplace_back(
+          [this, move_index, iterative_depth, &thread_board_states]()
+          {
+            int eval;
+            if (use_aspiration_window)
+            {
+              eval = run_search_with_aspiration_window(
+                  thread_board_states[move_index], iterative_depth);
+            }
+            else
+            {
+              eval = -negamax_alpha_beta_search(thread_board_states[move_index],
+                                                -INF, INF, iterative_depth - 1,
+                                                false);
+            }
+          });
+    }
+
+    // Wait for all threads to finish.
+    for (auto &thread : search_threads)
+    {
+      thread.join();
+    }
+
+    if (!running_search_flag)
     {
       return;
     }
@@ -432,7 +514,8 @@ void SearchEngine::reset_and_print_performance_matrix(
                       .count();
 
   // Print performance metrics to user.
-  if (show_performance)
+  if ((show_performance && engine_is_searching()) ||
+      (show_ponder_performance && engine_is_pondering))
   {
     printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
     printf("Nodes Visited %d\n", nodes_visited.load());

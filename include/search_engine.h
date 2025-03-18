@@ -38,11 +38,17 @@ public:
   /// @brief Show performance matrix of the search.
   bool show_performance = false;
 
+  /// @brief Show performance matrix of pondering search.
+  bool show_ponder_performance = false;
+
   /// @brief Show move evaluations.
   bool show_move_evaluations = false;
 
   /// @brief Flag to run search with aspiration window.
   bool use_aspiration_window = true;
+
+  /// @brief Flag to run search with null move pruning.
+  bool engine_is_pondering = false;
 
   /// @brief Transposition Table object.
   TranspositionTable transposition_table;
@@ -137,6 +143,10 @@ private:
   ThreadHandler search_thread_handler = ThreadHandler(
       running_search_flag, [this]() { this->search_and_execute_best_move(); });
 
+  ThreadHandler ponder_thread_handler =
+      ThreadHandler(running_search_flag,
+                    [this]() { this->start_iterative_search_pondering(); });
+
   // FUNCTIONS
 
   /**
@@ -170,8 +180,10 @@ private:
    * player's turn to fill out the transposition table. This will give the
    * engine a head start in its search during its turn.
    *
+   * @details Will use iterative deepening search, but we do not care about the
+   * results. We just want the search to fill out the transposition table.
    */
-  void start_engine_pondering();
+  void start_iterative_search_pondering();
 
   /**
    * @brief Encapsulates the iterative deepening search for each move to apply
@@ -200,8 +212,8 @@ private:
                                          int depth) -> int;
 
   /**
-   * @brief Recursive function to find the best move using minimax algorithm
-   * with alpha beta pruning.
+   * @brief Recursive function to evaluate the best move for the given board
+   * state.
    *
    * @note Exactly the same algorithm as minimax_alpha_beta_search. Minimizing
    * node is essentially the same as a maximizing node, but with the scores and

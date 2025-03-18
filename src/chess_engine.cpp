@@ -104,7 +104,9 @@ void ChessEngine::engine_vs_player_state()
     else
     {
       // Player's turn.
+      search_engine.start_engine_pondering();
       handle_player_turn();
+      search_engine.stop_engine_pondering();
     }
     game_board_state.print_board(player_color);
   }
@@ -143,6 +145,10 @@ void ChessEngine::set_up_engine()
   user_message = "Show Performance?";
   char show_performance_char = getValidCharInput(user_message, "yn");
   search_engine.show_performance = show_performance_char == 'y';
+
+  user_message = "Show Pondering Performance?";
+  char show_ponder_performance_char = getValidCharInput(user_message, "yn");
+  search_engine.show_ponder_performance = show_ponder_performance_char == 'y';
 
   user_message = "Show All Move Evaluations?";
   char show_move_evaluations_char = getValidCharInput(user_message, "yn");
@@ -235,17 +241,16 @@ void ChessEngine::handle_player_during_engine_turn()
     while (search_engine.engine_is_searching())
     {
       // Check if input is available
-      if (_kbhit())
+      if (_kbhit() != 0)
       {
         // Read input
         std::getline(std::cin, userInput);
         break;
       }
-      else
-      {
-        // No input, check again later after a delay of 100ms
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
+
+      // No input, check again later after a delay of 100ms
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(parts::INPUT_WAIT_TIME));
     }
 
     if (!search_engine.engine_is_searching())

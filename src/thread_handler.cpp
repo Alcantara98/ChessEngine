@@ -6,7 +6,7 @@ namespace engine::parts
 
 ThreadHandler::ThreadHandler(std::atomic<bool> &running_flag,
                              std::function<void()> function)
-    : running_flag(running_flag), function(function)
+    : running_flag(running_flag), function(std::move(function))
 
 {
 }

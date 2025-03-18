@@ -68,7 +68,7 @@ private:
    * @details The function will wait for the timeout to occur and then set the
    * stop flag to true.
    */
-  void initiate_search_timeout(const int thread_timeout);
+  void initiate_search_timeout(int thread_timeout);
 };
 } // namespace engine::parts
 #endif // THREAD_HANDLER_H

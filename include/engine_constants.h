@@ -152,6 +152,9 @@ const std::string MAIN_MENU_STATE = "Main Menu";
 const std::string PLAYER_VS_PLAYER_STATE = "Player vs Player";
 const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
 
+// CHESS ENGINE CONSTANTS
+const int INPUT_WAIT_TIME = 100;
+
 // INTERFACE MESSAGES
 const std::string GAME_OVER_HELP_MESSAGE =
     "\n-- Game Over-- \n\nCommand Options :\n  - menu\n  - exit\n  - undo\n  - "
@@ -163,6 +166,7 @@ const std::string HELP_MESSAGE =
     "play-player\n  - help\n\n Player's Turn:\n  - undo\n  - reset\n  - "
     "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n Engine's "
     "turn:\n  - stop-search\n\n";
+
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H
