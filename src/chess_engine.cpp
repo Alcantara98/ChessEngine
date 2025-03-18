@@ -97,11 +97,9 @@ void ChessEngine::engine_vs_player_state()
     if (!game_over && game_board_state.color_to_move != player_color)
     {
       // Engine's turn.
-      if (!search_engine.execute_best_move())
-      {
-        printf("BREAKPOINT execute_best_move\n");
-        exit(0);
-      }
+      search_engine.handle_engine_turn();
+      handle_player_during_engine_turn();
+      search_engine.stop_engine_turn();
     }
     else
     {
@@ -223,6 +221,44 @@ void ChessEngine::handle_player_turn()
     {
       // Move was valid and played, end player's turn.
       break;
+    }
+  }
+}
+
+void ChessEngine::handle_player_during_engine_turn()
+{
+  printf("Enter 'stop-search' to stop engine search\n");
+  while (!exit_state && search_engine.engine_is_searching())
+  {
+    std::string userInput;
+
+    while (search_engine.engine_is_searching())
+    {
+      // Check if input is available
+      if (_kbhit())
+      {
+        // Read input
+        std::getline(std::cin, userInput);
+        break;
+      }
+      else
+      {
+        // No input, check again later after a delay of 100ms
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    }
+
+    if (!search_engine.engine_is_searching())
+    {
+      return;
+    }
+    if (userInput == "stop-search")
+    {
+      return;
+    }
+    if (handle_state_change_commands(userInput))
+    {
+      continue;
     }
   }
 }

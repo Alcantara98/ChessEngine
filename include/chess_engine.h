@@ -5,6 +5,7 @@
 #include "move_interface.h"
 #include "search_engine.h"
 
+#include <conio.h>
 #include <functional>
 #include <sstream>
 
@@ -95,6 +96,11 @@ private:
    * @brief Takes user input and handles the player's turn.
    */
   void handle_player_turn();
+
+  /**
+   * @brief Handles the engine's turn.
+   */
+  void handle_player_during_engine_turn();
 
   /**
    * @brief Handles state changes based on user input.

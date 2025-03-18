@@ -160,8 +160,9 @@ const std::string GAME_OVER_HELP_MESSAGE =
 
 const std::string HELP_MESSAGE =
     "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
-    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n  - "
-    "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n";
+    "play-player\n  - help\n\n Player's Turn:\n  - undo\n  - reset\n  - "
+    "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n Engine's "
+    "turn:\n  - stop-search\n\n";
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

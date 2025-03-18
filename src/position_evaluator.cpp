@@ -271,7 +271,7 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
   if (king_piece.piece_color == PieceColor::WHITE && !board_state.is_end_game)
   {
     eval += KING_VALUE;
-    if (board_state.white_has_castled)
+    if (board_state.white_has_castled && !board_state.is_end_game)
     {
       eval += LARGE_EVAL_VALUE;
     }

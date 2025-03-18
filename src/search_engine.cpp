@@ -12,14 +12,47 @@ SearchEngine::SearchEngine(BoardState &board_state)
 
 // PUBLIC FUNCTIONS
 
-auto SearchEngine::execute_best_move() -> bool
+void SearchEngine::handle_engine_turn()
 {
+  search_thread_handler.start_thread(max_search_time_milliseconds);
+}
+
+void SearchEngine::stop_engine_turn() { search_thread_handler.stop_thread(); }
+
+void SearchEngine::clear_previous_move_evals()
+{
+  while (!previous_move_evals.empty())
+  {
+    previous_move_evals.pop();
+  }
+}
+
+auto SearchEngine::last_move_eval() -> int
+{
+  if (!previous_move_evals.empty())
+  {
+    return previous_move_evals.top();
+  }
+  return 0;
+}
+
+void SearchEngine::pop_last_move_eval()
+{
+  if (!previous_move_evals.empty())
+  {
+    previous_move_evals.pop();
+  }
+}
+
+auto SearchEngine::engine_is_searching() -> bool { return running_search_flag; }
+
+// PRIVATE FUNCTIONS
+
+auto SearchEngine::search_and_execute_best_move() -> bool
+{
+  running_search_flag = true;
   std::vector<std::pair<Move, int>> move_scores;
-  std::thread search_timeout_thread(&SearchEngine::initiate_search_timeout,
-                                    this);
-  evaluate_possible_moves(move_scores);
-  search_timeout_thread.join();
-  stop_search_flag = false;
+  start_iterative_search_evaluation(move_scores);
   sort_moves(move_scores);
 
   if (show_move_evaluations)
@@ -51,39 +84,13 @@ auto SearchEngine::execute_best_move() -> bool
   return false;
 }
 
-void SearchEngine::clear_previous_move_evals()
-{
-  while (!previous_move_evals.empty())
-  {
-    previous_move_evals.pop();
-  }
-}
-
-auto SearchEngine::last_move_eval() -> int
-{
-  if (!previous_move_evals.empty())
-  {
-    return previous_move_evals.top();
-  }
-  return 0;
-}
-
-void SearchEngine::pop_last_move_eval()
-{
-  if (!previous_move_evals.empty())
-  {
-    previous_move_evals.pop();
-  }
-}
-
-// PRIVATE FUNCTIONS
-void SearchEngine::evaluate_possible_moves(
+void SearchEngine::start_iterative_search_evaluation(
     std::vector<std::pair<Move, int>> &move_scores)
 {
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
 
-  // Search until stop_search_flag is true, or max_search_depth is reached.
+  // Search until running_search_flag is false, or max_search_depth is reached.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
@@ -141,7 +148,7 @@ void SearchEngine::evaluate_possible_moves(
       thread.join();
     }
 
-    if (!stop_search_flag)
+    if (running_search_flag)
     {
       // Get results from threads.
       move_scores.clear();
@@ -159,9 +166,6 @@ void SearchEngine::evaluate_possible_moves(
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
                                        search_end_time);
   }
-  // Notify the timeout thread that the search is complete.
-  std::lock_guard<std::mutex> lock(search_timeout_mutex);
-  search_timeout_cv.notify_one();
 }
 
 auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
@@ -203,7 +207,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
 
-    if (stop_search_flag)
+    if (!running_search_flag)
     {
       break;
     }
@@ -233,7 +237,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
                                              int beta, int depth,
                                              bool null_move_line) -> int
 {
-  if (stop_search_flag)
+  if (!running_search_flag)
   {
     return 0;
   }
@@ -338,7 +342,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
   // table. This will cause invalid states to be stored with eval scores of 0.
   // This may be saved as exact values in the transposition table, causing
   // incorrect cutoffs.
-  if (stop_search_flag)
+  if (!running_search_flag)
   {
     return 0;
   }
@@ -442,16 +446,5 @@ void SearchEngine::reset_and_print_performance_matrix(
   // Reset performance metrics.
   nodes_visited = 0;
   leaf_nodes_visited = 0;
-}
-
-void SearchEngine::initiate_search_timeout()
-{
-  std::unique_lock<std::mutex> lock(search_timeout_mutex);
-  if (search_timeout_cv.wait_for(
-          lock, std::chrono::milliseconds(max_search_time_milliseconds)) ==
-      std::cv_status::timeout)
-  {
-    stop_search_flag = true;
-  }
 }
 } // namespace engine::parts
