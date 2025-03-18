@@ -265,6 +265,10 @@ void ChessEngine::handle_player_during_engine_turn()
     {
       continue;
     }
+    if (handle_board_undo_reset_commands(userInput))
+    {
+      return;
+    }
   }
 }
 
@@ -303,6 +307,19 @@ auto ChessEngine::handle_state_change_commands(const std::string &user_input)
 auto ChessEngine::handle_board_undo_reset_commands(
     const std::string &user_input) -> bool
 {
+  if (user_input == "undo" || user_input == "redo" || user_input == "reset")
+  {
+    // Need to stop engine from searching or pondering before doing any of these
+    // commands.
+    if (search_engine.engine_is_searching())
+    {
+      search_engine.stop_engine_turn();
+    }
+    if (search_engine.engine_is_pondering)
+    {
+      search_engine.stop_engine_pondering();
+    }
+  }
   if (user_input == "undo")
   {
     game_board_state.undo_move();

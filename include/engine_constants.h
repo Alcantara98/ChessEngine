@@ -98,7 +98,7 @@ const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {(PAWN_VALUE / 4) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
+    {(PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
 
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
@@ -163,9 +163,9 @@ const std::string GAME_OVER_HELP_MESSAGE =
 
 const std::string HELP_MESSAGE =
     "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
-    "play-player\n  - help\n\n Player's Turn:\n  - undo\n  - reset\n  - "
-    "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n Engine's "
-    "turn:\n  - stop-search\n\n";
+    "play-player\n  - help\n\n All Playing States:\n  - undo\n  - reset\n  - "
+    "redo\n\n Player's Turn\n  - print-moves\n  - use-window\n  - no-window\n  "
+    "- enter a move\n\n Engine's turn:\n  - stop-search\n\n";
 
 } // namespace engine::parts
 

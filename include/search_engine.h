@@ -133,13 +133,6 @@ private:
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<bool> running_search_flag = false;
 
-  /// @brief The best score of current iterative search. Reset after each
-  /// iteration.
-  /// NOTE: This is used to stop other threads from widening the
-  /// search window in the aspiration window function unnecessarily. Do not use
-  /// this score to determine the best move.
-  std::atomic<int> current_iterative_best_move_score = -INF;
-
   ThreadHandler search_thread_handler = ThreadHandler(
       running_search_flag, [this]() { this->search_and_execute_best_move(); });
 

@@ -56,7 +56,10 @@ void SearchEngine::pop_last_move_eval()
   }
 }
 
-auto SearchEngine::engine_is_searching() -> bool { return running_search_flag; }
+auto SearchEngine::engine_is_searching() -> bool
+{
+  return running_search_flag && !engine_is_pondering;
+}
 
 // PRIVATE FUNCTIONS
 
@@ -106,8 +109,6 @@ void SearchEngine::start_iterative_search_evaluation(
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
-    // Reset current iterative search best move score to -INF for new iteration.
-    current_iterative_best_move_score = -INF;
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -189,8 +190,6 @@ void SearchEngine::start_iterative_search_pondering()
   for (int iterative_depth = 1; iterative_depth <= MAX_SEARCH_DEPTH;
        ++iterative_depth)
   {
-    // Reset current iterative search best move score to -INF for new iteration.
-    current_iterative_best_move_score = -INF;
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -271,21 +270,6 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       alpha = eval - window_increment;
     }
 
-    // If current best move eval is greater than alpha, then there is no
-    // point finding values below it. Decrease the window so the alpha is the
-    // best move so far.
-    if (current_iterative_best_move_score > alpha)
-    {
-      alpha = current_iterative_best_move_score;
-    }
-    // If current best move eval is already greater than beta, then just
-    // extend the window to infinity since we want a value greater than
-    // current_iterative_best_move_score.
-    if (current_iterative_best_move_score > beta)
-    {
-      beta = INF;
-    }
-
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
 
@@ -296,18 +280,6 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
 
     // Return eval if it is within the window.
     if (eval < beta && eval > alpha)
-    {
-      if (eval > current_iterative_best_move_score)
-      {
-        current_iterative_best_move_score = eval;
-      }
-      break;
-    }
-
-    // If current best move is a fail-low (eval <= alpha), a re-search will only
-    // find lower evals than current one. So if current best move is already
-    // greater than current eval, there is no point finding smaller evaluations.
-    if (eval <= alpha && current_iterative_best_move_score > eval)
     {
       break;
     }
@@ -356,12 +328,15 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
       {
       case EXACT:
         return tt_value;
+
       case FAILED_HIGH:
         alpha = std::max(alpha, tt_value);
         break;
+
       case FAILED_LOW:
         beta = std::min(beta, tt_value);
         break;
+
       default:
         // Handle unexpected tt_flag value.
         printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
@@ -514,14 +489,18 @@ void SearchEngine::reset_and_print_performance_matrix(
                       .count();
 
   // Print performance metrics to user.
-  if ((show_performance && engine_is_searching()) ||
+  if ((show_performance && !engine_is_pondering) ||
       (show_ponder_performance && engine_is_pondering))
   {
     printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
-    printf("Nodes Visited %d\n", nodes_visited.load());
     printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
+    printf("Nodes Visited %d\n", nodes_visited.load());
+    printf("Leaf Nodes per second: %d kN/s\n\n",
+           static_cast<int>(leaf_nodes_visited /
+                            (duration / MILLISECONDS_TO_SECONDS) /
+                            NODES_TO_KILONODES));
     printf(
-        "Nodes per second: %d kN/s\n\n",
+        "Nodes per second: %d kN/s\n",
         static_cast<int>(nodes_visited / (duration / MILLISECONDS_TO_SECONDS) /
                          NODES_TO_KILONODES));
   }
