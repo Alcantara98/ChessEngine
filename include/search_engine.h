@@ -18,7 +18,7 @@ namespace engine::parts
 {
 /**
  * @brief Class to find the best move for the current board state using various
- * search algorithms and heuristics.
+ * search algorithms and heuristics and apply it to the given board.
  */
 class SearchEngine
 {

@@ -9,6 +9,9 @@
 
 namespace engine::parts
 {
+/**
+ * @brief Class to run a function in a separate thread.
+ */
 class ThreadHandler
 {
 public:
@@ -16,9 +19,8 @@ public:
   /**
    * @brief Constructor to create a thread handler.
    *
-   * @param stop_flag Atomic flag to stop the thread.
+   * @param running_flag Running flag, if set to false, the thread will stop.
    * @param function Function to run in the thread.
-   * @param args Arguments to pass to the function.
    */
   ThreadHandler(std::atomic<bool> &running_flag,
                 std::function<void()> function);
@@ -45,10 +47,11 @@ public:
 private:
   // PROPERTIES
 
-  /// @brief Atomic flag to stop the thread. If false, the thread will stop.
+  /// @brief Atomic flag to stop the thread. When set to false, the thread will
+  /// stop.
   std::atomic<bool> &running_flag;
 
-  /// @brief Thread object.
+  /// @brief Thread object to run the given function.
   std::thread worker_thread;
 
   /// @brief For stopping the worker thread.
@@ -66,7 +69,9 @@ private:
    * @brief Initiates the search timeout.
    *
    * @details The function will wait for the timeout to occur and then set the
-   * stop flag to true.
+   * running flag to false.
+   *
+   * @param thread_timeout Timeout for the thread.
    */
   void initiate_search_timeout(int thread_timeout);
 };

@@ -6,7 +6,7 @@
 namespace engine::parts
 {
 /**
- * @brief Class to represent a move in chess.
+ * @brief A structure to represent a move in chess.
  */
 struct Move
 {
