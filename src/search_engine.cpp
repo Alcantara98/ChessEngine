@@ -374,6 +374,10 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
     eval = engine::parts::position_evaluator::evaluate_position(board_state);
+
+    // The evaluator returns evaluations where positive eval is good for white
+    // and negative eval is good for black. Since negamax nodes are always
+    // maximizing nodes, we need to negate the eval for black.
     if (board_state.color_to_move == PieceColor::BLACK)
     {
       return -eval;
