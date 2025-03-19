@@ -2,10 +2,10 @@
 #define CHESS_ENGINE
 
 #include "board_state.h"
+#include "cross_plat_functions.h"
 #include "move_interface.h"
 #include "search_engine.h"
 
-#include <conio.h>
 #include <functional>
 #include <sstream>
 

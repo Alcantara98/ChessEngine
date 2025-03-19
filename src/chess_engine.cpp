@@ -296,7 +296,7 @@ void ChessEngine::handle_player_during_engine_turn()
     while (search_engine.engine_is_searching())
     {
       // Check if input is available
-      if (_kbhit() != 0)
+      if (inputAvailable())
       {
         // Read input
         std::getline(std::cin, userInput);

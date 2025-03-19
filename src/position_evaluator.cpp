@@ -7,37 +7,56 @@ namespace engine::parts::position_evaluator
 auto evaluate_position(BoardState &board_state) -> int
 {
   int eval = 0;
+  // We pass eval_temp to evaluators now instead of eval directly. This way, the
+  // functions can evaluate white and black pieces the same way (positively). We
+  // can then check the piece color and add or subtract accordingly to the
+  // actual eval.
+  int eval_temp = 0;
 
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
     for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
+      eval_temp = 0;
       Piece &piece = *board_state.chess_board[x_position][y_position];
       PieceType &piece_type = piece.piece_type;
 
       switch (piece_type)
       {
       case PieceType::PAWN:
-        evaluate_pawn(x_position, y_position, piece, eval, board_state);
+        evaluate_pawn(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::ROOK:
-        evaluate_rook(x_position, y_position, piece, eval, board_state);
+        evaluate_rook(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::KNIGHT:
-        evaluate_knight(x_position, y_position, piece, eval, board_state);
+        evaluate_knight(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::BISHOP:
-        evaluate_bishop(x_position, y_position, piece, eval, board_state);
+        evaluate_bishop(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::QUEEN:
-        evaluate_queen(x_position, y_position, piece, eval, board_state);
+        evaluate_queen(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::KING:
-        evaluate_king(x_position, y_position, piece, eval, board_state);
+        evaluate_king(x_position, y_position, piece, eval_temp, board_state);
         break;
       default:
         // Empty square.
         break;
+      }
+
+      // If piece is black, subtract the evaluation.
+      if (piece_type != PieceType::EMPTY)
+      {
+        if (piece.piece_color == PieceColor::WHITE)
+        {
+          eval += eval_temp;
+        }
+        else
+        {
+          eval -= eval_temp;
+        }
       }
     }
   }
@@ -53,35 +72,25 @@ void evaluate_pawn(int x_position,
                    BoardState &board_state)
 {
   // Piece value.
-  if (pawn_piece.piece_color == PieceColor::WHITE)
-  {
-    eval += PAWN_VALUE;
-  }
-  else
-  {
-    eval -= PAWN_VALUE;
-  }
+  eval += PAWN_VALUE;
 
   // Position value - x coordinate.
+  eval += PAWN_POSITION_EVAL_MAP[x_position];
+
+  // If in the end game, give a pawn more value the closer they are to
+  // getting promoted into a main piece.
+  int rank_eval = 0;
   if (pawn_piece.piece_color == PieceColor::WHITE)
   {
-    eval += PAWN_POSITION_EVAL_MAP[x_position];
-
-    // If in the end game, give pawn value the closer they are to promotion.
-    if (board_state.is_end_game)
-    {
-      eval += y_position * MEDIUM_EVAL_VALUE;
-    }
+    rank_eval = y_position * MEDIUM_EVAL_VALUE;
   }
   else
   {
-    eval -= PAWN_POSITION_EVAL_MAP[x_position];
-
-    // If in the end game, give pawn value the closer they are to promotion.
-    if (board_state.is_end_game)
-    {
-      eval -= (Y_MAX - y_position) * MEDIUM_EVAL_VALUE;
-    }
+    rank_eval = (Y_MAX - y_position) * MEDIUM_EVAL_VALUE;
+  }
+  if (board_state.is_end_game)
+  {
+    eval += rank_eval;
   }
 }
 
@@ -92,21 +101,12 @@ void evaluate_knight(int x_position,
                      BoardState &board_state)
 {
   // Piece value.
-  if (knight_piece.piece_color == PieceColor::WHITE)
+  eval += KNIGHT_VALUE;
+
+  // Less value if knight has moved. Development is important.
+  if (!knight_piece.piece_has_moved)
   {
-    eval += KNIGHT_VALUE;
-    if (!knight_piece.piece_has_moved)
-    {
-      eval -= LARGE_EVAL_VALUE;
-    }
-  }
-  else
-  {
-    eval -= KNIGHT_VALUE;
-    if (!knight_piece.piece_has_moved)
-    {
-      eval += LARGE_EVAL_VALUE;
-    }
+    eval -= LARGE_EVAL_VALUE;
   }
 
   // The more moves a knight has, the better.
@@ -114,19 +114,14 @@ void evaluate_knight(int x_position,
   int new_y;
   for (const auto &move : KNIGHT_MOVES)
   {
+    // Increase evaluation based on the number of moves.
     new_x = x_position + move[0];
     new_y = y_position + move[1];
+
+    // Check if within bounds.
     if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
-      // Increase evaluation based on the number of moves.
-      if (knight_piece.piece_color == PieceColor::WHITE)
-      {
-        eval += VERY_SMALL_EVAL_VALUE;
-      }
-      else
-      {
-        eval -= VERY_SMALL_EVAL_VALUE;
-      }
+      eval += VERY_SMALL_EVAL_VALUE;
     }
   }
 }
@@ -138,20 +133,30 @@ void evaluate_bishop(int x_position,
                      BoardState &board_state)
 {
   // Piece value.
+  eval += BISHOP_VALUE;
+  if (!bishop_piece.piece_has_moved)
+  {
+    eval -= LARGE_EVAL_VALUE;
+  }
+
+  // If bishop is blocking a pawn, decrease evaluation.
+  // When I play, I don't like it when my bishops block my pawns.
+  // This is a personal preference and is experimental.
+  int direction;
   if (bishop_piece.piece_color == PieceColor::WHITE)
   {
-    eval += BISHOP_VALUE;
-    if (!bishop_piece.piece_has_moved)
-    {
-      eval -= LARGE_EVAL_VALUE;
-    }
+    direction = POSITIVE_DIRECTION;
   }
   else
   {
-    eval -= BISHOP_VALUE;
-    if (!bishop_piece.piece_has_moved)
+    direction = NEGATIVE_DIRECTION;
+  }
+  if (y_position + direction >= Y_MIN && y_position + direction <= Y_MAX)
+  {
+    if (board_state.chess_board[x_position][y_position + direction]
+            ->piece_type == PieceType::PAWN)
     {
-      eval += LARGE_EVAL_VALUE;
+      eval -= LARGE_EVAL_VALUE;
     }
   }
 
@@ -160,23 +165,19 @@ void evaluate_bishop(int x_position,
   int new_y;
   for (const auto &direction : BISHOP_DIRECTIONS)
   {
+    // Increase evaluation based on the number of moves.
     new_x = x_position + direction[0];
     new_y = y_position + direction[1];
+
+    // Check if still within bounds.
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
-      // Increase evaluation based on the number of moves.
       if (board_state.chess_board[new_x][new_y]->piece_type != PieceType::EMPTY)
       {
         break;
       }
-      if (bishop_piece.piece_color == PieceColor::WHITE)
-      {
-        eval += VERY_SMALL_EVAL_VALUE;
-      }
-      else
-      {
-        eval -= VERY_SMALL_EVAL_VALUE;
-      }
+
+      eval += VERY_SMALL_EVAL_VALUE;
 
       new_x += direction[0];
       new_y += direction[1];
@@ -191,14 +192,7 @@ void evaluate_rook(int x_position,
                    BoardState &board_state)
 {
   // Piece value.
-  if (rook_piece.piece_color == PieceColor::WHITE)
-  {
-    eval += ROOK_VALUE;
-  }
-  else
-  {
-    eval -= ROOK_VALUE;
-  }
+  eval += ROOK_VALUE;
 
   if (board_state.is_end_game)
   {
@@ -207,25 +201,21 @@ void evaluate_rook(int x_position,
     int new_y;
     for (const auto &direction : ROOK_DIRECTIONS)
     {
+      // Increase evaluation based on the number of moves.
       new_x = x_position + direction[0];
       new_y = y_position + direction[1];
+
+      // Check if still within bounds.
       while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
              new_y <= Y_MAX)
       {
-        // Increase evaluation based on the number of moves.
         if (board_state.chess_board[new_x][new_y]->piece_type !=
             PieceType::EMPTY)
         {
           break;
         }
-        if (rook_piece.piece_color == PieceColor::WHITE)
-        {
-          eval += VERY_SMALL_EVAL_VALUE;
-        }
-        else
-        {
-          eval -= VERY_SMALL_EVAL_VALUE;
-        }
+
+        eval += VERY_SMALL_EVAL_VALUE;
 
         new_x += direction[0];
         new_y += direction[1];
@@ -241,37 +231,26 @@ void evaluate_queen(int x_position,
                     BoardState &board_state)
 {
   // Piece value.
-  if (queen_piece.piece_color == PieceColor::WHITE)
-  {
-    eval += QUEEN_VALUE;
-  }
-  else
-  {
-    eval -= QUEEN_VALUE;
-  }
+  eval += QUEEN_VALUE;
 
   // The more moves a queen has, the better.
   int new_x;
   int new_y;
   for (const auto &direction : QUEEN_DIRECTIONS)
   {
+    // Increase evaluation based on the number of moves.
     new_x = x_position + direction[0];
     new_y = y_position + direction[1];
+
+    // Check if still within bounds.
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
-      // Increase evaluation based on the number of moves.
       if (board_state.chess_board[new_x][new_y]->piece_type != PieceType::EMPTY)
       {
         break;
       }
-      if (queen_piece.piece_color == PieceColor::WHITE)
-      {
-        eval += VERY_SMALL_EVAL_VALUE;
-      }
-      else
-      {
-        eval -= VERY_SMALL_EVAL_VALUE;
-      }
+
+      eval += VERY_SMALL_EVAL_VALUE;
 
       new_x += direction[0];
       new_y += direction[1];
@@ -286,20 +265,18 @@ void evaluate_king(int x_position,
                    BoardState &board_state)
 {
   // Piece value.
-  if (king_piece.piece_color == PieceColor::WHITE)
+  eval += KING_VALUE;
+
+  if (!board_state.is_end_game)
   {
-    eval += KING_VALUE;
-    if (board_state.white_has_castled && !board_state.is_end_game)
+    // Give eval points if the king has castled, but not in the end game where
+    // it doesn't matter anymore.
+    if ((king_piece.piece_color == PieceColor::WHITE &&
+         board_state.white_has_castled) ||
+        (king_piece.piece_color == PieceColor::BLACK &&
+         board_state.black_has_castled))
     {
       eval += LARGE_EVAL_VALUE;
-    }
-  }
-  else
-  {
-    eval -= KING_VALUE;
-    if (board_state.black_has_castled && !board_state.is_end_game)
-    {
-      eval -= LARGE_EVAL_VALUE;
     }
   }
 
@@ -307,14 +284,10 @@ void evaluate_king(int x_position,
   if (!board_state.is_end_game)
   {
     evaluate_king_safety(x_position, y_position, king_piece, eval, board_state);
-    if (king_piece.piece_color == PieceColor::WHITE)
-    {
-      eval += KING_POSITION_EVAL_MAP[x_position];
-    }
-    else
-    {
-      eval -= KING_POSITION_EVAL_MAP[x_position];
-    }
+
+    // Give points if the king is far away from the center of the board.
+    // But not in the end game where it king needs to be active.
+    eval += KING_POSITION_EVAL_MAP[x_position];
   }
 }
 
@@ -342,14 +315,8 @@ void evaluate_king_safety(int x_position,
         {
           break;
         }
-        if (king_piece.piece_color == PieceColor::WHITE)
-        {
-          eval -= VERY_SMALL_EVAL_VALUE;
-        }
-        else
-        {
-          eval += VERY_SMALL_EVAL_VALUE;
-        }
+
+        eval -= VERY_SMALL_EVAL_VALUE;
 
         new_x += direction[0];
         new_y += direction[1];
