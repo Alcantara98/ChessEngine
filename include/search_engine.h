@@ -216,7 +216,7 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
-   * @param null_move_line Flag to indicate if the search line is from a null
+   * @param is_null_move_line Flag to indicate if the search line is from a null
    * move.
    *
    * @return Evaluation score from search branch.
@@ -225,7 +225,7 @@ private:
                                  int alpha,
                                  int beta,
                                  int depth,
-                                 bool null_move_line) -> int;
+                                 bool is_null_move_line) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -245,7 +245,7 @@ private:
    * @param depth Current depth of search.
    * @param best_move_index Index of best move.
    * @param possible_moves Vector of possible moves.
-   * @param null_move_line Flag to indicate if the search line is from a null
+   * @param is_null_move_line Flag to indicate if the search line is from a null
    * move.
    */
   void run_negamax_procedure(BoardState &board_state,
@@ -256,7 +256,7 @@ private:
                              int &depth,
                              int &best_move_index,
                              std::vector<Move> &possible_moves,
-                             bool &null_move_line);
+                             bool &is_null_move_line);
 
   /**
    * @brief Min search procedure for each possible move.

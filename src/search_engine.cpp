@@ -273,13 +273,19 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
 
-    if (!running_search_flag)
-    {
-      break;
-    }
+    // An eval of abs(INF) means a checkmate position has been found. At the
+    // leaf node, we minus the depth the checkmate was found from INF before
+    // returning it. So the eval of a chekmate line will be less than
+    // INF. Hence why we check using INF_MINUS_1000. Any eval greater than
+    // INF_MINUS_1000 is a checkmate line.
+    const int INF_MINUS_1000 = -1000;
 
-    // Return eval if it is within the window.
-    if (eval < beta && eval > alpha)
+    // - Return eval if it is within the window.
+    // - Return eval if search has stopped.
+    // - Return eval if eval if a checkmate line has been found, no need to
+    // widen the window and re-search.
+    if ((eval < beta && eval > alpha) || !running_search_flag ||
+        std::abs(eval) > INF_MINUS_1000)
     {
       break;
     }
@@ -291,7 +297,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
                                              int alpha,
                                              int beta,
                                              int depth,
-                                             bool null_move_line) -> int
+                                             bool is_null_move_line) -> int
 {
   if (!running_search_flag)
   {
@@ -368,7 +374,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   }
 
   // Try a null move.
-  if (!null_move_line &&
+  // We curently only allow one null move per search line, and only when
+  // MIN_NULL_MOVE_DEPTH depth has been reached.
+  if (!is_null_move_line &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game)
   {
@@ -395,7 +403,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // Search and evaluate each move.
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
-                        best_move_index, possible_moves, null_move_line);
+                        best_move_index, possible_moves, is_null_move_line);
 
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
@@ -426,7 +434,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          int &depth,
                                          int &best_move_index,
                                          std::vector<Move> &possible_moves,
-                                         bool &null_move_line)
+                                         bool &is_null_move_line)
 {
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
@@ -434,7 +442,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     // We only want to know if there is an eval greater than beta, hence make
     // the search window tight.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      null_move_line);
+                                      is_null_move_line);
     if (eval > max_eval)
     {
       max_eval = eval;
