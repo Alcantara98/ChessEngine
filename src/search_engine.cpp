@@ -495,12 +495,12 @@ void SearchEngine::reset_and_print_performance_matrix(
     printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
     printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
     printf("Nodes Visited %d\n", nodes_visited.load());
-    printf("Leaf Nodes per second: %d kN/s\n\n",
+    printf("Leaf Nodes per second: %d kN/s\n",
            static_cast<int>(leaf_nodes_visited /
                             (duration / MILLISECONDS_TO_SECONDS) /
                             NODES_TO_KILONODES));
     printf(
-        "Nodes per second: %d kN/s\n",
+        "Nodes per second: %d kN/s\n\n",
         static_cast<int>(nodes_visited / (duration / MILLISECONDS_TO_SECONDS) /
                          NODES_TO_KILONODES));
   }
