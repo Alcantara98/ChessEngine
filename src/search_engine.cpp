@@ -360,6 +360,10 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   {
     eval = engine::parts::position_evaluator::evaluate_position(board_state);
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+    if (board_state.color_to_move == PieceColor::BLACK)
+    {
+      return -eval;
+    }
     return eval;
   }
 

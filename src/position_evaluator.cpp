@@ -7,37 +7,51 @@ namespace engine::parts::position_evaluator
 auto evaluate_position(BoardState &board_state) -> int
 {
   int eval = 0;
+  int eval_temp = 0;
 
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
     for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
     {
+      eval_temp = 0;
       Piece &piece = *board_state.chess_board[x_position][y_position];
       PieceType &piece_type = piece.piece_type;
 
       switch (piece_type)
       {
       case PieceType::PAWN:
-        evaluate_pawn(x_position, y_position, piece, eval, board_state);
+        evaluate_pawn(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::ROOK:
-        evaluate_rook(x_position, y_position, piece, eval, board_state);
+        evaluate_rook(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::KNIGHT:
-        evaluate_knight(x_position, y_position, piece, eval, board_state);
+        evaluate_knight(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::BISHOP:
-        evaluate_bishop(x_position, y_position, piece, eval, board_state);
+        evaluate_bishop(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::QUEEN:
-        evaluate_queen(x_position, y_position, piece, eval, board_state);
+        evaluate_queen(x_position, y_position, piece, eval_temp, board_state);
         break;
       case PieceType::KING:
-        evaluate_king(x_position, y_position, piece, eval, board_state);
+        evaluate_king(x_position, y_position, piece, eval_temp, board_state);
         break;
       default:
         // Empty square.
         break;
+      }
+
+      if (piece_type != PieceType::EMPTY)
+      {
+        if (piece.piece_color == PieceColor::WHITE)
+        {
+          eval += eval_temp;
+        }
+        else
+        {
+          eval -= eval_temp;
+        }
       }
     }
   }
@@ -191,14 +205,7 @@ void evaluate_queen(int x_position,
                     BoardState &board_state)
 {
   // Piece value.
-  if (queen_piece.piece_color == PieceColor::WHITE)
-  {
-    eval += QUEEN_VALUE;
-  }
-  else
-  {
-    eval -= QUEEN_VALUE;
-  }
+  eval += QUEEN_VALUE;
 
   // The more moves a queen has, the better.
   int new_x;
@@ -233,6 +240,7 @@ void evaluate_king(int x_position,
 {
   // Piece value.
   eval += KING_VALUE;
+
   if (!board_state.is_end_game)
   {
     // Give eval points if the king has castled, but not in the end game where
