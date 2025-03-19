@@ -7,7 +7,7 @@ namespace engine::parts
 BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
   initialize_zobrist_keys();
-  setup_board();
+  setup_board_default();
 }
 
 BoardState::BoardState(const BoardState &other)
@@ -42,7 +42,7 @@ BoardState::~BoardState() { clear_pointers(); }
 
 // PUBLIC FUNCTIONS
 
-void BoardState::setup_board()
+void BoardState::setup_board_default()
 {
   // Set empty squares.
   for (int y_position = Y2_RANK; y_position <= Y6_RANK; ++y_position)
@@ -106,7 +106,7 @@ void BoardState::reset_board()
   number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
   is_end_game = false;
   clear_pointers();
-  setup_board();
+  setup_board_default();
 }
 
 void BoardState::print_board(PieceColor color)

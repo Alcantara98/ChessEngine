@@ -98,7 +98,7 @@ public:
   /**
    * @brief Resets chess board to default starting piece positions.
    */
-  void setup_board();
+  void setup_board_default();
 
   /**
    * @brief Resets chess board to default starting piece positions.
