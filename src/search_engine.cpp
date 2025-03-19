@@ -299,13 +299,15 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
                                              int depth,
                                              bool is_null_move_line) -> int
 {
-  // Increment nodes visited.
-  nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
+  // Check if the engine wants to stop searching.
   if (!running_search_flag)
   {
     return 0;
   }
+
+  // Increment nodes visited.
+  nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
   // If the king is no longer in the board, checkmate has occurred.
   // Return -INF evaluation for the side that has lost its king.
   // NOTE: We minus the depth in which the checkmate was found from INF. This
