@@ -5,6 +5,7 @@
 #include "move_interface.h"
 #include "search_engine.h"
 
+#include <conio.h>
 #include <functional>
 #include <sstream>
 
@@ -51,6 +52,9 @@ private:
   /// @brief Flag to check if game is over.
   bool game_over = false;
 
+  /// @brief Flag to allow pondering.
+  bool allow_pondering = true;
+
   /// @brief Current state. Uses main_menu_state by default.
   void (ChessEngine::*current_state)() = &ChessEngine::main_menu_state;
 
@@ -92,9 +96,21 @@ private:
   void set_up_engine();
 
   /**
+   * @brief Toggles engine heuristic parameters.
+   *
+   * @param user_input User input.
+   */
+  auto update_search_engine_parameters(const std::string &user_input) -> bool;
+
+  /**
    * @brief Takes user input and handles the player's turn.
    */
   void handle_player_turn();
+
+  /**
+   * @brief Handles the engine's turn.
+   */
+  void handle_player_during_engine_turn();
 
   /**
    * @brief Handles state changes based on user input.
@@ -115,6 +131,13 @@ private:
   auto handle_board_undo_reset_commands(const std::string &user_input) -> bool;
 
   /**
+   * @brief Handle general commands. etc. menu, help.
+   *
+   * @param user_input User input command.
+   */
+  auto handle_general_commands(const std::string &user_input) -> bool;
+
+  /**
    * @brief Gets a valid integer input from the user.
    *
    * @param user_message User message to display to the user.
@@ -123,8 +146,8 @@ private:
    *
    * @return Valid integer input.
    */
-  auto getValidIntInput(const std::string &user_message, int min,
-                        int max) -> int;
+  auto
+  getValidIntInput(const std::string &user_message, int min, int max) -> int;
 
   /**
    * @brief Gets a valid character input from the user.

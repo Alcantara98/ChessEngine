@@ -97,11 +97,9 @@ void ChessEngine::engine_vs_player_state()
     if (!game_over && game_board_state.color_to_move != player_color)
     {
       // Engine's turn.
-      if (!search_engine.execute_best_move())
-      {
-        printf("BREAKPOINT execute_best_move\n");
-        exit(0);
-      }
+      search_engine.handle_engine_turn();
+      handle_player_during_engine_turn();
+      search_engine.stop_engine_turn();
     }
     else
     {
@@ -131,27 +129,17 @@ void ChessEngine::check_and_handle_if_game_over()
 
 void ChessEngine::set_up_engine()
 {
-  std::string user_message;
+  const std::string update_depth = "update-depth";
+  const std::string update_timelimit = "update-timelimit";
+  const std::string update_pondering = "update-pondering";
+  const std::string update_info = "update-info";
+  (void)update_search_engine_parameters(update_depth);
+  (void)update_search_engine_parameters(update_timelimit);
+  (void)update_search_engine_parameters(update_pondering);
+  (void)update_search_engine_parameters(update_info);
 
-  // Get user input for engine settings.
-  user_message = "Please Enter Engine Depth";
-  int search_depth = getValidIntInput(user_message, 1, parts::MAX_SEARCH_DEPTH);
-  search_engine.max_search_depth = search_depth;
-
-  user_message = "Enter Search Time for Each Move in Milliseconds";
-  int search_time = getValidIntInput(user_message, 1, parts::MAX_SEARCH_TIME);
-  search_engine.max_search_time_milliseconds = search_time;
-
-  user_message = "Show Performance?";
-  char show_performance_char = getValidCharInput(user_message, "yn");
-  search_engine.show_performance = show_performance_char == 'y';
-
-  user_message = "Show All Move Evaluations?";
-  char show_move_evaluations_char = getValidCharInput(user_message, "yn");
-  search_engine.show_move_evaluations = show_move_evaluations_char == 'y';
-
-  user_message = "Enter Player Color (w = White, b = Black)";
-  char user_color = getValidCharInput(user_message, "wb");
+  std::string user_message = "Enter Player Color (w = White, b = Black)";
+  const char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
   if (user_color == 'w' &&
@@ -165,6 +153,70 @@ void ChessEngine::set_up_engine()
     player_color = parts::PieceColor::BLACK;
     search_engine.engine_color = parts::PieceColor::WHITE;
   }
+}
+
+auto ChessEngine::update_search_engine_parameters(const std::string &user_input)
+    -> bool
+{
+  std::string user_message;
+
+  // If the engine is pondering, stop pondering to update parameters.
+  if (search_engine.engine_is_pondering &&
+      (user_input == "update-depth" || user_input == "update-timelimit" ||
+       user_input == "update-window" || user_input == "update-info" ||
+       user_input == "update-pondering"))
+  {
+    search_engine.stop_engine_pondering();
+  }
+
+  if (user_input == "update-depth")
+  {
+    user_message = "Please Enter Engine Depth";
+    int search_depth =
+        getValidIntInput(user_message, 1, parts::MAX_SEARCH_DEPTH);
+    search_engine.max_search_depth = search_depth;
+  }
+  else if (user_input == "update-timelimit")
+  {
+    user_message = "Enter Search Time for Each Move in Milliseconds";
+    int search_time = getValidIntInput(user_message, 1, parts::MAX_SEARCH_TIME);
+    search_engine.max_search_time_milliseconds = search_time;
+  }
+  else if (user_input == "update-window")
+  {
+    user_message = "Allow Aspiration Window?";
+    char use_window_char = getValidCharInput(user_message, "yn");
+    search_engine.use_aspiration_window = use_window_char == 'y';
+  }
+  else if (user_input == "update-info")
+  {
+    user_message = "Show Performance?";
+    char show_performance_char = getValidCharInput(user_message, "yn");
+    search_engine.show_performance = show_performance_char == 'y';
+
+    if (allow_pondering)
+    {
+      user_message = "Show Pondering Performance?";
+      char show_ponder_performance_char = getValidCharInput(user_message, "yn");
+      search_engine.show_ponder_performance =
+          show_ponder_performance_char == 'y';
+    }
+
+    user_message = "Show All Move Evaluations?";
+    char show_move_evaluations_char = getValidCharInput(user_message, "yn");
+    search_engine.show_move_evaluations = show_move_evaluations_char == 'y';
+  }
+  else if (user_input == "update-pondering")
+  {
+    user_message = "Allow Pondering?";
+    char allow_pondering_char = getValidCharInput(user_message, "yn");
+    allow_pondering = allow_pondering_char == 'y';
+  }
+  else
+  {
+    return false;
+  }
+  return true;
 }
 
 void ChessEngine::handle_player_turn()
@@ -181,6 +233,11 @@ void ChessEngine::handle_player_turn()
   std::string user_input;
   while (!exit_state)
   {
+    if (allow_pondering && !search_engine.engine_is_pondering)
+    {
+      // Start pondering if allowed during player's turn.
+      search_engine.start_engine_pondering();
+    }
     if (game_over)
     {
       printf("%s", parts::GAME_OVER_HELP_MESSAGE.c_str());
@@ -196,19 +253,17 @@ void ChessEngine::handle_player_turn()
     {
       continue;
     }
+    if (handle_general_commands(user_input))
+    {
+      continue;
+    }
+    if (update_search_engine_parameters(user_input))
+    {
+      continue;
+    }
     if (handle_board_undo_reset_commands(user_input))
     {
       break;
-    }
-    if (user_input == "use-window")
-    {
-      search_engine.use_aspiration_window = true;
-      continue;
-    }
-    if (user_input == "no-window")
-    {
-      search_engine.use_aspiration_window = false;
-      continue;
     }
     if (user_input == "print-moves")
     {
@@ -225,17 +280,61 @@ void ChessEngine::handle_player_turn()
       break;
     }
   }
+  if (search_engine.engine_is_pondering)
+  {
+    // End pondering after player's turn.
+    search_engine.stop_engine_pondering();
+  }
+}
+
+void ChessEngine::handle_player_during_engine_turn()
+{
+  while (!exit_state && search_engine.engine_is_searching())
+  {
+    std::string userInput;
+
+    while (search_engine.engine_is_searching())
+    {
+      // Check if input is available
+      if (_kbhit() != 0)
+      {
+        // Read input
+        std::getline(std::cin, userInput);
+        break;
+      }
+
+      // No input, check again later after a delay of 100ms
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(parts::INPUT_DELAY_TIME));
+    }
+
+    if (!search_engine.engine_is_searching())
+    {
+      break;
+    }
+    if (userInput == "stop-search")
+    {
+      break;
+    }
+    if (handle_state_change_commands(userInput))
+    {
+      break;
+    }
+    if (handle_general_commands(userInput))
+    {
+      continue;
+    }
+    if (handle_board_undo_reset_commands(userInput))
+    {
+      return;
+    }
+  }
 }
 
 auto ChessEngine::handle_state_change_commands(const std::string &user_input)
     -> bool
 {
-  if (user_input == "exit")
-  {
-    printf("\n -- Goodbye G! --\n\n");
-    exit(0);
-  }
-  else if (user_input == "menu")
+  if (user_input == "menu")
   {
     change_state(&ChessEngine::main_menu_state);
   }
@@ -247,11 +346,6 @@ auto ChessEngine::handle_state_change_commands(const std::string &user_input)
   {
     change_state(&ChessEngine::player_vs_player_state);
   }
-  else if (user_input == "help")
-  {
-    printf("Current State: %s\n", current_state_name.c_str());
-    printf("%s", parts::HELP_MESSAGE.c_str());
-  }
   else
   {
     return false;
@@ -262,6 +356,19 @@ auto ChessEngine::handle_state_change_commands(const std::string &user_input)
 auto ChessEngine::handle_board_undo_reset_commands(
     const std::string &user_input) -> bool
 {
+  if (user_input == "undo" || user_input == "redo" || user_input == "reset")
+  {
+    // Need to stop engine from searching or pondering before doing any of
+    // these commands.
+    if (search_engine.engine_is_searching())
+    {
+      search_engine.stop_engine_turn();
+    }
+    if (search_engine.engine_is_pondering)
+    {
+      search_engine.stop_engine_pondering();
+    }
+  }
   if (user_input == "undo")
   {
     game_board_state.undo_move();
@@ -276,6 +383,7 @@ auto ChessEngine::handle_board_undo_reset_commands(
   else if (user_input == "redo" &&
            current_state == &ChessEngine::engine_vs_player_state)
   {
+    search_engine.transposition_table.clear();
     game_board_state.undo_move();
     search_engine.pop_last_move_eval();
     if (game_board_state.color_to_move == player_color)
@@ -292,7 +400,8 @@ auto ChessEngine::handle_board_undo_reset_commands(
     return false;
   }
 
-  // If it was game over and we undid the last move, it is no longer game over.
+  // If it was game over and we undid the last move, it is no longer game
+  // over.
   if (game_over)
   {
     game_over = false;
@@ -300,7 +409,37 @@ auto ChessEngine::handle_board_undo_reset_commands(
   return true;
 }
 
-auto ChessEngine::getValidIntInput(const std::string &user_message, int min,
+auto ChessEngine::handle_general_commands(const std::string &user_input) -> bool
+{
+  if (user_input == "exit")
+  {
+    printf("\n -- Goodbye G! --\n\n");
+    // Stop engine from searching or pondering before exiting to prevent thread
+    // issues.
+    if (search_engine.engine_is_searching())
+    {
+      search_engine.stop_engine_turn();
+    }
+    if (search_engine.engine_is_pondering)
+    {
+      search_engine.stop_engine_pondering();
+    }
+    exit(0);
+  }
+  else if (user_input == "help")
+  {
+    printf("Current State: %s\n", current_state_name.c_str());
+    printf("%s", parts::HELP_MESSAGE.c_str());
+  }
+  else
+  {
+    return false;
+  }
+  return true;
+}
+
+auto ChessEngine::getValidIntInput(const std::string &user_message,
+                                   int min,
                                    int max) -> int
 {
   int int_input;
@@ -314,6 +453,10 @@ auto ChessEngine::getValidIntInput(const std::string &user_message, int min,
     std::cin >> user_input;
 
     if (handle_state_change_commands(user_input))
+    {
+      continue;
+    }
+    if (handle_general_commands(user_input))
     {
       continue;
     }
@@ -346,6 +489,10 @@ auto ChessEngine::getValidCharInput(const std::string &user_message,
     std::cin >> user_input;
 
     if (handle_state_change_commands(user_input))
+    {
+      continue;
+    }
+    if (handle_general_commands(user_input))
     {
       continue;
     }

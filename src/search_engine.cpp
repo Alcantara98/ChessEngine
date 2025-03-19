@@ -12,14 +12,62 @@ SearchEngine::SearchEngine(BoardState &board_state)
 
 // PUBLIC FUNCTIONS
 
-auto SearchEngine::execute_best_move() -> bool
+void SearchEngine::handle_engine_turn()
 {
+  search_thread_handler.start_thread(max_search_time_milliseconds);
+}
+
+void SearchEngine::stop_engine_turn() { search_thread_handler.stop_thread(); }
+
+void SearchEngine::start_engine_pondering()
+{
+  engine_is_pondering = true;
+  ponder_thread_handler.start_thread(MAX_SEARCH_TIME);
+}
+
+void SearchEngine::stop_engine_pondering()
+{
+  ponder_thread_handler.stop_thread();
+  engine_is_pondering = false;
+}
+
+void SearchEngine::clear_previous_move_evals()
+{
+  while (!previous_move_evals.empty())
+  {
+    previous_move_evals.pop();
+  }
+}
+
+auto SearchEngine::last_move_eval() -> int
+{
+  if (!previous_move_evals.empty())
+  {
+    return previous_move_evals.top();
+  }
+  return 0;
+}
+
+void SearchEngine::pop_last_move_eval()
+{
+  if (!previous_move_evals.empty())
+  {
+    previous_move_evals.pop();
+  }
+}
+
+auto SearchEngine::engine_is_searching() -> bool
+{
+  return running_search_flag && !engine_is_pondering;
+}
+
+// PRIVATE FUNCTIONS
+
+auto SearchEngine::search_and_execute_best_move() -> bool
+{
+  running_search_flag = true;
   std::vector<std::pair<Move, int>> move_scores;
-  std::thread search_timeout_thread(&SearchEngine::initiate_search_timeout,
-                                    this);
-  evaluate_possible_moves(move_scores);
-  search_timeout_thread.join();
-  stop_search_flag = false;
+  start_iterative_search_evaluation(move_scores);
   sort_moves(move_scores);
 
   if (show_move_evaluations)
@@ -51,44 +99,16 @@ auto SearchEngine::execute_best_move() -> bool
   return false;
 }
 
-void SearchEngine::clear_previous_move_evals()
-{
-  while (!previous_move_evals.empty())
-  {
-    previous_move_evals.pop();
-  }
-}
-
-auto SearchEngine::last_move_eval() -> int
-{
-  if (!previous_move_evals.empty())
-  {
-    return previous_move_evals.top();
-  }
-  return 0;
-}
-
-void SearchEngine::pop_last_move_eval()
-{
-  if (!previous_move_evals.empty())
-  {
-    previous_move_evals.pop();
-  }
-}
-
-// PRIVATE FUNCTIONS
-void SearchEngine::evaluate_possible_moves(
+void SearchEngine::start_iterative_search_evaluation(
     std::vector<std::pair<Move, int>> &move_scores)
 {
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
 
-  // Search until stop_search_flag is true, or max_search_depth is reached.
+  // Search until running_search_flag is false, or max_search_depth is reached.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
-    // Reset current iterative search best move score to -INF for new iteration.
-    current_iterative_best_move_score = -INF;
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -141,7 +161,7 @@ void SearchEngine::evaluate_possible_moves(
       thread.join();
     }
 
-    if (!stop_search_flag)
+    if (running_search_flag)
     {
       // Get results from threads.
       move_scores.clear();
@@ -159,9 +179,74 @@ void SearchEngine::evaluate_possible_moves(
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
                                        search_end_time);
   }
-  // Notify the timeout thread that the search is complete.
-  std::lock_guard<std::mutex> lock(search_timeout_mutex);
-  search_timeout_cv.notify_one();
+}
+
+void SearchEngine::start_iterative_search_pondering()
+{
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(game_board_state);
+
+  // Search until running_search_flag is false, or max_search_depth is reached.
+  for (int iterative_depth = 1; iterative_depth <= MAX_SEARCH_DEPTH;
+       ++iterative_depth)
+  {
+    max_iterative_search_depth = iterative_depth;
+
+    std::vector<std::thread> search_threads;
+    std::vector<BoardState> thread_board_states(possible_moves.size(),
+                                                BoardState(game_board_state));
+
+    auto search_start_time = std::chrono::steady_clock::now();
+    // Search each move in a separate thread.
+    for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+    {
+      // Calculate possible moves again for each thread.
+      // NOTE: This is because moves contain references to pieces from the
+      // board state. If game_board_state moves are used, threads will modify
+      // its pieces, causing issues (piece_has_moved_flag for example may become
+      // true, and if it is a pawn, it can no longer move 2 squares forward).
+      std::vector<Move> thread_possible_moves =
+          move_generator::calculate_possible_moves(
+              thread_board_states[move_index]);
+
+      // Apply move to the board state for the thread.
+      thread_board_states[move_index].apply_move(
+          thread_possible_moves[move_index]);
+
+      // Start thread and search.
+      search_threads.emplace_back(
+          [this, move_index, iterative_depth, &thread_board_states]()
+          {
+            int eval;
+            if (use_aspiration_window)
+            {
+              eval = run_search_with_aspiration_window(
+                  thread_board_states[move_index], iterative_depth);
+            }
+            else
+            {
+              eval = -negamax_alpha_beta_search(thread_board_states[move_index],
+                                                -INF, INF, iterative_depth - 1,
+                                                false);
+            }
+          });
+    }
+
+    // Wait for all threads to finish.
+    for (auto &thread : search_threads)
+    {
+      thread.join();
+    }
+
+    if (!running_search_flag)
+    {
+      return;
+    }
+
+    auto search_end_time = std::chrono::steady_clock::now();
+    reset_and_print_performance_matrix(iterative_depth, search_start_time,
+                                       search_end_time);
+  }
 }
 
 auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
@@ -185,25 +270,10 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       alpha = eval - window_increment;
     }
 
-    // If current best move eval is greater than alpha, then there is no
-    // point finding values below it. Decrease the window so the alpha is the
-    // best move so far.
-    if (current_iterative_best_move_score > alpha)
-    {
-      alpha = current_iterative_best_move_score;
-    }
-    // If current best move eval is already greater than beta, then just
-    // extend the window to infinity since we want a value greater than
-    // current_iterative_best_move_score.
-    if (current_iterative_best_move_score > beta)
-    {
-      beta = INF;
-    }
-
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
 
-    if (stop_search_flag)
+    if (!running_search_flag)
     {
       break;
     }
@@ -211,29 +281,19 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // Return eval if it is within the window.
     if (eval < beta && eval > alpha)
     {
-      if (eval > current_iterative_best_move_score)
-      {
-        current_iterative_best_move_score = eval;
-      }
-      break;
-    }
-
-    // If current best move is a fail-low (eval <= alpha), a re-search will only
-    // find lower evals than current one. So if current best move is already
-    // greater than current eval, there is no point finding smaller evaluations.
-    if (eval <= alpha && current_iterative_best_move_score > eval)
-    {
       break;
     }
   }
   return eval;
 }
 
-auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
-                                             int beta, int depth,
+auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
+                                             int alpha,
+                                             int beta,
+                                             int depth,
                                              bool null_move_line) -> int
 {
-  if (stop_search_flag)
+  if (!running_search_flag)
   {
     return 0;
   }
@@ -270,12 +330,15 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
       {
       case EXACT:
         return tt_value;
+
       case FAILED_HIGH:
         alpha = std::max(alpha, tt_value);
         break;
+
       case FAILED_LOW:
         beta = std::min(beta, tt_value);
         break;
+
       default:
         // Handle unexpected tt_flag value.
         printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
@@ -338,7 +401,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
   // table. This will cause invalid states to be stored with eval scores of 0.
   // This may be saved as exact values in the transposition table, causing
   // incorrect cutoffs.
-  if (stop_search_flag)
+  if (!running_search_flag)
   {
     return 0;
   }
@@ -355,9 +418,13 @@ void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
       { return move_a.second > move_b.second; });
 }
 
-void SearchEngine::run_negamax_procedure(BoardState &board_state, int &alpha,
-                                         int &beta, int &max_eval, int &eval,
-                                         int &depth, int &best_move_index,
+void SearchEngine::run_negamax_procedure(BoardState &board_state,
+                                         int &alpha,
+                                         int &beta,
+                                         int &max_eval,
+                                         int &eval,
+                                         int &depth,
+                                         int &best_move_index,
                                          std::vector<Move> &possible_moves,
                                          bool &null_move_line)
 {
@@ -383,8 +450,8 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state, int &alpha,
   }
 }
 
-void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
-                                       int &beta, int &depth, int &eval)
+void SearchEngine::do_null_move_search(
+    BoardState &board_state, int &alpha, int &beta, int &depth, int &eval)
 {
   // If previous move is a null move, skip this to prevent double null
   // moves. This will prevent the search from being too shallow.
@@ -395,8 +462,10 @@ void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
 }
 
 void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
-                                                      int &depth, int &max_eval,
-                                                      int &alpha, int &beta,
+                                                      int &depth,
+                                                      int &max_eval,
+                                                      int &alpha,
+                                                      int &beta,
                                                       int &best_move_index)
 {
   // Store in transposition table.
@@ -428,11 +497,16 @@ void SearchEngine::reset_and_print_performance_matrix(
                       .count();
 
   // Print performance metrics to user.
-  if (show_performance)
+  if ((show_performance && !engine_is_pondering) ||
+      (show_ponder_performance && engine_is_pondering))
   {
     printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
-    printf("Nodes Visited %d\n", nodes_visited.load());
     printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
+    printf("Nodes Visited %d\n", nodes_visited.load());
+    printf("Leaf Nodes per second: %d kN/s\n",
+           static_cast<int>(leaf_nodes_visited /
+                            (duration / MILLISECONDS_TO_SECONDS) /
+                            NODES_TO_KILONODES));
     printf(
         "Nodes per second: %d kN/s\n\n",
         static_cast<int>(nodes_visited / (duration / MILLISECONDS_TO_SECONDS) /
@@ -442,16 +516,5 @@ void SearchEngine::reset_and_print_performance_matrix(
   // Reset performance metrics.
   nodes_visited = 0;
   leaf_nodes_visited = 0;
-}
-
-void SearchEngine::initiate_search_timeout()
-{
-  std::unique_lock<std::mutex> lock(search_timeout_mutex);
-  if (search_timeout_cv.wait_for(
-          lock, std::chrono::milliseconds(max_search_time_milliseconds)) ==
-      std::cv_status::timeout)
-  {
-    stop_search_flag = true;
-  }
 }
 } // namespace engine::parts

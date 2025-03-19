@@ -9,3 +9,5 @@ SortIncludes: true
 IncludeBlocks: Preserve
 SpaceBeforeParens: ControlStatements
 SeparateDefinitionBlocks: Always
+BinPackParameters: false
+

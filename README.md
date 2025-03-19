@@ -1,4 +1,4 @@
-# **ChessEngine** ♟️
+# **LiYing** ♟️
 ### **Elby's Chess Engine that can beat any human (hopefully... eventually).** 🤖
 
 ---
@@ -23,10 +23,18 @@
   - Branching Factor: `9-10`
   - Speed: `1000-2000 kN/s`
 
-### **v1.3.0** 
+### **v1.3.0**
 - Lockless Transposition Table
 - **Performance**:
   - Branching Factor: `9-10`
+  - Speed: `8000-9000 kN/s`
+
+### **v1.4.0** (Coming Soon)
+- Aspiration Window
+- Move-Ordering - Capture Moves First
+- Pondering - Search during Player's Turn
+- **Performance**:
+  - Branching Factor: `7-8`
   - Speed: `8000-9000 kN/s`
 
 **Current Branching Factor**: `9-10` ((branching_factor)^(search_depth) = leaf_nodes_visited)

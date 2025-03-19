@@ -33,7 +33,8 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_pawn_moves(BoardState &board_state, int x_position,
+static void generate_pawn_moves(BoardState &board_state,
+                                int x_position,
                                 int y_position,
                                 std::vector<Move> &possible_moves);
 
@@ -52,10 +53,13 @@ static void generate_pawn_moves(BoardState &board_state, int x_position,
  * @param promotion_rank The rank to promote the pawn.
  */
 static void generate_normal_pawn_moves(chess_board_type &chess_board,
-                                       int x_position, int y_position,
+                                       int x_position,
+                                       int y_position,
                                        std::vector<Move> &possible_moves,
-                                       Piece *pawn_piece, int pawn_direction,
-                                       bool first_move, int promotion_rank);
+                                       Piece *pawn_piece,
+                                       int pawn_direction,
+                                       bool first_move,
+                                       int promotion_rank);
 
 /**
  * @brief Generates normal pawn capture moves.
@@ -72,10 +76,13 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
  * @param promotion_rank The rank to promote the pawn.
  */
 static void generate_pawn_capture_moves(chess_board_type &chess_board,
-                                        int x_position, int y_position,
+                                        int x_position,
+                                        int y_position,
                                         std::vector<Move> &possible_moves,
-                                        Piece *pawn_piece, int pawn_direction,
-                                        bool first_move, int promotion_rank);
+                                        Piece *pawn_piece,
+                                        int pawn_direction,
+                                        bool first_move,
+                                        int promotion_rank);
 
 /**
  * @brief Generates en passant pawn capture moves.
@@ -91,10 +98,15 @@ static void generate_pawn_capture_moves(chess_board_type &chess_board,
  * @param first_move True if the pawn has not moved yet.
  * @param previous_move The previous move applied on the board.
  */
-static void generate_en_passant_pawn_capture_moves(
-    chess_board_type &chess_board, int x_position, int y_position,
-    std::vector<Move> &possible_moves, Piece *pawn_piece, int pawn_direction,
-    bool first_move, Move &previous_move);
+static void
+generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
+                                       int x_position,
+                                       int y_position,
+                                       std::vector<Move> &possible_moves,
+                                       Piece *pawn_piece,
+                                       int pawn_direction,
+                                       bool first_move,
+                                       Move &previous_move);
 
 /**
  * @brief Generates all possible moves for a given king.
@@ -106,7 +118,8 @@ static void generate_en_passant_pawn_capture_moves(
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_king_moves(BoardState &board_state, int x_position,
+static void generate_king_moves(BoardState &board_state,
+                                int x_position,
                                 int y_position,
                                 std::vector<Move> &possible_moves);
 
@@ -120,7 +133,8 @@ static void generate_king_moves(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_castle_king_moves(BoardState &board_state, int x_position,
+static void generate_castle_king_moves(BoardState &board_state,
+                                       int x_position,
                                        int y_position,
                                        std::vector<Move> &possible_moves);
 
@@ -135,8 +149,10 @@ static void generate_castle_king_moves(BoardState &board_state, int x_position,
  *
  * @return bool True if the rook can castle.
  */
-static auto can_castle(BoardState &board_state, Piece *king_piece,
-                       int y_position, Piece *potential_rook_piece,
+static auto can_castle(BoardState &board_state,
+                       Piece *king_piece,
+                       int y_position,
+                       Piece *potential_rook_piece,
                        const std::vector<int> &castle_path) -> bool;
 
 /**
@@ -149,7 +165,8 @@ static auto can_castle(BoardState &board_state, Piece *king_piece,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_knight_moves(BoardState &board_state, int x_position,
+static void generate_knight_moves(BoardState &board_state,
+                                  int x_position,
                                   int y_position,
                                   std::vector<Move> &possible_moves);
 
@@ -163,7 +180,8 @@ static void generate_knight_moves(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_bishop_moves(BoardState &board_state, int x_position,
+static void generate_bishop_moves(BoardState &board_state,
+                                  int x_position,
                                   int y_position,
                                   std::vector<Move> &possible_moves);
 
@@ -177,7 +195,8 @@ static void generate_bishop_moves(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_rook_moves(BoardState &board_state, int x_position,
+static void generate_rook_moves(BoardState &board_state,
+                                int x_position,
                                 int y_position,
                                 std::vector<Move> &possible_moves);
 
@@ -191,7 +210,8 @@ static void generate_rook_moves(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void generate_queen_moves(BoardState &board_state, int x_position,
+static void generate_queen_moves(BoardState &board_state,
+                                 int x_position,
                                  int y_position,
                                  std::vector<Move> &possible_moves);
 
@@ -204,8 +224,10 @@ static void generate_queen_moves(BoardState &board_state, int x_position,
  * @param possible_moves Reference to the list of possible moves of current
  * board_state.
  */
-static void rook_bishop_move_helper(BoardState &board_state, int x_position,
-                                    int y_position, int x_direction,
+static void rook_bishop_move_helper(BoardState &board_state,
+                                    int x_position,
+                                    int y_position,
+                                    int x_direction,
                                     int y_direction,
                                     std::vector<Move> &possible_moves);
 

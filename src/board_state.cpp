@@ -354,7 +354,8 @@ void BoardState::undo_null_move()
                                                        : PieceColor::WHITE;
 }
 
-auto BoardState::square_is_attacked(int x_position, int y_position,
+auto BoardState::square_is_attacked(int x_position,
+                                    int y_position,
                                     PieceColor color_being_attacked) -> bool
 {
   return square_is_attacked_by_pawn(x_position, y_position,

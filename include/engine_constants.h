@@ -98,7 +98,7 @@ const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {(PAWN_VALUE / 4) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
+    {(PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
 
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
@@ -152,16 +152,25 @@ const std::string MAIN_MENU_STATE = "Main Menu";
 const std::string PLAYER_VS_PLAYER_STATE = "Player vs Player";
 const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
 
+// CHESS ENGINE CONSTANTS
+const int INPUT_DELAY_TIME = 100;
+
 // INTERFACE MESSAGES
 const std::string GAME_OVER_HELP_MESSAGE =
     "\n-- Game Over-- \n\nCommand Options :\n  - menu\n  - exit\n  - undo\n  - "
-    "reset\n  - play-engine\n  - play-player\n  - print-moves\n  - "
-    "help\n\nEnter one of the commands above: ";
+    "reset\n  - play-engine\n  - play-player\n  - print-moves\n  - help\n\n "
+    "Update Engine Parameters:\n  - update-depth\n  - update-timelimit\n  - "
+    "update-window\n  - update-info\n  - update-pondering\n\nEnter one of the "
+    "commands above: ";
 
 const std::string HELP_MESSAGE =
     "\nCommands:\n\n ALL States:\n  - menu\n  - exit\n  - play-engine\n  - "
-    "play-player\n  - help\n\n Playing States:\n  - undo\n  - reset\n  - "
-    "print-moves\n  - use-window\n  - no-window\n  - enter a move\n\n";
+    "play-player\n  - help\n\n All Playing States:\n  - undo\n  - reset\n  - "
+    "redo\n\n Player's Turn\n  - print-moves\n  - enter a move\n  - Update "
+    "Engine Parameters:\n    ~ update-depth\n    ~ update-timelimit\n    ~ "
+    "update-window\n    ~ update-info\n    ~ update-pondering\n\n "
+    "Engine's turn:\n  - stop-search\n\n";
+
 } // namespace engine::parts
 
 #endif // ENGINE_CONSTANTS_H

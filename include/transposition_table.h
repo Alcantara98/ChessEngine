@@ -68,7 +68,10 @@ public:
    * @param flag Flag of the value.
    * @param best_move_index Index of the best move in the board state.
    */
-  void store(uint64_t &hash, int search_depth, int eval_score, int flag,
+  void store(uint64_t &hash,
+             int search_depth,
+             int eval_score,
+             int flag,
              int best_move_index);
 
   /**
@@ -82,7 +85,10 @@ public:
    *
    * @return true if the entry was found, false otherwise.
    */
-  auto retrieve(uint64_t &hash, int &search_depth, int &eval_score, int &flag,
+  auto retrieve(uint64_t &hash,
+                int &search_depth,
+                int &eval_score,
+                int &flag,
                 int &best_move_index) -> bool;
 
   /**
@@ -110,8 +116,11 @@ private:
    *
    * @return Calculated checksum.
    */
-  static auto calculate_checksum(uint64_t hash, int depth, int eval_score,
-                                 int flag, int best_move_index) -> uint32_t;
+  static auto calculate_checksum(uint64_t hash,
+                                 int depth,
+                                 int eval_score,
+                                 int flag,
+                                 int best_move_index) -> uint32_t;
 };
 } // namespace engine::parts
 

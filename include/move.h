@@ -6,7 +6,7 @@
 namespace engine::parts
 {
 /**
- * @brief Class to represent a move in chess.
+ * @brief A structure to represent a move in chess.
  */
 struct Move
 {
@@ -60,10 +60,17 @@ struct Move
    * @param pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y If a pawn
    * moved two squares, these are the coordinates the pawn moved to.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-       Piece *captured_piece, PieceType promotion_piece_type,
-       bool capture_is_en_passant, bool first_move_of_moving_piece,
-       bool pawn_moved_two_squares, int pawn_moved_two_squares_to_x,
+  Move(int from_x,
+       int from_y,
+       int to_x,
+       int to_y,
+       Piece *moving_piece,
+       Piece *captured_piece,
+       PieceType promotion_piece_type,
+       bool capture_is_en_passant,
+       bool first_move_of_moving_piece,
+       bool pawn_moved_two_squares,
+       int pawn_moved_two_squares_to_x,
        int pawn_moved_two_squares_to_y);
 
   /**
@@ -78,7 +85,11 @@ struct Move
    * @param pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y If a pawn
    * moved two squares, these are the coordinates the pawn moved to.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
+  Move(int from_x,
+       int from_y,
+       int to_x,
+       int to_y,
+       Piece *moving_piece,
        bool first_move_of_moving_piece = false,
        bool pawn_moved_two_squares = false,
        int pawn_moved_two_squares_to_x = -1,
@@ -95,8 +106,13 @@ struct Move
    * @param capture_is_en_passant True if moving_piece (has to be a pawn)
    * captures En Passant.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-       Piece *captured_piece, bool first_move_of_moving_piece = false,
+  Move(int from_x,
+       int from_y,
+       int to_x,
+       int to_y,
+       Piece *moving_piece,
+       Piece *captured_piece,
+       bool first_move_of_moving_piece = false,
        bool capture_is_en_passant = false);
 
   /**
@@ -108,7 +124,11 @@ struct Move
    * @param promotion_piece_type If pawn is promoted, it will be promoted to
    * this piece type.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
+  Move(int from_x,
+       int from_y,
+       int to_x,
+       int to_y,
+       Piece *moving_piece,
        PieceType promotion_piece_type);
 
   /**
@@ -121,8 +141,13 @@ struct Move
    * @param promotion_piece_type If pawn is promoted, it will be promoted to
    * this piece type.
    */
-  Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-       Piece *captured_piece, PieceType promotion_piece_type);
+  Move(int from_x,
+       int from_y,
+       int to_x,
+       int to_y,
+       Piece *moving_piece,
+       Piece *captured_piece,
+       PieceType promotion_piece_type);
 
   // FUNCTIONS
 

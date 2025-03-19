@@ -46,7 +46,10 @@ auto evaluate_position(BoardState &board_state) -> int
 
 // PRIVATE FUNCTIONS
 
-void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece, int &eval,
+void evaluate_pawn(int x_position,
+                   int y_position,
+                   Piece &pawn_piece,
+                   int &eval,
                    BoardState &board_state)
 {
   // Piece value.
@@ -82,8 +85,11 @@ void evaluate_pawn(int x_position, int y_position, Piece &pawn_piece, int &eval,
   }
 }
 
-void evaluate_knight(int x_position, int y_position, Piece &knight_piece,
-                     int &eval, BoardState &board_state)
+void evaluate_knight(int x_position,
+                     int y_position,
+                     Piece &knight_piece,
+                     int &eval,
+                     BoardState &board_state)
 {
   // Piece value.
   if (knight_piece.piece_color == PieceColor::WHITE)
@@ -125,8 +131,11 @@ void evaluate_knight(int x_position, int y_position, Piece &knight_piece,
   }
 }
 
-void evaluate_bishop(int x_position, int y_position, Piece &bishop_piece,
-                     int &eval, BoardState &board_state)
+void evaluate_bishop(int x_position,
+                     int y_position,
+                     Piece &bishop_piece,
+                     int &eval,
+                     BoardState &board_state)
 {
   // Piece value.
   if (bishop_piece.piece_color == PieceColor::WHITE)
@@ -175,7 +184,10 @@ void evaluate_bishop(int x_position, int y_position, Piece &bishop_piece,
   }
 }
 
-void evaluate_rook(int x_position, int y_position, Piece &rook_piece, int &eval,
+void evaluate_rook(int x_position,
+                   int y_position,
+                   Piece &rook_piece,
+                   int &eval,
                    BoardState &board_state)
 {
   // Piece value.
@@ -222,8 +234,11 @@ void evaluate_rook(int x_position, int y_position, Piece &rook_piece, int &eval,
   }
 }
 
-void evaluate_queen(int x_position, int y_position, Piece &queen_piece,
-                    int &eval, BoardState &board_state)
+void evaluate_queen(int x_position,
+                    int y_position,
+                    Piece &queen_piece,
+                    int &eval,
+                    BoardState &board_state)
 {
   // Piece value.
   if (queen_piece.piece_color == PieceColor::WHITE)
@@ -264,14 +279,17 @@ void evaluate_queen(int x_position, int y_position, Piece &queen_piece,
   }
 }
 
-void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
+void evaluate_king(int x_position,
+                   int y_position,
+                   Piece &king_piece,
+                   int &eval,
                    BoardState &board_state)
 {
   // Piece value.
-  if (king_piece.piece_color == PieceColor::WHITE && !board_state.is_end_game)
+  if (king_piece.piece_color == PieceColor::WHITE)
   {
     eval += KING_VALUE;
-    if (board_state.white_has_castled)
+    if (board_state.white_has_castled && !board_state.is_end_game)
     {
       eval += LARGE_EVAL_VALUE;
     }
@@ -300,8 +318,11 @@ void evaluate_king(int x_position, int y_position, Piece &king_piece, int &eval,
   }
 }
 
-void evaluate_king_safety(int x_position, int y_position, Piece &king_piece,
-                          int &eval, BoardState &board_state)
+void evaluate_king_safety(int x_position,
+                          int y_position,
+                          Piece &king_piece,
+                          int &eval,
+                          BoardState &board_state)
 {
   {
     int new_x;
