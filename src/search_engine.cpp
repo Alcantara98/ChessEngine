@@ -299,25 +299,32 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
                                              int depth,
                                              bool is_null_move_line) -> int
 {
+  // Increment nodes visited.
+  nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
   if (!running_search_flag)
   {
     return 0;
   }
   // If the king is no longer in the board, checkmate has occurred.
   // Return -INF evaluation for the side that has lost its king.
+  // NOTE: We minus the depth in which the checkmate was found from INF. This
+  // means checkmates found at shallower depths will have a higher eval.
+  // We want to choose the shortest checkmate line.
   if (board_state.color_to_move == PieceColor::WHITE &&
       !board_state.white_king_on_board)
   {
-    return -INF;
+    return -INF + max_iterative_search_depth - depth;
   }
   if (board_state.color_to_move == PieceColor::BLACK &&
       !board_state.black_king_on_board)
   {
-    return -INF;
+    return -INF + max_iterative_search_depth - depth;
   }
 
+  // Save original alpha value to deterime the eval flag for transposition
+  // table.
   int original_alpha = alpha;
-  nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
   int eval;
   int tt_value;
@@ -364,8 +371,10 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // Evaluate leaf nodes.
   if (depth <= 0)
   {
-    eval = engine::parts::position_evaluator::evaluate_position(board_state);
+    // Increment leaf nodes visited.
     leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+    eval = engine::parts::position_evaluator::evaluate_position(board_state);
     if (board_state.color_to_move == PieceColor::BLACK)
     {
       return -eval;
@@ -375,7 +384,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // Try a null move.
   // We curently only allow one null move per search line, and only when
-  // MIN_NULL_MOVE_DEPTH depth has been reached.
+  // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will make
+  // the search too shallow and return BS evals.
   if (!is_null_move_line &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game)
@@ -461,8 +471,6 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 void SearchEngine::do_null_move_search(
     BoardState &board_state, int &alpha, int &beta, int &depth, int &eval)
 {
-  // If previous move is a null move, skip this to prevent double null
-  // moves. This will prevent the search from being too shallow.
   board_state.apply_null_move();
   eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
                                     depth - NULL_MOVE_REDUCTION, true);
