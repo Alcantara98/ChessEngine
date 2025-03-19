@@ -3,7 +3,7 @@
 auto inputAvailable() -> bool
 {
 #ifdef _WIN32
-  if (_kbhit())
+  if (_kbhit() != 0)
   {
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     DWORD events;
