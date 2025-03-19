@@ -10,13 +10,6 @@ BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
   setup_board();
 }
 
-BoardState::BoardState(chess_board_type &input_chess_board,
-                       PieceColor color_to_move)
-    : chess_board(input_chess_board), color_to_move(color_to_move)
-{
-  initialize_zobrist_keys();
-}
-
 BoardState::BoardState(const BoardState &other)
     : color_to_move(other.color_to_move),
       previous_move_stack(other.previous_move_stack),

@@ -82,17 +82,6 @@ public:
   BoardState(PieceColor color_to_move = PieceColor::WHITE);
 
   /**
-   * @brief Constructor to initialize board state with a given chess board.
-   *
-   * @param input_chess_board Initializes chess_board to equal
-   * input_chess_board.
-   * @param color_to_move Color to move with current state. White by default
-   * starts the game.
-   */
-  BoardState(chess_board_type &input_chess_board,
-             PieceColor color_to_move = PieceColor::WHITE);
-
-  /**
    * @brief Copy constructor to copy another board state.
    *
    * @param other The board state to copy.

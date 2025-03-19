@@ -325,15 +325,17 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // table.
   int original_alpha = alpha;
 
+  // These values will be updated by the retrieve function of transposition
+  // table if the position has been saved in the table.
   int eval;
   int tt_value;
   int tt_flag;
   int entry_search_depth;
-  int entry_best_move = -1;
+  int entry_best_move_index = -1;
   uint64_t hash = board_state.compute_zobrist_hash();
   // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, entry_search_depth, tt_value, tt_flag,
-                                   entry_best_move))
+                                   entry_best_move_index))
   {
     // Check if tt_value can be used.
     if (depth <= entry_search_depth)
@@ -409,9 +411,10 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // If there is a best move from the transposition table, move it to the
   // front to be searched first, causing more alpha beta pruning to occur.
-  if (entry_best_move >= 0 && entry_best_move < possible_moves.size())
+  if (entry_best_move_index >= 0 &&
+      entry_best_move_index < possible_moves.size())
   {
-    std::swap(possible_moves[0], possible_moves[entry_best_move]);
+    std::swap(possible_moves[0], possible_moves[entry_best_move_index]);
   }
 
   // Search and evaluate each move.
@@ -421,7 +424,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
   // This may be saved as exact values in the transposition table, causing
-  // incorrect cutoffs.
+  // incorrect cutoffs on future searches.
   if (!running_search_flag)
   {
     return 0;
