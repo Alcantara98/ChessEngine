@@ -7,6 +7,10 @@ namespace engine::parts::position_evaluator
 auto evaluate_position(BoardState &board_state) -> int
 {
   int eval = 0;
+  // We pass eval_temp to evaluators now instead of eval directly. This way, the
+  // functions can evaluate white and black pieces the same way (positively). We
+  // can then check the piece color and add or subtract accordingly to the
+  // actual eval.
   int eval_temp = 0;
 
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
@@ -42,6 +46,7 @@ auto evaluate_position(BoardState &board_state) -> int
         break;
       }
 
+      // If piece is black, subtract the evaluation.
       if (piece_type != PieceType::EMPTY)
       {
         if (piece.piece_color == PieceColor::WHITE)
@@ -132,6 +137,27 @@ void evaluate_bishop(int x_position,
   if (!bishop_piece.piece_has_moved)
   {
     eval -= LARGE_EVAL_VALUE;
+  }
+
+  // If bishop is blocking a pawn, decrease evaluation.
+  // When I play, I don't like it when my bishops block my pawns.
+  // This is a personal preference and is experimental.
+  int direction;
+  if (bishop_piece.piece_color == PieceColor::WHITE)
+  {
+    direction = POSITIVE_DIRECTION;
+  }
+  else
+  {
+    direction = NEGATIVE_DIRECTION;
+  }
+  if (y_position + direction >= Y_MIN && y_position + direction <= Y_MAX)
+  {
+    if (board_state.chess_board[x_position][y_position + direction]
+            ->piece_type == PieceType::PAWN)
+    {
+      eval -= LARGE_EVAL_VALUE;
+    }
   }
 
   // The more moves a bishop has, the better.
