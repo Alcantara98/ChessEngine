@@ -64,7 +64,8 @@ private:
    *
    * @return Returns true if move is valid, false otherwise.
    */
-  auto create_move_from_string(Move &move, const std::string &move_string,
+  auto create_move_from_string(Move &move,
+                               const std::string &move_string,
                                char &piece_type) -> bool;
 
   /**
@@ -76,7 +77,8 @@ private:
    *
    * @return Returns true if move is valid, false otherwise.
    */
-  auto validate_move(const std::vector<Move> &possible_moves, Move &move,
+  auto validate_move(const std::vector<Move> &possible_moves,
+                     Move &move,
                      char &piece_type) -> bool;
 };
 } // namespace engine::parts

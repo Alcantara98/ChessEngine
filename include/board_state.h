@@ -154,7 +154,8 @@ public:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked(int x_position, int y_position,
+  auto square_is_attacked(int x_position,
+                          int y_position,
                           PieceColor color_being_attacked) -> bool;
 
   /**
@@ -231,7 +232,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_pawn(int &x_position, int &y_position,
+  auto square_is_attacked_by_pawn(int &x_position,
+                                  int &y_position,
                                   PieceColor &color_being_attacked) -> bool;
 
   /**
@@ -243,7 +245,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_knight(int &x_position, int &y_position,
+  auto square_is_attacked_by_knight(int &x_position,
+                                    int &y_position,
                                     PieceColor &color_being_attacked) -> bool;
 
   /**
@@ -256,7 +259,8 @@ private:
    * @return True if the square is attacked, false otherwise.
    */
   auto
-  square_is_attacked_by_rook_or_queen(int &x_position, int &y_position,
+  square_is_attacked_by_rook_or_queen(int &x_position,
+                                      int &y_position,
                                       PieceColor &color_being_attacked) -> bool;
 
   /**
@@ -269,7 +273,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_bishop_or_queen(int &x_position, int &y_position,
+  auto square_is_attacked_by_bishop_or_queen(int &x_position,
+                                             int &y_position,
                                              PieceColor &color_being_attacked)
       -> bool;
 
@@ -282,7 +287,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_king(int &x_position, int &y_position,
+  auto square_is_attacked_by_king(int &x_position,
+                                  int &y_position,
                                   PieceColor &color_being_attacked) -> bool;
 
   /**

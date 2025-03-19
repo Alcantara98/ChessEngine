@@ -287,8 +287,10 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
   return eval;
 }
 
-auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state, int alpha,
-                                             int beta, int depth,
+auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
+                                             int alpha,
+                                             int beta,
+                                             int depth,
                                              bool null_move_line) -> int
 {
   if (!running_search_flag)
@@ -416,9 +418,13 @@ void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
       { return move_a.second > move_b.second; });
 }
 
-void SearchEngine::run_negamax_procedure(BoardState &board_state, int &alpha,
-                                         int &beta, int &max_eval, int &eval,
-                                         int &depth, int &best_move_index,
+void SearchEngine::run_negamax_procedure(BoardState &board_state,
+                                         int &alpha,
+                                         int &beta,
+                                         int &max_eval,
+                                         int &eval,
+                                         int &depth,
+                                         int &best_move_index,
                                          std::vector<Move> &possible_moves,
                                          bool &null_move_line)
 {
@@ -444,8 +450,8 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state, int &alpha,
   }
 }
 
-void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
-                                       int &beta, int &depth, int &eval)
+void SearchEngine::do_null_move_search(
+    BoardState &board_state, int &alpha, int &beta, int &depth, int &eval)
 {
   // If previous move is a null move, skip this to prevent double null
   // moves. This will prevent the search from being too shallow.
@@ -456,8 +462,10 @@ void SearchEngine::do_null_move_search(BoardState &board_state, int &alpha,
 }
 
 void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
-                                                      int &depth, int &max_eval,
-                                                      int &alpha, int &beta,
+                                                      int &depth,
+                                                      int &max_eval,
+                                                      int &alpha,
+                                                      int &beta,
                                                       int &best_move_index)
 {
   // Store in transposition table.

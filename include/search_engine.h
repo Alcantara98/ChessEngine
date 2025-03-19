@@ -221,8 +221,11 @@ private:
    *
    * @return Evaluation score from search branch.
    */
-  auto negamax_alpha_beta_search(BoardState &board_state, int alpha, int beta,
-                                 int depth, bool null_move_line) -> int;
+  auto negamax_alpha_beta_search(BoardState &board_state,
+                                 int alpha,
+                                 int beta,
+                                 int depth,
+                                 bool null_move_line) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -245,8 +248,12 @@ private:
    * @param null_move_line Flag to indicate if the search line is from a null
    * move.
    */
-  void run_negamax_procedure(BoardState &board_state, int &alpha, int &beta,
-                             int &max_eval, int &eval, int &depth,
+  void run_negamax_procedure(BoardState &board_state,
+                             int &alpha,
+                             int &beta,
+                             int &max_eval,
+                             int &eval,
+                             int &depth,
                              int &best_move_index,
                              std::vector<Move> &possible_moves,
                              bool &null_move_line);
@@ -270,8 +277,8 @@ private:
    * @param depth Current depth of search.
    * @param eval Evaluation score to be updated.
    */
-  void do_null_move_search(BoardState &board_state, int &alpha, int &beta,
-                           int &depth, int &eval);
+  void do_null_move_search(
+      BoardState &board_state, int &alpha, int &beta, int &depth, int &eval);
 
   /**
    * @brief Stores the state in the transposition table.
@@ -283,8 +290,11 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param best_move_index Index of best move.
    */
-  void store_state_in_transposition_table(uint64_t &hash, int &depth,
-                                          int &max_eval, int &alpha, int &beta,
+  void store_state_in_transposition_table(uint64_t &hash,
+                                          int &depth,
+                                          int &max_eval,
+                                          int &alpha,
+                                          int &beta,
                                           int &best_move_index);
 
   /**

@@ -13,8 +13,11 @@ TranspositionTable::~TranspositionTable() { delete[] tt_table; }
 
 // PUBLIC FUNCTIONS
 
-void TranspositionTable::store(uint64_t &hash, int search_depth, int eval_score,
-                               int flag, int best_move_index)
+void TranspositionTable::store(uint64_t &hash,
+                               int search_depth,
+                               int eval_score,
+                               int flag,
+                               int best_move_index)
 {
   // Get the entry.
   TranspositionTableEntry &entry = tt_table[hash % max_size];
@@ -30,8 +33,10 @@ void TranspositionTable::store(uint64_t &hash, int search_depth, int eval_score,
   entry.checksum = checksum;
 }
 
-auto TranspositionTable::retrieve(uint64_t &hash, int &search_depth,
-                                  int &eval_score, int &flag,
+auto TranspositionTable::retrieve(uint64_t &hash,
+                                  int &search_depth,
+                                  int &eval_score,
+                                  int &flag,
                                   int &best_move_index) -> bool
 {
   TranspositionTableEntry entry = tt_table[hash % max_size];
@@ -60,8 +65,10 @@ void TranspositionTable::clear()
 }
 
 // PRIVATE FUNCTIONS
-auto TranspositionTable::calculate_checksum(uint64_t hash, int depth,
-                                            int eval_score, int flag,
+auto TranspositionTable::calculate_checksum(uint64_t hash,
+                                            int depth,
+                                            int eval_score,
+                                            int flag,
                                             int best_move_index) -> uint32_t
 {
   uint32_t checksum = CHECKSUM_SEED;

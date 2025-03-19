@@ -438,7 +438,8 @@ auto ChessEngine::handle_general_commands(const std::string &user_input) -> bool
   return true;
 }
 
-auto ChessEngine::getValidIntInput(const std::string &user_message, int min,
+auto ChessEngine::getValidIntInput(const std::string &user_message,
+                                   int min,
                                    int max) -> int
 {
   int int_input;

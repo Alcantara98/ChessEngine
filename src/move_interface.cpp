@@ -180,7 +180,8 @@ auto MoveInterface::create_move_from_string(Move &move,
 }
 
 auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
-                                  Move &move, char &piece_type) -> bool
+                                  Move &move,
+                                  char &piece_type) -> bool
 {
   // Check if moving piece is empty.
   if (move.moving_piece->piece_type == PieceType::EMPTY)

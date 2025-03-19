@@ -60,8 +60,10 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>
 
 // STATIC FUNCTIONS
 
-void generate_pawn_moves(BoardState &board_state, int x_position,
-                         int y_position, std::vector<Move> &possible_moves)
+void generate_pawn_moves(BoardState &board_state,
+                         int x_position,
+                         int y_position,
+                         std::vector<Move> &possible_moves)
 {
   chess_board_type &chess_board = board_state.chess_board;
   Piece *pawn_piece = chess_board[x_position][y_position];
@@ -97,11 +99,14 @@ void generate_pawn_moves(BoardState &board_state, int x_position,
   }
 }
 
-void generate_normal_pawn_moves(chess_board_type &chess_board, int x_position,
+void generate_normal_pawn_moves(chess_board_type &chess_board,
+                                int x_position,
                                 int y_position,
                                 std::vector<Move> &possible_moves,
-                                Piece *pawn_piece, int pawn_direction,
-                                bool first_move, int promotion_rank)
+                                Piece *pawn_piece,
+                                int pawn_direction,
+                                bool first_move,
+                                int promotion_rank)
 {
   // One square move forward.
   // Check if the square in front of the pawn is empty.
@@ -144,11 +149,14 @@ void generate_normal_pawn_moves(chess_board_type &chess_board, int x_position,
   }
 }
 
-void generate_pawn_capture_moves(chess_board_type &chess_board, int x_position,
+void generate_pawn_capture_moves(chess_board_type &chess_board,
+                                 int x_position,
                                  int y_position,
                                  std::vector<Move> &possible_moves,
-                                 Piece *pawn_piece, int pawn_direction,
-                                 bool first_move, int promotion_rank)
+                                 Piece *pawn_piece,
+                                 int pawn_direction,
+                                 bool first_move,
+                                 int promotion_rank)
 {
   // Pawn can capture left and right.
   for (int capture_direction : {NEGATIVE_DIRECTION, POSITIVE_DIRECTION})
@@ -186,10 +194,12 @@ void generate_pawn_capture_moves(chess_board_type &chess_board, int x_position,
 }
 
 void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
-                                            int x_position, int y_position,
+                                            int x_position,
+                                            int y_position,
                                             std::vector<Move> &possible_moves,
                                             Piece *pawn_piece,
-                                            int pawn_direction, bool first_move,
+                                            int pawn_direction,
+                                            bool first_move,
                                             Move &previous_move)
 {
   // En-passant moves can only be made on the 5th rank for white and 4th rank
@@ -222,8 +232,10 @@ void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
   }
 }
 
-void generate_king_moves(BoardState &board_state, int x_position,
-                         int y_position, std::vector<Move> &possible_moves)
+void generate_king_moves(BoardState &board_state,
+                         int x_position,
+                         int y_position,
+                         std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *king_piece = board[x_position][y_position];
@@ -254,7 +266,8 @@ void generate_king_moves(BoardState &board_state, int x_position,
   }
 }
 
-void generate_castle_king_moves(BoardState &board_state, int x_position,
+void generate_castle_king_moves(BoardState &board_state,
+                                int x_position,
                                 int y_position,
                                 std::vector<Move> &possible_moves)
 {
@@ -285,7 +298,9 @@ void generate_castle_king_moves(BoardState &board_state, int x_position,
   }
 }
 
-auto can_castle(BoardState &board_state, Piece *king_piece, int y_position,
+auto can_castle(BoardState &board_state,
+                Piece *king_piece,
+                int y_position,
                 Piece *potential_rook_piece,
                 const std::vector<int> &castle_path) -> bool
 {
@@ -310,8 +325,10 @@ auto can_castle(BoardState &board_state, Piece *king_piece, int y_position,
   return true;
 }
 
-void generate_knight_moves(BoardState &board_state, int x_position,
-                           int y_position, std::vector<Move> &possible_moves)
+void generate_knight_moves(BoardState &board_state,
+                           int x_position,
+                           int y_position,
+                           std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *knight_piece = board[x_position][y_position];
@@ -342,8 +359,10 @@ void generate_knight_moves(BoardState &board_state, int x_position,
   }
 }
 
-void generate_bishop_moves(BoardState &board_state, int x_position,
-                           int y_position, std::vector<Move> &possible_moves)
+void generate_bishop_moves(BoardState &board_state,
+                           int x_position,
+                           int y_position,
+                           std::vector<Move> &possible_moves)
 {
   // Each respective pair of x and y directions represent a diagonal.
   for (auto direction : BISHOP_DIRECTIONS)
@@ -353,8 +372,10 @@ void generate_bishop_moves(BoardState &board_state, int x_position,
   }
 }
 
-void generate_rook_moves(BoardState &board_state, int x_position,
-                         int y_position, std::vector<Move> &possible_moves)
+void generate_rook_moves(BoardState &board_state,
+                         int x_position,
+                         int y_position,
+                         std::vector<Move> &possible_moves)
 {
   // Each respective pair of x and y directions represent horizontal or
   // vertical moves.
@@ -365,8 +386,10 @@ void generate_rook_moves(BoardState &board_state, int x_position,
   }
 }
 
-void generate_queen_moves(BoardState &board_state, int x_position,
-                          int y_position, std::vector<Move> &possible_moves)
+void generate_queen_moves(BoardState &board_state,
+                          int x_position,
+                          int y_position,
+                          std::vector<Move> &possible_moves)
 {
   // Queen moves are a combination of rook and bishop moves.
   generate_rook_moves(board_state, x_position, y_position, possible_moves);
@@ -374,8 +397,11 @@ void generate_queen_moves(BoardState &board_state, int x_position,
 }
 
 // PRIVATE FUNCTIONS
-void rook_bishop_move_helper(BoardState &board_state, int x_position,
-                             int y_position, int x_direction, int y_direction,
+void rook_bishop_move_helper(BoardState &board_state,
+                             int x_position,
+                             int y_position,
+                             int x_direction,
+                             int y_direction,
                              std::vector<Move> &possible_moves)
 {
   chess_board_type &board = board_state.chess_board;

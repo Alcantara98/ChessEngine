@@ -4,10 +4,18 @@ namespace engine::parts
 {
 // CONSTRUCTORS
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-           Piece *captured_piece, PieceType promotion_piece_type,
-           bool is_en_passant, bool first_move, bool pawn_moved_two,
-           int pawn_moved_two_squares_to_x, int pawn_moved_two_squares_to_y)
+Move::Move(int from_x,
+           int from_y,
+           int to_x,
+           int to_y,
+           Piece *moving_piece,
+           Piece *captured_piece,
+           PieceType promotion_piece_type,
+           bool is_en_passant,
+           bool first_move,
+           bool pawn_moved_two,
+           int pawn_moved_two_squares_to_x,
+           int pawn_moved_two_squares_to_y)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(promotion_piece_type),
@@ -19,9 +27,15 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-           bool first_move, bool pawn_moved_two,
-           int pawn_moved_two_squares_to_x, int pawn_moved_two_squares_to_y)
+Move::Move(int from_x,
+           int from_y,
+           int to_x,
+           int to_y,
+           Piece *moving_piece,
+           bool first_move,
+           bool pawn_moved_two,
+           int pawn_moved_two_squares_to_x,
+           int pawn_moved_two_squares_to_y)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(nullptr),
       promotion_piece_type(PieceType::EMPTY), capture_is_en_passant(false),
@@ -32,8 +46,14 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-           Piece *captured_piece, bool first_move, bool is_en_passant)
+Move::Move(int from_x,
+           int from_y,
+           int to_x,
+           int to_y,
+           Piece *moving_piece,
+           Piece *captured_piece,
+           bool first_move,
+           bool is_en_passant)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(PieceType::EMPTY),
@@ -43,7 +63,11 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
+Move::Move(int from_x,
+           int from_y,
+           int to_x,
+           int to_y,
+           Piece *moving_piece,
            PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(nullptr),
@@ -53,8 +77,13 @@ Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
 {
 }
 
-Move::Move(int from_x, int from_y, int to_x, int to_y, Piece *moving_piece,
-           Piece *captured_piece, PieceType promotion_piece_type)
+Move::Move(int from_x,
+           int from_y,
+           int to_x,
+           int to_y,
+           Piece *moving_piece,
+           Piece *captured_piece,
+           PieceType promotion_piece_type)
     : from_x(from_x), from_y(from_y), to_x(to_x), to_y(to_y),
       moving_piece(moving_piece), captured_piece(captured_piece),
       promotion_piece_type(promotion_piece_type), capture_is_en_passant(false),
