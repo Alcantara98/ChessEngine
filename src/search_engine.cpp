@@ -311,13 +311,10 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // NOTE: We minus the depth in which the checkmate was found from INF. This
   // means checkmates found at shallower depths will have a higher eval.
   // We want to choose the shortest checkmate line.
-  if (board_state.color_to_move == PieceColor::WHITE &&
-      !board_state.white_king_on_board)
-  {
-    return -INF + max_iterative_search_depth - depth;
-  }
-  if (board_state.color_to_move == PieceColor::BLACK &&
-      !board_state.black_king_on_board)
+  if ((board_state.color_to_move == PieceColor::WHITE &&
+       !board_state.white_king_on_board) ||
+      (board_state.color_to_move == PieceColor::BLACK &&
+       !board_state.black_king_on_board))
   {
     return -INF + max_iterative_search_depth - depth;
   }
