@@ -117,7 +117,7 @@ public:
    *
    * @return True if the current player is in checkmate, false otherwise.
    */
-  auto is_checkmate(BoardState &board_state) -> bool;
+  static auto is_checkmate(BoardState &board_state) -> bool;
 
   /**
    * @brief Checks if the current player is in stalemate.
@@ -129,7 +129,7 @@ public:
    *
    * @return True if the current player is in stalemate, false otherwise.
    */
-  auto is_stalemate(BoardState &board_state) -> bool;
+  static auto is_stalemate(BoardState &board_state) -> bool;
 
 private:
   // PROPERTIES
@@ -303,6 +303,24 @@ private:
    */
   void do_null_move_search(
       BoardState &board_state, int &alpha, int &beta, int &depth, int &eval);
+
+  /**
+   * @brief If the score exceeds INF_MINUS_1000 or is less than -INF_MINUS_1000,
+   * it indicates a checkmate sequence. This function will handle necessary
+   * checks and adjustments required for checkmate evals.
+   *
+   * @note If node is part of a checkmate sequence, We adjust the score by 1 to
+   * favor shorter mate sequences. Longer checkmate sequences receive a larger
+   * adjustment, lowering their evaluation relative to the winning side.
+   *
+   * @note An eval of less than -INF_MINUS_1000 indicates that every move by the
+   * current player eventually leads to the capture of their king. This
+   * situation represents a terminal position, caused by either checkmate or
+   * stalemate. Performing explicit checks for checkmate/stalemate during the
+   * negamax search would be too costly, so the engine relies on detecting king
+   * capture first, and then checks for checkmate/stalemate here.
+   */
+  static void handle_checkmate_eval(int &eval, BoardState &board_state);
 
   /**
    * @brief Stores the state in the transposition table.
