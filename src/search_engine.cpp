@@ -489,8 +489,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   if (max_eval < INF_MINUS_1000)
   {
-    // If the eval is a checkmate line, check if stalemate has occurred.
-    // If stalemate has occurred, return 0 since it would be a draw.
+    // If all moves lead to this player getting checkmated, it could also mean
+    // it is a stalemate.
     if (is_stalemate(board_state))
     {
       return 0;
