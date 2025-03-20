@@ -128,6 +128,9 @@ public:
    * - w - White to move
    * - b - Black to move
    *
+   * The default chess board configuration would be given as:
+   * 'RNBQKBNRPPPPPPPP--------------------------------pppppppprnbqkbnrw'
+   *
    * @return True if the given board configuration is valid, false otherwise.
    */
   auto setup_custom_board(const std::string &board_configuration) -> bool;
