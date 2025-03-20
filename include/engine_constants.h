@@ -129,15 +129,17 @@ const std::array<std::array<int, 2>, 8> KING_MOVES = {{{-1, -1},
                                                        {+1, +1}}};
 
 // PIECE TYPE MAPPINGS
-const std::map<char, parts::PieceType> STRING_TO_PIECE_TYPE = {
+const std::map<char, parts::PieceType> CHAR_TO_PIECE_TYPE = {
     {'k', parts::PieceType::KING},   {'q', parts::PieceType::QUEEN},
     {'r', parts::PieceType::ROOK},   {'b', parts::PieceType::BISHOP},
-    {'n', parts::PieceType::KNIGHT}, {'p', parts::PieceType::PAWN}};
+    {'n', parts::PieceType::KNIGHT}, {'p', parts::PieceType::PAWN},
+    {'-', parts::PieceType::EMPTY}};
 
-const std::map<parts::PieceType, char> PIECE_TYPE_TO_STRING = {
+const std::map<parts::PieceType, char> PIECE_TYPE_TO_CHAR = {
     {parts::PieceType::KING, 'k'},   {parts::PieceType::QUEEN, 'q'},
     {parts::PieceType::ROOK, 'r'},   {parts::PieceType::BISHOP, 'b'},
-    {parts::PieceType::KNIGHT, 'n'}, {parts::PieceType::PAWN, 'p'}};
+    {parts::PieceType::KNIGHT, 'n'}, {parts::PieceType::PAWN, 'p'},
+    {parts::PieceType::EMPTY, '-'}};
 
 const std::map<char, int> ALGEBRAIC_TO_INT = {{'a', 0}, {'b', 1}, {'c', 2},
                                               {'d', 3}, {'e', 4}, {'f', 5},
@@ -154,6 +156,8 @@ const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
 
 // CHESS ENGINE CONSTANTS
 const int INPUT_DELAY_TIME = 100;
+const char WHITE_PIECE_CHAR = 'w';
+const char BLACK_PIECE_CHAR = 'b';
 
 // INTERFACE MESSAGES
 const std::string GAME_OVER_HELP_MESSAGE =
