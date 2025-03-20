@@ -199,8 +199,7 @@ void ChessEngine::set_up_engine()
   const char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
-  if (user_color == parts::WHITE_PIECE_CHAR &&
-      game_board_state.color_to_move == parts::PieceColor::WHITE)
+  if (user_color == parts::WHITE_PIECE_CHAR)
   {
     player_color = parts::PieceColor::WHITE;
     search_engine.engine_color = parts::PieceColor::BLACK;
