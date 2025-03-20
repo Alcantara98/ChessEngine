@@ -278,7 +278,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // returning it. So the eval of a chekmate line will be less than
     // INF. Hence why we check using INF_MINUS_1000. Any eval greater than
     // INF_MINUS_1000 is a checkmate line.
-    const int INF_MINUS_1000 = -1000;
+    const int INF_MINUS_1000 = INF - 1000;
 
     // - Return eval if it is within the window.
     // - Return eval if search has stopped.
