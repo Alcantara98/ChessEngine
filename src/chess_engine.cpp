@@ -118,12 +118,12 @@ void ChessEngine::engine_vs_player_state()
 
 void ChessEngine::check_and_handle_if_game_over()
 {
-  if (!game_over && search_engine.is_stalemate())
+  if (!game_over && search_engine.is_stalemate(game_board_state))
   {
     printf("\nStalemate, It's a draw!\n");
     game_over = true;
   }
-  if (!game_over && search_engine.is_checkmate())
+  if (!game_over && search_engine.is_checkmate(game_board_state))
   {
     std::string winner =
         game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"

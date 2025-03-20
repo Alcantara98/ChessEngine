@@ -61,14 +61,14 @@ auto SearchEngine::engine_is_searching() -> bool
   return running_search_flag && !engine_is_pondering;
 }
 
-auto SearchEngine::is_checkmate() -> bool
+auto SearchEngine::is_checkmate(BoardState &board_state) -> bool
 {
-  parts::PieceColor current_color = game_board_state.color_to_move;
+  parts::PieceColor current_color = board_state.color_to_move;
   std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(game_board_state);
+      parts::move_generator::calculate_possible_moves(board_state);
 
   // King needs to be in check to be checkmate.
-  if (!game_board_state.king_is_checked(current_color))
+  if (!board_state.king_is_checked(current_color))
   {
     return false;
   }
@@ -76,25 +76,25 @@ auto SearchEngine::is_checkmate() -> bool
   // Check if all possible moves result in a checked king.
   for (parts::Move move : possible_moves)
   {
-    game_board_state.apply_move(move);
-    if (!game_board_state.king_is_checked(current_color))
+    board_state.apply_move(move);
+    if (!board_state.king_is_checked(current_color))
     {
-      game_board_state.undo_move();
+      board_state.undo_move();
       return false;
     }
-    game_board_state.undo_move();
+    board_state.undo_move();
   }
   return true;
 }
 
-auto SearchEngine::is_stalemate() -> bool
+auto SearchEngine::is_stalemate(BoardState &board_state) -> bool
 {
-  parts::PieceColor current_color = game_board_state.color_to_move;
+  parts::PieceColor current_color = board_state.color_to_move;
   std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(game_board_state);
+      parts::move_generator::calculate_possible_moves(board_state);
 
   // King cannot be in check to be a stalemate.
-  if (game_board_state.king_is_checked(current_color))
+  if (board_state.king_is_checked(current_color))
   {
     return false;
   }
@@ -103,13 +103,13 @@ auto SearchEngine::is_stalemate() -> bool
   // it is a stalemate.
   for (parts::Move move : possible_moves)
   {
-    game_board_state.apply_move(move);
-    if (!game_board_state.king_is_checked(current_color))
+    board_state.apply_move(move);
+    if (!board_state.king_is_checked(current_color))
     {
-      game_board_state.undo_move();
+      board_state.undo_move();
       return false;
     }
-    game_board_state.undo_move();
+    board_state.undo_move();
   }
   return true;
 }
@@ -491,7 +491,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   {
     // If the eval is a checkmate line, check if stalemate has occurred.
     // If stalemate has occurred, return 0 since it would be a draw.
-    if (is_stalemate())
+    if (is_stalemate(board_state))
     {
       return 0;
     }
