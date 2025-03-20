@@ -52,7 +52,7 @@ auto MoveInterface::move_to_string(const Move &move) -> std::string
   else
   {
     // Get piece type.
-    move_string += PIECE_TYPE_TO_STRING.at(move.moving_piece->piece_type);
+    move_string += PIECE_TYPE_TO_CHAR.at(move.moving_piece->piece_type);
 
     // Get initial coordinates.
     move_string += INT_TO_ALGEBRAIC.at(move.from_x);
@@ -79,7 +79,7 @@ auto MoveInterface::move_to_string(const Move &move) -> std::string
     if (move.promotion_piece_type != PieceType::EMPTY)
     {
       move_string += "=";
-      move_string += PIECE_TYPE_TO_STRING.at(move.promotion_piece_type);
+      move_string += PIECE_TYPE_TO_CHAR.at(move.promotion_piece_type);
     }
   }
   return move_string;
@@ -93,9 +93,9 @@ auto MoveInterface::create_move_from_string(Move &move,
 {
   // Check if move is valid.
   std::smatch matches;
-  std::regex moveRegex(
+  std::regex move_pattern(
       R"(^(O-O(?:-O)?)|([kqrbnp])([a-h][1-8])(x)?([a-h][1-8])=?([qrbns])?([+#])?$)");
-  if (std::regex_match(move_string, matches, moveRegex))
+  if (std::regex_match(move_string, matches, move_pattern))
   {
     // Get initial and final coordinates.
     if (matches[CASTLE_MOVE_INDEX].matched)
@@ -168,7 +168,7 @@ auto MoveInterface::create_move_from_string(Move &move,
     if (matches[PROMOTION_INDEX].matched)
     {
       move.promotion_piece_type =
-          STRING_TO_PIECE_TYPE.at(matches[PROMOTION_INDEX].str().at(0));
+          CHAR_TO_PIECE_TYPE.at(matches[PROMOTION_INDEX].str().at(0));
     }
   }
   else
@@ -191,11 +191,11 @@ auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
   }
 
   // Check if input piece type matches square piece type.
-  if (STRING_TO_PIECE_TYPE.at(piece_type) != move.moving_piece->piece_type)
+  if (CHAR_TO_PIECE_TYPE.at(piece_type) != move.moving_piece->piece_type)
   {
     printf("Invalid Move - Given piece type: %c does not match square piece "
            "type: %c\n",
-           piece_type, PIECE_TYPE_TO_STRING.at(move.moving_piece->piece_type));
+           piece_type, PIECE_TYPE_TO_CHAR.at(move.moving_piece->piece_type));
     return false;
   }
 

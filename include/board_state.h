@@ -7,8 +7,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstdio>
 #include <random>
+#include <regex>
 #include <stack>
 #include <unordered_map>
 #include <vector>
@@ -98,7 +100,37 @@ public:
   /**
    * @brief Resets chess board to default starting piece positions.
    */
-  void setup_board_default();
+  void setup_default_board();
+
+  /**
+   * @brief Sets up the board with a custom configuration.
+   *
+   * @param board_configuration The custom board configuration.
+   *
+   * @details The board configuration is a string of 65 characters representing
+   * the board state. The first 64 characters represent the board state from
+   * A1 to H8. The last character represents the color to move. The characters
+   * are as follows:
+   *
+   * - K - White King
+   * - Q - White Queen
+   * - R - White Rook
+   * - B - White Bishop
+   * - N - White Knight
+   * - P - White Pawn
+   * - k - Black King
+   * - q - Black Queen
+   * - r - Black Rook
+   * - b - Black Bishop
+   * - n - Black Knight
+   * - p - Black Pawn
+   * - - - Empty Square
+   * - w - White to move
+   * - b - Black to move
+   *
+   * @return True if the given board configuration is valid, false otherwise.
+   */
+  auto setup_custom_board(std::string board_configuration) -> bool;
 
   /**
    * @brief Resets chess board to default starting piece positions.
@@ -174,20 +206,6 @@ public:
 
 private:
   // PROPERTIES
-
-  /// @brief PieceType to Char mapping for white pieces.
-  const std::unordered_map<PieceType, char> white_piece_to_char_map = {
-      {PieceType::EMPTY, '-'},  {PieceType::KING, 'K'},
-      {PieceType::QUEEN, 'Q'},  {PieceType::ROOK, 'R'},
-      {PieceType::BISHOP, 'B'}, {PieceType::KNIGHT, 'N'},
-      {PieceType::PAWN, 'P'}};
-
-  /// @brief PieceType to Char mapping for black pieces.
-  const std::unordered_map<PieceType, char> black_piece_to_char_map = {
-      {PieceType::EMPTY, '-'},  {PieceType::KING, 'k'},
-      {PieceType::QUEEN, 'q'},  {PieceType::ROOK, 'r'},
-      {PieceType::BISHOP, 'b'}, {PieceType::KNIGHT, 'n'},
-      {PieceType::PAWN, 'p'}};
 
   /// @brief Zobrist keys.
   std::array<std::array<std::array<size_t, NUM_OF_COLORS>, NUM_OF_PIECE_TYPES>,
