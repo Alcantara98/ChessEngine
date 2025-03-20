@@ -107,6 +107,26 @@ public:
    */
   auto engine_is_searching() -> bool;
 
+  /**
+   * @brief Checks if the current player is in checkmate.
+   *
+   * @note If the king is checked and all possible moves result in a checked
+   * king, it is a checkmate.
+   *
+   * @return True if the current player is in checkmate, false otherwise.
+   */
+  auto is_checkmate() -> bool;
+
+  /**
+   * @brief Checks if the current player is in stalemate.
+   *
+   * @note If the king is not checked and all possible moves result in a checked
+   * king, it is a stalemate.
+   *
+   * @return True if the current player is in stalemate, false otherwise.
+   */
+  auto is_stalemate() -> bool;
+
 private:
   // PROPERTIES
 

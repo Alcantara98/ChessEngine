@@ -64,6 +64,7 @@ const double MILLISECONDS_TO_SECONDS = 1000.0;
 const int MAX_SEARCH_DEPTH = 100;
 const int MAX_SEARCH_TIME = 600000;
 const int INF = std::numeric_limits<int>::max();
+const int INF_MINUS_1000 = INF - 1000;
 
 // PIECE VALUES
 const int PAWN_VALUE = 100;

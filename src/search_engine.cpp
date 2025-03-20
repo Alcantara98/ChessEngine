@@ -61,6 +61,59 @@ auto SearchEngine::engine_is_searching() -> bool
   return running_search_flag && !engine_is_pondering;
 }
 
+auto SearchEngine::is_checkmate() -> bool
+{
+  parts::PieceColor current_color = game_board_state.color_to_move;
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(game_board_state);
+
+  // King needs to be in check to be checkmate.
+  if (!game_board_state.king_is_checked(current_color))
+  {
+    return false;
+  }
+
+  // Check if all possible moves result in a checked king.
+  for (parts::Move move : possible_moves)
+  {
+    game_board_state.apply_move(move);
+    if (!game_board_state.king_is_checked(current_color))
+    {
+      game_board_state.undo_move();
+      return false;
+    }
+    game_board_state.undo_move();
+  }
+  return true;
+}
+
+auto SearchEngine::is_stalemate() -> bool
+{
+  parts::PieceColor current_color = game_board_state.color_to_move;
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(game_board_state);
+
+  // King cannot be in check to be a stalemate.
+  if (game_board_state.king_is_checked(current_color))
+  {
+    return false;
+  }
+
+  // If king is not in check, and all possible moves result in a checked king,
+  // it is a stalemate.
+  for (parts::Move move : possible_moves)
+  {
+    game_board_state.apply_move(move);
+    if (!game_board_state.king_is_checked(current_color))
+    {
+      game_board_state.undo_move();
+      return false;
+    }
+    game_board_state.undo_move();
+  }
+  return true;
+}
+
 // PRIVATE FUNCTIONS
 
 auto SearchEngine::search_and_execute_best_move() -> bool
@@ -82,11 +135,12 @@ auto SearchEngine::search_and_execute_best_move() -> bool
     printf("\n");
   }
 
-  // Check if move leaves king in check.
+  // A move cannot leave your king in check. Filter out moves that do.
   for (std::pair<Move, int> move_score : move_scores)
   {
     if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
+      // If not in check, apply move and return true.
       game_board_state.apply_move(move_score.first);
       previous_move_evals.push(move_score.second);
       printf("Engine's Move: %s\n",
@@ -95,6 +149,7 @@ auto SearchEngine::search_and_execute_best_move() -> bool
       return true;
     }
   }
+
   // No valid moves found.
   return false;
 }
@@ -256,10 +311,17 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
   int beta;
   int eval = last_move_eval();
 
+  // An eval of abs(INF) means a checkmate position has been found. At the
+  // leaf node, we minus the depth the checkmate was found from INF before
+  // returning it. So the eval of a chekmate line will be less than
+  // INF. Hence why we check using INF_MINUS_1000. Any eval greater than
+  // INF_MINUS_1000 is a checkmate line.
+
   // Try aspiration windows until a valid window is found.
   for (int window_increment : ASPIRATION_WINDOWS)
   {
-    if (std::abs(last_move_eval()) == INF)
+    // Last eval maybe a checkmate line.
+    if (std::abs(last_move_eval()) > INF_MINUS_1000)
     {
       alpha = -INF;
       beta = INF;
@@ -272,13 +334,6 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
 
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
-
-    // An eval of abs(INF) means a checkmate position has been found. At the
-    // leaf node, we minus the depth the checkmate was found from INF before
-    // returning it. So the eval of a chekmate line will be less than
-    // INF. Hence why we check using INF_MINUS_1000. Any eval greater than
-    // INF_MINUS_1000 is a checkmate line.
-    const int INF_MINUS_1000 = INF - 1000;
 
     // - Return eval if it is within the window.
     // - Return eval if search has stopped.
@@ -431,6 +486,16 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   }
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
                                      beta, best_move_index);
+
+  if (max_eval < INF_MINUS_1000)
+  {
+    // If the eval is a checkmate line, check if stalemate has occurred.
+    // If stalemate has occurred, return 0 since it would be a draw.
+    if (is_stalemate())
+    {
+      return 0;
+    }
+  }
   return max_eval;
 }
 

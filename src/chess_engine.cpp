@@ -92,6 +92,8 @@ void ChessEngine::engine_vs_player_state()
   set_up_engine();
 
   // Print initial board state.
+  printf("Player Color: %s\n",
+         player_color == parts::PieceColor::WHITE ? "White" : "Black");
   game_board_state.print_board(player_color);
 
   while (!exit_state)
@@ -116,17 +118,17 @@ void ChessEngine::engine_vs_player_state()
 
 void ChessEngine::check_and_handle_if_game_over()
 {
-  if (!game_over && is_checkmate())
+  if (!game_over && search_engine.is_stalemate())
+  {
+    printf("\nStalemate, It's a draw!\n");
+    game_over = true;
+  }
+  if (!game_over && search_engine.is_checkmate())
   {
     std::string winner =
         game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"
                                                                    : "White";
     printf("\nCheckmate, %s WINS!\n", winner.c_str());
-    game_over = true;
-  }
-  if (!game_over && is_stalemate())
-  {
-    printf("\nStalemate, It's a draw!\n");
     game_over = true;
   }
 }
@@ -289,7 +291,7 @@ void ChessEngine::handle_player_turn()
   std::string user_input;
   while (!exit_state)
   {
-    if (allow_pondering && !search_engine.engine_is_pondering)
+    if (allow_pondering && !search_engine.engine_is_pondering && !game_over)
     {
       // Start pondering if allowed during player's turn.
       search_engine.start_engine_pondering();
@@ -563,44 +565,6 @@ auto ChessEngine::getValidCharInput(const std::string &user_message,
     printf("Invalid input. Please try again\n");
   }
   return ' ';
-}
-
-auto ChessEngine::is_checkmate() -> bool
-{
-  parts::PieceColor current_color = game_board_state.color_to_move;
-  std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(game_board_state);
-
-  for (parts::Move move : possible_moves)
-  {
-    game_board_state.apply_move(move);
-    if (!game_board_state.king_is_checked(current_color))
-    {
-      game_board_state.undo_move();
-      return false;
-    }
-    game_board_state.undo_move();
-  }
-  return true;
-}
-
-auto ChessEngine::is_stalemate() -> bool
-{
-  parts::PieceColor current_color = game_board_state.color_to_move;
-  std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(game_board_state);
-
-  for (parts::Move move : possible_moves)
-  {
-    game_board_state.apply_move(move);
-    if (!game_board_state.king_is_checked(current_color))
-    {
-      game_board_state.undo_move();
-      return false;
-    }
-    game_board_state.undo_move();
-  }
-  return true;
 }
 
 void ChessEngine::print_applied_moves()

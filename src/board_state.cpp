@@ -139,13 +139,31 @@ auto BoardState::setup_custom_board(const std::string &board_configuration)
         break;
 
       case PieceType::ROOK:
+        if ((piece_color == PieceColor::WHITE && x_position == XA_FILE &&
+             y_position == Y1_RANK) ||
+            (piece_color == PieceColor::WHITE && x_position == XH_FILE &&
+             y_position == Y1_RANK) ||
+            (piece_color == PieceColor::BLACK && x_position == XA_FILE &&
+             y_position == Y8_RANK) ||
+            (piece_color == PieceColor::BLACK && x_position == XH_FILE &&
+             y_position == Y8_RANK))
+        {
+          has_moved = false;
+        }
         chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, false);
+            new Piece(piece_type, piece_color, has_moved);
         break;
 
       case PieceType::KING:
+        if ((piece_color == PieceColor::WHITE && x_position == XE_FILE &&
+             y_position == Y1_RANK) ||
+            (piece_color == PieceColor::BLACK && x_position == XE_FILE &&
+             y_position == Y8_RANK))
+        {
+          has_moved = false;
+        }
         chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, false);
+            new Piece(piece_type, piece_color, has_moved);
         break;
 
       case PieceType::EMPTY:
