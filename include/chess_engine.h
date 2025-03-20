@@ -91,6 +91,39 @@ private:
   void check_and_handle_if_game_over();
 
   /**
+   * @brief Setup the chess board.
+   *
+   * @details will ask the user if they want to setup a custom board or use the
+   * default board.
+   *
+   * @note If the user wants to setup a custom board, they will be asked to
+   * input a custom board configuration. This configuration is a string of 65
+   * characters representing the board state. The first 64 characters represent
+   * the board state from A1 to H8. The last character represents the color to
+   * move. The characters are as follows:
+   *
+   * - K - White King
+   * - Q - White Queen
+   * - R - White Rook
+   * - B - White Bishop
+   * - N - White Knight
+   * - P - White Pawn
+   * - k - Black King
+   * - q - Black Queen
+   * - r - Black Rook
+   * - b - Black Bishop
+   * - n - Black Knight
+   * - p - Black Pawn
+   * - - - Empty Square
+   * - w - White to move
+   * - b - Black to move
+   *
+   * The default chess board configuration would be given as:
+   * 'RNBQKBNRPPPPPPPP--------------------------------pppppppprnbqkbnrw'
+   */
+  void setup_chess_board();
+
+  /**
    * @brief Setup engine parameters.
    */
   void set_up_engine();
@@ -192,4 +225,4 @@ private:
 };
 } // namespace engine
 
-#endif
+#endif // CHESS_ENGINE

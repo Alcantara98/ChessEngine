@@ -156,6 +156,8 @@ const std::string ENGINE_VS_PLAYER_STATE = "Engine vs Player";
 
 // CHESS ENGINE CONSTANTS
 const int INPUT_DELAY_TIME = 100;
+const char WHITE_PIECE_CHAR = 'w';
+const char BLACK_PIECE_CHAR = 'b';
 
 // INTERFACE MESSAGES
 const std::string GAME_OVER_HELP_MESSAGE =

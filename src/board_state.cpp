@@ -93,7 +93,7 @@ void BoardState::setup_default_board()
   chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
 }
 
-auto BoardState::setup_custom_board(const std::string board_configuration)
+auto BoardState::setup_custom_board(const std::string &board_configuration)
     -> bool
 {
   std::regex board_config_pattern(R"([kqbnrpKQBNRP\-]{64}[wb]{1})");
@@ -109,13 +109,20 @@ auto BoardState::setup_custom_board(const std::string board_configuration)
     {
       char piece_char = board_configuration[board_configuration_index];
       PieceColor piece_color =
-          (islower(piece_char)) ? PieceColor::BLACK : PieceColor::WHITE;
+          (islower(piece_char) != 0) ? PieceColor::BLACK : PieceColor::WHITE;
       PieceType piece_type = CHAR_TO_PIECE_TYPE.at(std::tolower(piece_char));
+
+      // Clear old piece to avoid memory leaks. All empty squares point to the
+      // same Piece instance so no need to delete them.
+      if (chess_board[x_position][y_position] != &empty_piece)
+      {
+        delete chess_board[x_position][y_position];
+      }
 
       // Whether a piece has moved only matters for kings, rooks, and pawns.
       // For kings and Rooks, we just assume they have not moved yet wherever
       // they are. When possible moves are calculated, they have to be in their
-      // default starting positions for castling to be possible so it won't
+      // default starting positions for castling to be possible so this won't
       // cause any issues.
       bool has_moved = true;
       switch (piece_type)
@@ -154,8 +161,9 @@ auto BoardState::setup_custom_board(const std::string board_configuration)
     }
   }
 
-  color_to_move =
-      (board_configuration[64] == 'w') ? PieceColor::WHITE : PieceColor::BLACK;
+  color_to_move = (board_configuration.back() == parts::WHITE_PIECE_CHAR)
+                      ? PieceColor::WHITE
+                      : PieceColor::BLACK;
 
   return true;
 }

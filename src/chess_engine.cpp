@@ -70,6 +70,9 @@ void ChessEngine::main_menu_state()
 void ChessEngine::player_vs_player_state()
 {
   printf("\n~%s~\n\n -- Have Fun --\n", parts::PLAYER_VS_PLAYER_STATE.c_str());
+
+  setup_chess_board();
+
   while (!exit_state)
   {
     game_board_state.print_board(game_board_state.color_to_move);
@@ -85,6 +88,7 @@ void ChessEngine::engine_vs_player_state()
   printf("\n~%s~\n\n -- Good Luck! --\n",
          parts::ENGINE_VS_PLAYER_STATE.c_str());
 
+  setup_chess_board();
   set_up_engine();
 
   // Print initial board state.
@@ -127,6 +131,59 @@ void ChessEngine::check_and_handle_if_game_over()
   }
 }
 
+void ChessEngine::setup_chess_board()
+{
+  std::string user_message = "Would you like to setup a custom board?";
+  char custom_board_char = getValidCharInput(user_message, "yn");
+
+  if (custom_board_char == 'y')
+  {
+    while (!exit_state)
+    {
+      std::string board_configuration;
+      printf("Enter Custom Board Configuration: ");
+      std::cin >> board_configuration;
+
+      if (handle_general_commands(board_configuration))
+      {
+        continue;
+      }
+      if (handle_state_change_commands(board_configuration))
+      {
+        continue;
+      }
+      if (game_board_state.setup_custom_board(board_configuration))
+      {
+        break;
+      }
+
+      printf(
+          "Invalid Board Configuration\n\nConfiguration is a string of 65 "
+          "characters representing the board state.\nThe first 64 characters "
+          "represent the board state from A1 to H8.\nThe last character "
+          "represents the color to move.\nThe characters are as follows:\n\n"
+          " - R - White Rook\n"
+          " - N - White Knight\n"
+          " - B - White Bishop\n"
+          " - Q - White Queen\n"
+          " - K - White King\n"
+          " - P - White Pawn\n"
+          " - r - Black Rook\n"
+          " - n - Black Knight\n"
+          " - b - Black Bishop\n"
+          " - q - Black Queen\n"
+          " - k - Black King\n"
+          " - p - Black Pawn\n"
+          " - - - Empty Square\n"
+          " - w - White to move\n"
+          " - b - Black to move\n\n"
+          "Example (Default Chess Starting Configuration): "
+          "RNBQKBNRPPPPPPPP--------------------------------"
+          "pppppppprnbqkbnrw\n");
+    }
+  }
+}
+
 void ChessEngine::set_up_engine()
 {
   const std::string update_depth = "update-depth";
@@ -142,7 +199,7 @@ void ChessEngine::set_up_engine()
   const char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
-  if (user_color == 'w' &&
+  if (user_color == parts::WHITE_PIECE_CHAR &&
       game_board_state.color_to_move == parts::PieceColor::WHITE)
   {
     player_color = parts::PieceColor::WHITE;
@@ -414,8 +471,8 @@ auto ChessEngine::handle_general_commands(const std::string &user_input) -> bool
   if (user_input == "exit")
   {
     printf("\n -- Goodbye G! --\n\n");
-    // Stop engine from searching or pondering before exiting to prevent thread
-    // issues.
+    // Stop engine from searching or pondering before exiting to prevent
+    // thread issues.
     if (search_engine.engine_is_searching())
     {
       search_engine.stop_engine_turn();

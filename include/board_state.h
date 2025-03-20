@@ -130,7 +130,7 @@ public:
    *
    * @return True if the given board configuration is valid, false otherwise.
    */
-  auto setup_custom_board(std::string board_configuration) -> bool;
+  auto setup_custom_board(const std::string &board_configuration) -> bool;
 
   /**
    * @brief Resets chess board to default starting piece positions.
