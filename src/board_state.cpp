@@ -112,69 +112,9 @@ auto BoardState::setup_custom_board(const std::string &board_configuration)
           (islower(piece_char) != 0) ? PieceColor::BLACK : PieceColor::WHITE;
       PieceType piece_type = CHAR_TO_PIECE_TYPE.at(std::tolower(piece_char));
 
-      // Clear old piece to avoid memory leaks. All empty squares point to the
-      // same Piece instance so no need to delete them.
-      if (chess_board[x_position][y_position] != &empty_piece)
-      {
-        delete chess_board[x_position][y_position];
-      }
+      setup_custom_board_worker(piece_color, piece_type, x_position,
+                                y_position);
 
-      // Whether a piece has moved only matters for kings, rooks, and pawns.
-      // For kings and Rooks, we just assume they have not moved yet wherever
-      // they are. When possible moves are calculated, they have to be in their
-      // default starting positions for castling to be possible so this won't
-      // cause any issues.
-      bool has_moved = true;
-      switch (piece_type)
-      {
-      case PieceType::PAWN:
-        // If the pawn is at the starting position, assume it has not moved.
-        if ((piece_color == PieceColor::WHITE && y_position == Y2_RANK) ||
-            (piece_color == PieceColor::BLACK && y_position == Y7_RANK))
-        {
-          has_moved = false;
-        }
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, has_moved);
-        break;
-
-      case PieceType::ROOK:
-        if ((piece_color == PieceColor::WHITE && x_position == XA_FILE &&
-             y_position == Y1_RANK) ||
-            (piece_color == PieceColor::WHITE && x_position == XH_FILE &&
-             y_position == Y1_RANK) ||
-            (piece_color == PieceColor::BLACK && x_position == XA_FILE &&
-             y_position == Y8_RANK) ||
-            (piece_color == PieceColor::BLACK && x_position == XH_FILE &&
-             y_position == Y8_RANK))
-        {
-          has_moved = false;
-        }
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, has_moved);
-        break;
-
-      case PieceType::KING:
-        if ((piece_color == PieceColor::WHITE && x_position == XE_FILE &&
-             y_position == Y1_RANK) ||
-            (piece_color == PieceColor::BLACK && x_position == XE_FILE &&
-             y_position == Y8_RANK))
-        {
-          has_moved = false;
-        }
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, has_moved);
-        break;
-
-      case PieceType::EMPTY:
-        chess_board[x_position][y_position] = &empty_piece;
-        break;
-
-      default:
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, true);
-        break;
-      }
       ++board_configuration_index;
     }
   }
@@ -184,6 +124,76 @@ auto BoardState::setup_custom_board(const std::string &board_configuration)
                       : PieceColor::BLACK;
 
   return true;
+}
+
+void BoardState::setup_custom_board_worker(const PieceColor &piece_color,
+                                           const PieceType &piece_type,
+                                           const int &x_position,
+                                           const int &y_position)
+{
+  // Clear old piece to avoid memory leaks. All empty squares point to the
+  // same Piece instance so no need to delete them.
+  if (chess_board[x_position][y_position] != &empty_piece)
+  {
+    delete chess_board[x_position][y_position];
+  }
+
+  // Whether a piece has moved only matters for kings, rooks, and pawns.
+  // For kings and Rooks, we just assume they have not moved yet wherever
+  // they are. When possible moves are calculated, they have to be in their
+  // default starting positions for castling to be possible so this won't
+  // cause any issues.
+  bool has_moved = true;
+  switch (piece_type)
+  {
+  case PieceType::PAWN:
+    // If the pawn is at the starting position, assume it has not moved.
+    if ((piece_color == PieceColor::WHITE && y_position == Y2_RANK) ||
+        (piece_color == PieceColor::BLACK && y_position == Y7_RANK))
+    {
+      has_moved = false;
+    }
+    chess_board[x_position][y_position] =
+        new Piece(piece_type, piece_color, has_moved);
+    break;
+
+  case PieceType::ROOK:
+    if ((piece_color == PieceColor::WHITE && x_position == XA_FILE &&
+         y_position == Y1_RANK) ||
+        (piece_color == PieceColor::WHITE && x_position == XH_FILE &&
+         y_position == Y1_RANK) ||
+        (piece_color == PieceColor::BLACK && x_position == XA_FILE &&
+         y_position == Y8_RANK) ||
+        (piece_color == PieceColor::BLACK && x_position == XH_FILE &&
+         y_position == Y8_RANK))
+    {
+      has_moved = false;
+    }
+    chess_board[x_position][y_position] =
+        new Piece(piece_type, piece_color, has_moved);
+    break;
+
+  case PieceType::KING:
+    if ((piece_color == PieceColor::WHITE && x_position == XE_FILE &&
+         y_position == Y1_RANK) ||
+        (piece_color == PieceColor::BLACK && x_position == XE_FILE &&
+         y_position == Y8_RANK))
+    {
+      has_moved = false;
+    }
+    chess_board[x_position][y_position] =
+        new Piece(piece_type, piece_color, has_moved);
+    break;
+
+  case PieceType::EMPTY:
+    chess_board[x_position][y_position] = &empty_piece;
+    break;
+
+  default:
+    chess_board[x_position][y_position] =
+        new Piece(piece_type, piece_color, true);
+    break;
+  }
 }
 
 void BoardState::reset_board()

@@ -135,7 +135,8 @@ auto SearchEngine::search_and_execute_best_move() -> bool
     printf("\n");
   }
 
-  // A move cannot leave your king in check. Filter out moves that do.
+  // A move cannot leave your king in check. Filter out moves that do and apply
+  // the first move that does not.
   for (std::pair<Move, int> move_score : move_scores)
   {
     if (!game_board_state.move_leaves_king_in_check(move_score.first))

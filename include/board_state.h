@@ -136,6 +136,20 @@ public:
   auto setup_custom_board(const std::string &board_configuration) -> bool;
 
   /**
+   * @brief Worker function for setup_custom_board. Creates the pieces and
+   * places them on the board.
+   *
+   * @param piece_color The color of the piece to place.
+   * @param piece_type The type of the piece to place.
+   * @param x_position The x position of the piece to place.
+   * @param y_position The y position of the piece to place.
+   */
+  void setup_custom_board_worker(const PieceColor &piece_color,
+                                 const PieceType &piece_type,
+                                 const int &x_position,
+                                 const int &y_position);
+
+  /**
    * @brief Resets chess board to default starting piece positions.
    */
   void reset_board();
