@@ -99,7 +99,7 @@ const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {(PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, KING_VALUE * 3}};
+    {(PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, INF}};
 
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {

@@ -325,7 +325,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // sequence.
     // If eval is a checkmate line, just set alpha and beta to
     // infinity as all other windows would fail high or low.
-    if (std::abs(eval) > INF_MINUS_1000)
+    if (std::abs(eval) > INF_MINUS_1000 || window_increment == INF)
     {
       alpha = -INF;
       beta = INF;
