@@ -602,11 +602,11 @@ void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
   // or an advantage state have higher evals allowing the engine to follow the
   // sequence of moves that lead to a checkmate or an advantage.
   // See note in function declaration for more details.
-  if (eval > PAWN_VALUE)
+  if (eval > INF_MINUS_1000)
   {
     --eval;
   }
-  else if (eval < -PAWN_VALUE)
+  else if (eval < -INF_MINUS_1000)
   {
     ++eval;
   }
