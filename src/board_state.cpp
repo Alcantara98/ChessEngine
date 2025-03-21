@@ -626,6 +626,22 @@ void BoardState::manage_piece_counts_on_apply(Move &move)
     is_end_game_check();
     break;
   }
+
+  if (move.promotion_piece_type == PieceType::EMPTY)
+  {
+    return;
+  }
+
+  switch (move.promotion_piece_type)
+  {
+  case PieceType::QUEEN:
+    ++queens_on_board;
+    break;
+
+  default:
+    ++number_of_main_pieces_left;
+    break;
+  }
 }
 
 void BoardState::manage_piece_counts_on_undo(Move &move)
@@ -652,12 +668,28 @@ void BoardState::manage_piece_counts_on_undo(Move &move)
     }
     break;
   case PieceType::QUEEN:
-    queens_on_board++;
+    ++queens_on_board;
     is_end_game_check();
     break;
   default:
     ++number_of_main_pieces_left;
     is_end_game_check();
+    break;
+  }
+
+  if (move.promotion_piece_type == PieceType::EMPTY)
+  {
+    return;
+  }
+
+  switch (move.promotion_piece_type)
+  {
+  case PieceType::QUEEN:
+    --queens_on_board;
+    break;
+
+  default:
+    --number_of_main_pieces_left;
     break;
   }
 }
