@@ -164,10 +164,9 @@ void ChessEngine::setup_chess_board()
         break;
       }
 
-      printf(
-          "Invalid FEN Configuration\nPlease check out this page if you do "
-          "not know FEN:\n"
-          "https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation\n\n");
+      printf("Invalid FEN Configuration\nPlease check out this page if you do "
+             "not know FEN:\n"
+             "https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation\n\n");
     }
   }
 }
