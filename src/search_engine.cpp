@@ -598,10 +598,10 @@ void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
     }
   }
 
-  // Adjust eval accordingly so that boardstates taht are closer to a checkmate
-  // or an advantage state have higher evals allowing the engine to follow the
-  // sequence of moves that lead to a checkmate or an advantage.
-  // See note in function declaration for more details.
+  // Adjust checkmate evals accordingly so that boardstates that are closer to a
+  // checkmate state have higher evals allowing the engine to follow the
+  // sequence of moves that lead to a checkmate. See note in function
+  // declaration for more details.
   if (eval > INF_MINUS_1000)
   {
     --eval;

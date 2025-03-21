@@ -333,27 +333,23 @@ private:
   /**
    * @brief Handles necessary eval adjustments to prevent stalemates and loops.
    *
-   * @note If node is part of a checkmate/advantage sequence, we adjust the
+   * @note If node is part of a checkmate sequence, we adjust the
    * score by 1 so that the engine can follow the sequence that leads to a
    * checkmate or an advantage. This is needed otherwise all boardstates that
-   * are part of a checkmate or advantage sequence will save the same eval score
-   * in the transposition table. If that is the case, the engine may just go
-   * back and forth between two boardstates. By doing this adjustment, the
-   * closer the boardstate is to the checkmate or advantage state, the higher
-   * the evaluation.
+   * are part of a checkmate sequence will save the same eval score in the
+   * transposition table. If that is the case, the engine may just go back and
+   * forth between two boardstates. By doing this adjustment, the closer the
+   * boardstate is to the checkmate state, the higher the evaluation.
    *
-   * @note For a node to be part of an advantage sequence, its max_eval must be
-   * larger than 100 or less than -100 points. Pawns are worth 100 points, and
-   * is the minimum piece advantage a player can have. Any advantage
-   * points below 100 are generally positional advantages which can be too
-   * small, and adjustments may bring them to 0.
+   * @note For a node to be part of an checkmate sequence, its max_eval must be
+   * larger than INF_MINUS_1000 or less than -INF_MINUS_1000 points.
    *
    * @note An eval of less than -INF_MINUS_1000 indicates that every move by the
    * current player eventually leads to the capture of their king. This
    * situation represents a terminal position, caused by either checkmate or
    * stalemate. Performing explicit checks for checkmate/stalemate during the
    * negamax search would be too costly, so the engine relies on detecting king
-   * capture first, and then checks for checkmate/stalemate here.
+   * capture first, and then checks for checkmate/stalemate in this function.
    */
   static void handle_eval_adjustments(int &eval, BoardState &board_state);
 
