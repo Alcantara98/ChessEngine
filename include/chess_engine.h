@@ -3,6 +3,7 @@
 
 #include "board_state.h"
 #include "cross_plat_functions.h"
+#include "fen_interface.h"
 #include "move_interface.h"
 #include "search_engine.h"
 

@@ -103,53 +103,6 @@ public:
   void setup_default_board();
 
   /**
-   * @brief Sets up the board with a custom configuration.
-   *
-   * @param board_configuration The custom board configuration.
-   *
-   * @details The board configuration is a string of 65 characters representing
-   * the board state. The first 64 characters represent the board state from
-   * A1 to H8. The last character represents the color to move. The characters
-   * are as follows:
-   *
-   * - K - White King
-   * - Q - White Queen
-   * - R - White Rook
-   * - B - White Bishop
-   * - N - White Knight
-   * - P - White Pawn
-   * - k - Black King
-   * - q - Black Queen
-   * - r - Black Rook
-   * - b - Black Bishop
-   * - n - Black Knight
-   * - p - Black Pawn
-   * - - - Empty Square
-   * - w - White to move
-   * - b - Black to move
-   *
-   * The default chess board configuration would be given as:
-   * 'RNBQKBNRPPPPPPPP--------------------------------pppppppprnbqkbnrw'
-   *
-   * @return True if the given board configuration is valid, false otherwise.
-   */
-  auto setup_custom_board(const std::string &board_configuration) -> bool;
-
-  /**
-   * @brief Worker function for setup_custom_board. Creates the pieces and
-   * places them on the board.
-   *
-   * @param piece_color The color of the piece to place.
-   * @param piece_type The type of the piece to place.
-   * @param x_position The x position of the piece to place.
-   * @param y_position The y position of the piece to place.
-   */
-  void setup_custom_board_worker(const PieceColor &piece_color,
-                                 const PieceType &piece_type,
-                                 const int &x_position,
-                                 const int &y_position);
-
-  /**
    * @brief Resets chess board to default starting piece positions.
    */
   void reset_board();
@@ -220,6 +173,11 @@ public:
    * @return The Zobrist hash value.
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
+
+  /**
+   * @brief Makes all squares empty.
+   */
+  void make_all_squares_empty();
 
 private:
   // PROPERTIES

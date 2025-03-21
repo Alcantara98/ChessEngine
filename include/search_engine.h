@@ -50,9 +50,6 @@ public:
   /// @brief Flag to run search with null move pruning.
   bool engine_is_pondering = false;
 
-  /// @brief Transposition Table object.
-  TranspositionTable transposition_table;
-
   // CONSTRUCTORS
   /**
    * @brief Default Constructor - takes a chess board state.
@@ -131,6 +128,11 @@ public:
    */
   static auto is_stalemate(BoardState &board_state) -> bool;
 
+  /**
+   * @brief Clears the transposition table.
+   */
+  void clear_transposition_table();
+
 private:
   // PROPERTIES
 
@@ -157,9 +159,14 @@ private:
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<bool> running_search_flag = false;
 
+  /// @brief Transposition Table object.
+  TranspositionTable transposition_table;
+
+  /// @brief Runs and handles the search thread.
   ThreadHandler search_thread_handler = ThreadHandler(
       running_search_flag, [this]() { this->search_and_execute_best_move(); });
 
+  /// @brief Runs and handles the pondering thread.
   ThreadHandler ponder_thread_handler =
       ThreadHandler(running_search_flag,
                     [this]() { this->start_iterative_search_pondering(); });
@@ -252,6 +259,20 @@ private:
                                  bool is_null_move_line) -> int;
 
   /**
+   * @brief Handles the leaf node of the search tree.
+   *
+   * @note Handles the evaluation of the leaf node of the search tree. This is
+   * where the search tree ends and the evaluation of the board state is
+   * performed.
+   *
+   * @param board_state BoardState object to search.
+   * @param eval Evaluation score to be updated.
+   *
+   * @return Evaluation score of the leaf node.
+   */
+  auto evaluate_leaf_node(BoardState &board_state, int &eval) -> int;
+
+  /**
    * @brief Sorts the moves based on their scores.
    *
    * @param move_scores Vector of moves and their scores.
@@ -300,18 +321,32 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score to be updated.
+   *
+   * @return True if eval failed high.
    */
-  void do_null_move_search(
-      BoardState &board_state, int &alpha, int &beta, int &depth, int &eval);
+  auto do_null_move_search(BoardState &board_state,
+                           int &alpha,
+                           int &beta,
+                           int &depth,
+                           int &eval) -> bool;
 
   /**
-   * @brief If the score exceeds INF_MINUS_1000 or is less than -INF_MINUS_1000,
-   * it indicates a checkmate sequence. This function will handle necessary
-   * checks and adjustments required for checkmate evals.
+   * @brief Handles necessary eval adjustments to prevent stalemates and loops.
    *
-   * @note If node is part of a checkmate sequence, We adjust the score by 1 to
-   * favor shorter mate sequences. Longer checkmate sequences receive a larger
-   * adjustment, lowering their evaluation relative to the winning side.
+   * @note If node is part of a checkmate/advantage sequence, we adjust the
+   * score by 1 so that the engine can follow the sequence that leads to a
+   * checkmate or an advantage. This is needed otherwise all boardstates that
+   * are part of a checkmate or advantage sequence will save the same eval score
+   * in the transposition table. If that is the case, the engine may just go
+   * back and forth between two boardstates. By doing this adjustment, the
+   * closer the boardstate is to the checkmate or advantage state, the higher
+   * the evaluation.
+   *
+   * @note For a node to be part of an advantage sequence, its max_eval must be
+   * larger than 100 or less than -100 points. Pawns are worth 100 points, and
+   * is the minimum piece advantage a player can have. Any advantage
+   * points below 100 are generally positional advantages which can be too
+   * small, and adjustments may bring them to 0.
    *
    * @note An eval of less than -INF_MINUS_1000 indicates that every move by the
    * current player eventually leads to the capture of their king. This
@@ -320,7 +355,7 @@ private:
    * negamax search would be too costly, so the engine relies on detecting king
    * capture first, and then checks for checkmate/stalemate here.
    */
-  static void handle_checkmate_eval(int &eval, BoardState &board_state);
+  static void handle_eval_adjustments(int &eval, BoardState &board_state);
 
   /**
    * @brief Stores the state in the transposition table.

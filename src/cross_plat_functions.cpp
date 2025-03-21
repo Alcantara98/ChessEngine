@@ -1,5 +1,7 @@
 #include "cross_plat_functions.h"
 
+namespace engine
+{
 auto inputAvailable() -> bool
 {
 #ifdef _WIN32
@@ -20,3 +22,4 @@ auto inputAvailable() -> bool
   return select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &timeout) > 0;
 #endif
 }
+} // namespace engine

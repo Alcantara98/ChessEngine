@@ -114,6 +114,8 @@ auto SearchEngine::is_stalemate(BoardState &board_state) -> bool
   return true;
 }
 
+void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
+
 // PRIVATE FUNCTIONS
 
 auto SearchEngine::search_and_execute_best_move() -> bool
@@ -334,6 +336,8 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       alpha = eval - window_increment;
     }
 
+    // Swap and negate alpha and beta and negate the eval because of the negamax
+    // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
 
@@ -365,6 +369,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
+  // CHECKMATE DETECTION
+
   // If the king is no longer in the board, checkmate has occurred.
   // Return -INF evaluation for the side that has lost its king.
   if ((board_state.color_to_move == PieceColor::WHITE &&
@@ -374,6 +380,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   {
     return -INF;
   }
+
+  // TRANSPOSITION TABLE LOOKUP
 
   // Save original alpha value to deterime the eval flag for transposition
   // table.
@@ -427,25 +435,15 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     }
   }
 
-  // Evaluate leaf nodes.
+  // HANDLE LEAF NODE
+
   if (depth <= 0)
   {
-    // Increment leaf nodes visited.
-    leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
-    eval = engine::parts::position_evaluator::evaluate_position(board_state);
-
-    // The evaluator returns evaluations where positive eval is good for white
-    // and negative eval is good for black. Since negamax nodes are always
-    // maximizing nodes, we need to negate the evalualtion for black.
-    if (board_state.color_to_move == PieceColor::BLACK)
-    {
-      return -eval;
-    }
-    return eval;
+    return evaluate_leaf_node(board_state, eval);
   }
 
-  // Try a null move.
+  // NULL MOVE PRUNING HEURISTIC
+
   // We curently only allow one null move per search line, and only when
   // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will make
   // the search too shallow and return BS evals.
@@ -453,19 +451,21 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game)
   {
-    do_null_move_search(board_state, alpha, beta, depth, eval);
-    // If a null move (which is theoretically a losing move) is greater than
-    // beta, then return null move eval.
-    if (eval >= beta)
+
+    if (do_null_move_search(board_state, alpha, beta, depth, eval))
     {
+      // If we played a null move (which is theoretically a losing move) and get
+      // an eval still greater than beta, then there is no need to search
+      // further. If we play an actual move, our eval will most likely be
+      // higher and we'd fail high (eval >= beta).
       return eval;
     }
   }
 
+  // NEGAMAX SEARCH
+
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(board_state);
-  int max_eval = -INF;
-  int best_move_index = 0;
 
   // If there is a best move from the transposition table, move it to the
   // front to be searched first, causing more alpha beta pruning to occur.
@@ -474,6 +474,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   {
     std::swap(possible_moves[0], possible_moves[tt_entry_best_move_index]);
   }
+
+  int max_eval = -INF;
+  int best_move_index = 0;
 
   // Search and evaluate each move.
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
@@ -488,13 +491,40 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     return 0;
   }
 
-  // Handle checkmate evals before saving to transposition table as eval may get
-  // modified.
-  handle_checkmate_eval(max_eval, board_state);
+  // AFTER SEARCH PROCEDURE
+
+  // Handle checkmate/advantage evals and correct stalemate evals before saving
+  // the state into the transposition table.
+  handle_eval_adjustments(max_eval, board_state);
 
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
                                      beta, best_move_index);
   return max_eval;
+}
+
+auto SearchEngine::evaluate_leaf_node(BoardState &board_state, int &eval) -> int
+{
+  // Increment leaf nodes visited.
+  leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+  eval = engine::parts::position_evaluator::evaluate_position(board_state);
+
+  // If eval is greater than the value of a pawn, add the depth to the eval
+  // since we will be decreasing the eval by 1 for each ply as we return.
+  // This ensures the engine will follow the sequence of moves that leads to
+  // an advantage.
+  if (eval > PAWN_VALUE)
+  {
+    eval += max_iterative_search_depth;
+  }
+  // The evaluator returns evaluations where positive eval is good for white
+  // and negative eval is good for black. Since negamax nodes are always
+  // maximizing nodes, we need to negate the evalualtion for black.
+  if (board_state.color_to_move == PieceColor::BLACK)
+  {
+    return -eval;
+  }
+  return eval;
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -518,8 +548,9 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     board_state.apply_move(possible_moves[move_index]);
-    // We only want to know if there is an eval greater than beta, hence make
-    // the search window tight.
+
+    // Swap and negate alpha and beta and negate the eval because of the negamax
+    // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       is_null_move_line);
     if (eval > max_eval)
@@ -537,16 +568,24 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
   }
 }
 
-void SearchEngine::do_null_move_search(
-    BoardState &board_state, int &alpha, int &beta, int &depth, int &eval)
+auto SearchEngine::do_null_move_search(BoardState &board_state,
+                                       int &alpha,
+                                       int &beta,
+                                       int &depth,
+                                       int &eval) -> bool
 {
   board_state.apply_null_move();
+
+  // Swap and negate alpha and beta and negate the eval because of the negamax
+  // algorithm.
   eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
                                     depth - NULL_MOVE_REDUCTION, true);
   board_state.undo_null_move();
+
+  return eval >= beta;
 }
 
-void SearchEngine::handle_checkmate_eval(int &eval, BoardState &board_state)
+void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
 {
   // Check if stalemate. If stalemate, eval is 0 as it would be a draw.
   // Read note in function declaration for more details.
@@ -559,16 +598,15 @@ void SearchEngine::handle_checkmate_eval(int &eval, BoardState &board_state)
     }
   }
 
-  // If this is reached, the eval is part of a checkmate sequence, not a
-  // stalemate.
-  // Adjust eval accordingly to favour shorter mate
-  // sequences.
-  // Read note in function declaration for more details.
-  if (eval > INF_MINUS_1000)
+  // Adjust eval accordingly so that boardstates taht are closer to a checkmate
+  // or an advantage state have higher evals allowing the engine to follow the
+  // sequence of moves that lead to a checkmate or an advantage.
+  // See note in function declaration for more details.
+  if (eval > PAWN_VALUE)
   {
     --eval;
   }
-  else if (eval < -INF_MINUS_1000)
+  else if (eval < -PAWN_VALUE)
   {
     ++eval;
   }
