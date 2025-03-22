@@ -18,24 +18,42 @@ namespace engine::parts::fen_interface
  * @details The board configuration is represented using Forsyth-Edwards
  * Notation (FEN). The FEN string consists of six fields separated by spaces:
  *
- * 1. Piece placement (from White's perspective). Each rank is described,
+ * Field 1. Piece placement (from White's perspective). Each rank is described,
  * starting with rank 8 and ending with rank 1. Within each rank, the contents
- * of each square are described from file 'a' to file 'h'.
+ * of each square are described from file 'a' to file 'h'. Each rank is
+ * separated by a '/'.
  *
- * 2. Active color. 'w' means White to move, 'b' means Black to move.
+ * The piece characters are:
+ * K = White King
+ * Q = White Queen
+ * R = White Rook
+ * B = White Bishop
+ * N = White Knight
+ * P = White Pawn
+ * k = Black King
+ * q = Black Queen
+ * r = Black Rook
+ * b = Black Bishop
+ * n = Black Knight
+ * p = Black Pawn
  *
- * 3. Castling availability. If neither side can castle, this is "-".
+ * For Empty Squares, a number 1-8 is used to represent the number of
+ * consecutive empty squares.
+ *
+ * Field 2. Active color. 'w' means White to move, 'b' means Black to move.
+ *
+ * Field 3. Castling availability. If neither side can castle, this is "-".
  * Otherwise, this has one or more letters: 'K' (White can castle kingside),
  *    'Q' (White can castle queenside), 'k' (Black can castle kingside),
  * and/or 'q' (Black can castle queenside).
  *
- * 4. En passant target square in algebraic notation. If there's no en passant
- * target square, this is "-".
+ * Field 4. En passant target square in algebraic notation. If there's no en
+ * passant target square, this is "-".
  *
- * 5. Halfmove clock. This is the number of halfmoves since the last pawn
+ * Field 5. Halfmove clock. This is the number of halfmoves since the last pawn
  * advance or capture.
  *
- * 6. Fullmove number. The number of the full move. It starts at 1 and is
+ * Field 6. Fullmove number. The number of the full move. It starts at 1 and is
  * incremented after Black's move.
  *
  * The default chess board configuration in FEN would be given as:
