@@ -167,9 +167,9 @@ private:
       running_search_flag, [this]() { this->search_and_execute_best_move(); });
 
   /// @brief Runs and handles the pondering thread.
-  ThreadHandler ponder_thread_handler =
-      ThreadHandler(running_search_flag,
-                    [this]() { this->start_iterative_search_pondering(); });
+  ThreadHandler ponder_thread_handler = ThreadHandler(
+      running_search_flag,
+      [this]() { this->run_iterative_deepening_search_pondering(); });
 
   // FUNCTIONS
 
@@ -196,7 +196,7 @@ private:
    * @param move_scores Vector of moves and their scores. The evaluation of each
    * move and the move will be stored in this vector by this function.
    */
-  void start_iterative_search_evaluation(
+  void run_iterative_deepening_search_evaluation(
       std::vector<std::pair<Move, int>> &move_scores);
 
   /**
@@ -207,7 +207,7 @@ private:
    * @details Will use iterative deepening search, but we do not care about the
    * results. We just want the search to fill out the transposition table.
    */
-  void start_iterative_search_pondering();
+  void run_iterative_deepening_search_pondering();
 
   /**
    * @brief Encapsulates the iterative deepening search for each move to apply

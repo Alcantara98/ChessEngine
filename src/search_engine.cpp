@@ -122,7 +122,7 @@ auto SearchEngine::search_and_execute_best_move() -> bool
 {
   running_search_flag = true;
   std::vector<std::pair<Move, int>> move_scores;
-  start_iterative_search_evaluation(move_scores);
+  run_iterative_deepening_search_evaluation(move_scores);
   sort_moves(move_scores);
 
   if (show_move_evaluations)
@@ -157,7 +157,7 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   return false;
 }
 
-void SearchEngine::start_iterative_search_evaluation(
+void SearchEngine::run_iterative_deepening_search_evaluation(
     std::vector<std::pair<Move, int>> &move_scores)
 {
   std::vector<Move> possible_moves =
@@ -241,7 +241,7 @@ void SearchEngine::start_iterative_search_evaluation(
   }
 }
 
-void SearchEngine::start_iterative_search_pondering()
+void SearchEngine::run_iterative_deepening_search_pondering()
 {
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
