@@ -374,17 +374,17 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // If the king is no longer in the board, checkmate has occurred.
   // Return -INF evaluation for the side that has lost its king.
   if ((board_state.color_to_move == PieceColor::WHITE &&
-       !board_state.white_king_on_board) ||
+       !board_state.white_king_is_alive) ||
       (board_state.color_to_move == PieceColor::BLACK &&
-       !board_state.black_king_on_board))
+       !board_state.black_king_is_alive))
   {
     return -INF;
   }
 
   // TRANSPOSITION TABLE LOOKUP
 
-  // Save original alpha value to deterime the eval flag for transposition
-  // table.
+  // Save the initial alpha value to later determine the correct evaluation
+  // flag when we save the state in the transposition table.
   int original_alpha = alpha;
 
   // These values will be updated by the retrieve function of the transposition
@@ -404,7 +404,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     // Check if tt_value can be used.
     // If the depth of the stored position is greater than or equal to the
     // current depth, then the stored value is reliable. The higher the stored
-    // depth, the deeper this node has been searched.
+    // depth, the deeper the node has been searched.
     if (depth <= tt_entry_search_depth)
     {
       switch (tt_flag)
@@ -437,6 +437,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // HANDLE LEAF NODE
 
+  // There is a scnario where the depth is less than 0. This can happen if the
+  // null move heuristic is used when the depth is 1. Null move calls negamax
+  // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
     return evaluate_leaf_node(board_state, eval);
@@ -493,7 +496,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // AFTER SEARCH PROCEDURE
 
-  // Handle checkmate/advantage evals and correct stalemate evals before saving
+  // Handle checkmate evals and correct stalemate evals before saving
   // the state into the transposition table.
   handle_eval_adjustments(max_eval, board_state);
 
@@ -507,16 +510,10 @@ auto SearchEngine::evaluate_leaf_node(BoardState &board_state, int &eval) -> int
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
+  /// @todo Implement quiescence search.
+
   eval = engine::parts::position_evaluator::evaluate_position(board_state);
 
-  // If eval is greater than the value of a pawn, add the depth to the eval
-  // since we will be decreasing the eval by 1 for each ply as we return.
-  // This ensures the engine will follow the sequence of moves that leads to
-  // an advantage.
-  if (eval > PAWN_VALUE)
-  {
-    eval += max_iterative_search_depth;
-  }
   // The evaluator returns evaluations where positive eval is good for white
   // and negative eval is good for black. Since negamax nodes are always
   // maximizing nodes, we need to negate the evalualtion for black.
@@ -558,9 +555,11 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       max_eval = eval;
       best_move_index = move_index;
     }
-    max_eval = std::max(max_eval, eval);
+    max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
+
     board_state.undo_move();
+
     if (alpha >= beta)
     {
       break;

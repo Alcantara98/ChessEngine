@@ -41,10 +41,10 @@ public:
   // EVALUATION HELPER PROPERTIES
 
   /// @brief Flag to check if the white king is on the board.
-  bool white_king_on_board = true;
+  bool white_king_is_alive = true;
 
   /// @brief Flag to check if the black king is on the board.
-  bool black_king_on_board = true;
+  bool black_king_is_alive = true;
 
   /// @brief Number of queens on the board.
   int queens_on_board = START_QUEENS_COUNT;
