@@ -41,10 +41,10 @@ public:
   // EVALUATION HELPER PROPERTIES
 
   /// @brief Flag to check if the white king is on the board.
-  bool white_king_on_board = true;
+  bool white_king_is_alive = true;
 
   /// @brief Flag to check if the black king is on the board.
-  bool black_king_on_board = true;
+  bool black_king_is_alive = true;
 
   /// @brief Number of queens on the board.
   int queens_on_board = START_QUEENS_COUNT;
@@ -101,39 +101,6 @@ public:
    * @brief Resets chess board to default starting piece positions.
    */
   void setup_default_board();
-
-  /**
-   * @brief Sets up the board with a custom configuration.
-   *
-   * @param board_configuration The custom board configuration.
-   *
-   * @details The board configuration is a string of 65 characters representing
-   * the board state. The first 64 characters represent the board state from
-   * A1 to H8. The last character represents the color to move. The characters
-   * are as follows:
-   *
-   * - K - White King
-   * - Q - White Queen
-   * - R - White Rook
-   * - B - White Bishop
-   * - N - White Knight
-   * - P - White Pawn
-   * - k - Black King
-   * - q - Black Queen
-   * - r - Black Rook
-   * - b - Black Bishop
-   * - n - Black Knight
-   * - p - Black Pawn
-   * - - - Empty Square
-   * - w - White to move
-   * - b - Black to move
-   *
-   * The default chess board configuration would be given as:
-   * 'RNBQKBNRPPPPPPPP--------------------------------pppppppprnbqkbnrw'
-   *
-   * @return True if the given board configuration is valid, false otherwise.
-   */
-  auto setup_custom_board(const std::string &board_configuration) -> bool;
 
   /**
    * @brief Resets chess board to default starting piece positions.
@@ -206,6 +173,11 @@ public:
    * @return The Zobrist hash value.
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
+
+  /**
+   * @brief Makes all squares empty.
+   */
+  void make_all_squares_empty();
 
 private:
   // PROPERTIES

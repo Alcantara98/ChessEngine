@@ -8,6 +8,8 @@
 #include <unistd.h>
 #endif
 
+namespace engine
+{
 /**
  * @brief Checks if input is available.
  *
@@ -16,3 +18,4 @@
  * @return True if input is available, false otherwise.
  */
 auto inputAvailable() -> bool;
+} // namespace engine

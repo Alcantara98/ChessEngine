@@ -92,6 +92,8 @@ void ChessEngine::engine_vs_player_state()
   set_up_engine();
 
   // Print initial board state.
+  printf("Player Color: %s\n",
+         player_color == parts::PieceColor::WHITE ? "White" : "Black");
   game_board_state.print_board(player_color);
 
   while (!exit_state)
@@ -116,17 +118,17 @@ void ChessEngine::engine_vs_player_state()
 
 void ChessEngine::check_and_handle_if_game_over()
 {
-  if (!game_over && is_checkmate())
+  if (!game_over && engine::parts::SearchEngine::is_stalemate(game_board_state))
+  {
+    printf("\nStalemate, It's a draw!\n");
+    game_over = true;
+  }
+  if (!game_over && engine::parts::SearchEngine::is_checkmate(game_board_state))
   {
     std::string winner =
         game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"
                                                                    : "White";
     printf("\nCheckmate, %s WINS!\n", winner.c_str());
-    game_over = true;
-  }
-  if (!game_over && is_stalemate())
-  {
-    printf("\nStalemate, It's a draw!\n");
     game_over = true;
   }
 }
@@ -140,46 +142,31 @@ void ChessEngine::setup_chess_board()
   {
     while (!exit_state)
     {
-      std::string board_configuration;
-      printf("Enter Custom Board Configuration: ");
-      std::cin >> board_configuration;
+      std::string user_input;
 
-      if (handle_general_commands(board_configuration))
+      // Clear the input buffer before using getline to avoid skipping input.
+      std::cin.ignore(parts::INF, '\n');
+
+      printf("Enter FEN Configuration: ");
+      std::getline(std::cin, user_input);
+
+      if (handle_general_commands(user_input))
       {
         continue;
       }
-      if (handle_state_change_commands(board_configuration))
+      if (handle_state_change_commands(user_input))
       {
         continue;
       }
-      if (game_board_state.setup_custom_board(board_configuration))
+      if (parts::fen_interface::setup_custom_board(game_board_state,
+                                                   user_input))
       {
         break;
       }
 
-      printf(
-          "Invalid Board Configuration\n\nConfiguration is a string of 65 "
-          "characters representing the board state.\nThe first 64 characters "
-          "represent the board state from A1 to H8.\nThe last character "
-          "represents the color to move.\nThe characters are as follows:\n\n"
-          " - R - White Rook\n"
-          " - N - White Knight\n"
-          " - B - White Bishop\n"
-          " - Q - White Queen\n"
-          " - K - White King\n"
-          " - P - White Pawn\n"
-          " - r - Black Rook\n"
-          " - n - Black Knight\n"
-          " - b - Black Bishop\n"
-          " - q - Black Queen\n"
-          " - k - Black King\n"
-          " - p - Black Pawn\n"
-          " - - - Empty Square\n"
-          " - w - White to move\n"
-          " - b - Black to move\n\n"
-          "Example (Default Chess Starting Configuration): "
-          "RNBQKBNRPPPPPPPP--------------------------------"
-          "pppppppprnbqkbnrw\n");
+      printf("Invalid FEN Configuration\nPlease check out this page if you do "
+             "not know FEN:\n"
+             "https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation\n\n");
     }
   }
 }
@@ -199,8 +186,7 @@ void ChessEngine::set_up_engine()
   const char user_color = getValidCharInput(user_message, "wb");
 
   // Set player and engine colors.
-  if (user_color == parts::WHITE_PIECE_CHAR &&
-      game_board_state.color_to_move == parts::PieceColor::WHITE)
+  if (user_color == parts::WHITE_PIECE_CHAR)
   {
     player_color = parts::PieceColor::WHITE;
     search_engine.engine_color = parts::PieceColor::BLACK;
@@ -290,7 +276,7 @@ void ChessEngine::handle_player_turn()
   std::string user_input;
   while (!exit_state)
   {
-    if (allow_pondering && !search_engine.engine_is_pondering)
+    if (allow_pondering && !search_engine.engine_is_pondering && !game_over)
     {
       // Start pondering if allowed during player's turn.
       search_engine.start_engine_pondering();
@@ -440,7 +426,7 @@ auto ChessEngine::handle_board_undo_reset_commands(
   else if (user_input == "redo" &&
            current_state == &ChessEngine::engine_vs_player_state)
   {
-    search_engine.transposition_table.clear();
+    search_engine.clear_transposition_table();
     game_board_state.undo_move();
     search_engine.pop_last_move_eval();
     if (game_board_state.color_to_move == player_color)
@@ -564,44 +550,6 @@ auto ChessEngine::getValidCharInput(const std::string &user_message,
     printf("Invalid input. Please try again\n");
   }
   return ' ';
-}
-
-auto ChessEngine::is_checkmate() -> bool
-{
-  parts::PieceColor current_color = game_board_state.color_to_move;
-  std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(game_board_state);
-
-  for (parts::Move move : possible_moves)
-  {
-    game_board_state.apply_move(move);
-    if (!game_board_state.king_is_checked(current_color))
-    {
-      game_board_state.undo_move();
-      return false;
-    }
-    game_board_state.undo_move();
-  }
-  return true;
-}
-
-auto ChessEngine::is_stalemate() -> bool
-{
-  parts::PieceColor current_color = game_board_state.color_to_move;
-  std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(game_board_state);
-
-  for (parts::Move move : possible_moves)
-  {
-    game_board_state.apply_move(move);
-    if (!game_board_state.king_is_checked(current_color))
-    {
-      game_board_state.undo_move();
-      return false;
-    }
-    game_board_state.undo_move();
-  }
-  return true;
 }
 
 void ChessEngine::print_applied_moves()

@@ -305,7 +305,7 @@ auto can_castle(BoardState &board_state,
                 const std::vector<int> &castle_path) -> bool
 {
   // Check if the piece is a rook and has not moved.
-  if (potential_rook_piece->piece_type != PieceType::ROOK &&
+  if (potential_rook_piece->piece_type != PieceType::ROOK ||
       potential_rook_piece->piece_has_moved)
   {
     return false;

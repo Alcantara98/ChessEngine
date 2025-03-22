@@ -61,13 +61,68 @@ auto SearchEngine::engine_is_searching() -> bool
   return running_search_flag && !engine_is_pondering;
 }
 
+auto SearchEngine::is_checkmate(BoardState &board_state) -> bool
+{
+  parts::PieceColor current_color = board_state.color_to_move;
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(board_state);
+
+  // King needs to be in check to be checkmate.
+  if (!board_state.king_is_checked(current_color))
+  {
+    return false;
+  }
+
+  // Check if all possible moves result in a checked king.
+  for (parts::Move move : possible_moves)
+  {
+    board_state.apply_move(move);
+    if (!board_state.king_is_checked(current_color))
+    {
+      board_state.undo_move();
+      return false;
+    }
+    board_state.undo_move();
+  }
+  return true;
+}
+
+auto SearchEngine::is_stalemate(BoardState &board_state) -> bool
+{
+  parts::PieceColor current_color = board_state.color_to_move;
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(board_state);
+
+  // King cannot be in check to be a stalemate.
+  if (board_state.king_is_checked(current_color))
+  {
+    return false;
+  }
+
+  // If king is not in check, and all possible moves result in a checked king,
+  // it is a stalemate.
+  for (parts::Move move : possible_moves)
+  {
+    board_state.apply_move(move);
+    if (!board_state.king_is_checked(current_color))
+    {
+      board_state.undo_move();
+      return false;
+    }
+    board_state.undo_move();
+  }
+  return true;
+}
+
+void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
+
 // PRIVATE FUNCTIONS
 
 auto SearchEngine::search_and_execute_best_move() -> bool
 {
   running_search_flag = true;
   std::vector<std::pair<Move, int>> move_scores;
-  start_iterative_search_evaluation(move_scores);
+  run_iterative_deepening_search_evaluation(move_scores);
   sort_moves(move_scores);
 
   if (show_move_evaluations)
@@ -82,11 +137,13 @@ auto SearchEngine::search_and_execute_best_move() -> bool
     printf("\n");
   }
 
-  // Check if move leaves king in check.
+  // A move cannot leave your king in check. Filter out moves that do and apply
+  // the first move that does not.
   for (std::pair<Move, int> move_score : move_scores)
   {
     if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
+      // If not in check, apply move and return true.
       game_board_state.apply_move(move_score.first);
       previous_move_evals.push(move_score.second);
       printf("Engine's Move: %s\n",
@@ -95,11 +152,12 @@ auto SearchEngine::search_and_execute_best_move() -> bool
       return true;
     }
   }
+
   // No valid moves found.
   return false;
 }
 
-void SearchEngine::start_iterative_search_evaluation(
+void SearchEngine::run_iterative_deepening_search_evaluation(
     std::vector<std::pair<Move, int>> &move_scores)
 {
   std::vector<Move> possible_moves =
@@ -121,16 +179,18 @@ void SearchEngine::start_iterative_search_evaluation(
     // Search each move in a separate thread.
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
     {
-      // Calculate possible moves again for each thread.
-      // NOTE: This is because moves contain references to pieces from the
-      // board state. If game_board_state moves are used, threads will modify
-      // its pieces, causing issues (piece_has_moved_flag for example may become
-      // true, and if it is a pawn, it can no longer move 2 squares forward).
+      // Recalculate possible moves for each thread.
+      // NOTE: Move objects reference board pieces directly. Reusing moves
+      // generated from the main game_board_state could lead to unintended
+      // modifications of the main game_board_state’s pieces. For example, a
+      // pawn’s 'piece_has_moved' flag might be unintentionally updated, and can
+      // no longer advance two squares in the actual game. Generating fresh
+      // moves for each thread’s board copy avoids these issues.
       std::vector<Move> thread_possible_moves =
           move_generator::calculate_possible_moves(
               thread_board_states[move_index]);
 
-      // Apply move to the board state for the thread.
+      // Apply move to the thread's board state.
       thread_board_states[move_index].apply_move(
           thread_possible_moves[move_index]);
       futures.push_back(promises[move_index].get_future());
@@ -181,7 +241,7 @@ void SearchEngine::start_iterative_search_evaluation(
   }
 }
 
-void SearchEngine::start_iterative_search_pondering()
+void SearchEngine::run_iterative_deepening_search_pondering()
 {
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
@@ -200,16 +260,18 @@ void SearchEngine::start_iterative_search_pondering()
     // Search each move in a separate thread.
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
     {
-      // Calculate possible moves again for each thread.
-      // NOTE: This is because moves contain references to pieces from the
-      // board state. If game_board_state moves are used, threads will modify
-      // its pieces, causing issues (piece_has_moved_flag for example may become
-      // true, and if it is a pawn, it can no longer move 2 squares forward).
+      // Recalculate possible moves for each thread.
+      // NOTE: Move objects reference board pieces directly. Reusing moves
+      // generated from the main game_board_state could lead to unintended
+      // modifications of the main game_board_state’s pieces. For example, a
+      // pawn’s 'piece_has_moved' flag might be unintentionally updated, and can
+      // no longer advance two squares in the actual game. Generating fresh
+      // moves for each thread’s board copy avoids these issues.
       std::vector<Move> thread_possible_moves =
           move_generator::calculate_possible_moves(
               thread_board_states[move_index]);
 
-      // Apply move to the board state for the thread.
+      // Apply move to the thread's board state.
       thread_board_states[move_index].apply_move(
           thread_possible_moves[move_index]);
 
@@ -259,7 +321,11 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
   // Try aspiration windows until a valid window is found.
   for (int window_increment : ASPIRATION_WINDOWS)
   {
-    if (std::abs(last_move_eval()) == INF)
+    // If abs(eval) is greater than INF_MINUS_1000, there is a checkmate
+    // sequence.
+    // If eval is a checkmate line, just set alpha and beta to
+    // infinity as all other windows would fail high or low.
+    if (std::abs(eval) > INF_MINUS_1000 || window_increment == INF)
     {
       alpha = -INF;
       beta = INF;
@@ -270,15 +336,10 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       alpha = eval - window_increment;
     }
 
+    // Swap and negate alpha and beta and negate the eval because of the negamax
+    // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
-
-    // An eval of abs(INF) means a checkmate position has been found. At the
-    // leaf node, we minus the depth the checkmate was found from INF before
-    // returning it. So the eval of a chekmate line will be less than
-    // INF. Hence why we check using INF_MINUS_1000. Any eval greater than
-    // INF_MINUS_1000 is a checkmate line.
-    const int INF_MINUS_1000 = INF - 1000;
 
     // - Return eval if it is within the window.
     // - Return eval if search has stopped.
@@ -308,25 +369,28 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
+  // CHECKMATE DETECTION
+
   // If the king is no longer in the board, checkmate has occurred.
   // Return -INF evaluation for the side that has lost its king.
-  // NOTE: We minus the depth in which the checkmate was found from INF. This
-  // means checkmates found at shallower depths will have a higher eval.
-  // We want to choose the shortest checkmate line.
   if ((board_state.color_to_move == PieceColor::WHITE &&
-       !board_state.white_king_on_board) ||
+       !board_state.white_king_is_alive) ||
       (board_state.color_to_move == PieceColor::BLACK &&
-       !board_state.black_king_on_board))
+       !board_state.black_king_is_alive))
   {
-    return -INF + max_iterative_search_depth - depth;
+    return -INF;
   }
 
-  // Save original alpha value to deterime the eval flag for transposition
-  // table.
+  // TRANSPOSITION TABLE LOOKUP
+
+  // Save the initial alpha value to later determine the correct evaluation
+  // flag when we save the state in the transposition table.
   int original_alpha = alpha;
 
-  // These values will be updated by the retrieve function of transposition
-  // table if the position has been saved in the table.
+  // These values will be updated by the retrieve function of the transposition
+  // table if the position has been searched before.
+  // If tt_entry_best_move_index is -1, it means there is no best move
+  // associated with the position.
   int eval;
   int tt_value;
   int tt_flag;
@@ -338,25 +402,27 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
                                    tt_flag, tt_entry_best_move_index))
   {
     // Check if tt_value can be used.
+    // If the depth of the stored position is greater than or equal to the
+    // current depth, then the stored value is reliable. The higher the stored
+    // depth, the deeper the node has been searched.
     if (depth <= tt_entry_search_depth)
     {
       switch (tt_flag)
       {
-      case EXACT:
+      case EXACT: // alpha < eval < beta
         return tt_value;
 
-      case FAILED_HIGH:
+      case FAILED_HIGH: // eval >= beta
         alpha = std::max(alpha, tt_value);
         break;
 
-      case FAILED_LOW:
+      case FAILED_LOW: // eval <= alpha
         beta = std::min(beta, tt_value);
         break;
 
       default:
         // Handle unexpected tt_flag value.
         printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
-        exit(0);
       }
 
       // Check if we still fail high or low with the current alpha and beta.
@@ -369,25 +435,18 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     }
   }
 
-  // Evaluate leaf nodes.
+  // HANDLE LEAF NODE
+
+  // There is a scnario where the depth is less than 0. This can happen if the
+  // null move heuristic is used when the depth is 1. Null move calls negamax
+  // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
-    // Increment leaf nodes visited.
-    leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
-    eval = engine::parts::position_evaluator::evaluate_position(board_state);
-
-    // The evaluator returns evaluations where positive eval is good for white
-    // and negative eval is good for black. Since negamax nodes are always
-    // maximizing nodes, we need to negate the eval for black.
-    if (board_state.color_to_move == PieceColor::BLACK)
-    {
-      return -eval;
-    }
-    return eval;
+    return evaluate_leaf_node(board_state, eval);
   }
 
-  // Try a null move.
+  // NULL MOVE PRUNING HEURISTIC
+
   // We curently only allow one null move per search line, and only when
   // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will make
   // the search too shallow and return BS evals.
@@ -395,19 +454,21 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game)
   {
-    do_null_move_search(board_state, alpha, beta, depth, eval);
-    // If a null move (which is theoretically a losing move) is greater than
-    // beta, then return null move eval.
-    if (eval >= beta)
+
+    if (do_null_move_search(board_state, alpha, beta, depth, eval))
     {
+      // If we played a null move (which is theoretically a losing move) and get
+      // an eval still greater than beta, then there is no need to search
+      // further. If we play an actual move, our eval will most likely be
+      // higher and we'd fail high (eval >= beta).
       return eval;
     }
   }
 
+  // NEGAMAX SEARCH
+
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(board_state);
-  int max_eval = -INF;
-  int best_move_index = 0;
 
   // If there is a best move from the transposition table, move it to the
   // front to be searched first, causing more alpha beta pruning to occur.
@@ -417,6 +478,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     std::swap(possible_moves[0], possible_moves[tt_entry_best_move_index]);
   }
 
+  int max_eval = -INF;
+  int best_move_index = 0;
+
   // Search and evaluate each move.
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
                         best_move_index, possible_moves, is_null_move_line);
@@ -424,14 +488,40 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
   // This may be saved as exact values in the transposition table, causing
-  // incorrect cutoffs on future searches.
+  // incorrect cutoffs in future searches.
   if (!running_search_flag)
   {
     return 0;
   }
+
+  // AFTER SEARCH PROCEDURE
+
+  // Handle checkmate evals and correct stalemate evals before saving
+  // the state into the transposition table.
+  handle_eval_adjustments(max_eval, board_state);
+
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
                                      beta, best_move_index);
   return max_eval;
+}
+
+auto SearchEngine::evaluate_leaf_node(BoardState &board_state, int &eval) -> int
+{
+  // Increment leaf nodes visited.
+  leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+  /// @todo Implement quiescence search.
+
+  eval = engine::parts::position_evaluator::evaluate_position(board_state);
+
+  // The evaluator returns evaluations where positive eval is good for white
+  // and negative eval is good for black. Since negamax nodes are always
+  // maximizing nodes, we need to negate the evalualtion for black.
+  if (board_state.color_to_move == PieceColor::BLACK)
+  {
+    return -eval;
+  }
+  return eval;
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -455,8 +545,9 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     board_state.apply_move(possible_moves[move_index]);
-    // We only want to know if there is an eval greater than beta, hence make
-    // the search window tight.
+
+    // Swap and negate alpha and beta and negate the eval because of the negamax
+    // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       is_null_move_line);
     if (eval > max_eval)
@@ -464,9 +555,11 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       max_eval = eval;
       best_move_index = move_index;
     }
-    max_eval = std::max(max_eval, eval);
+    max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
+
     board_state.undo_move();
+
     if (alpha >= beta)
     {
       break;
@@ -474,13 +567,48 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
   }
 }
 
-void SearchEngine::do_null_move_search(
-    BoardState &board_state, int &alpha, int &beta, int &depth, int &eval)
+auto SearchEngine::do_null_move_search(BoardState &board_state,
+                                       int &alpha,
+                                       int &beta,
+                                       int &depth,
+                                       int &eval) -> bool
 {
   board_state.apply_null_move();
+
+  // Swap and negate alpha and beta and negate the eval because of the negamax
+  // algorithm.
   eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
                                     depth - NULL_MOVE_REDUCTION, true);
   board_state.undo_null_move();
+
+  return eval >= beta;
+}
+
+void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
+{
+  // Check if stalemate. If stalemate, eval is 0 as it would be a draw.
+  // Read note in function declaration for more details.
+  if (eval < -INF_MINUS_1000)
+  {
+    if (is_stalemate(board_state))
+    {
+      eval = 0;
+      return;
+    }
+  }
+
+  // Adjust checkmate evals accordingly so that boardstates that are closer to a
+  // checkmate state have higher evals allowing the engine to follow the
+  // sequence of moves that lead to a checkmate. See note in function
+  // declaration for more details.
+  if (eval > INF_MINUS_1000)
+  {
+    --eval;
+  }
+  else if (eval < -INF_MINUS_1000)
+  {
+    ++eval;
+  }
 }
 
 void SearchEngine::store_state_in_transposition_table(uint64_t &hash,

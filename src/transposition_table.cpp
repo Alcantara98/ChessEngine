@@ -39,6 +39,11 @@ auto TranspositionTable::retrieve(uint64_t &hash,
                                   int &flag,
                                   int &best_move_index) -> bool
 {
+  // We need to mod the hash to get the index because the hash has a larger
+  // range than the table size. This will cause collisions, and potentially
+  // have racy writes to the same entry and cause mixed data from different
+  // states.
+  // We handle this by using a checksum to verify the data.
   TranspositionTableEntry entry = tt_table[hash % max_size];
 
   if (entry.hash == hash)

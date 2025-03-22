@@ -15,8 +15,8 @@ BoardState::BoardState(const BoardState &other)
       previous_move_stack(other.previous_move_stack),
       zobrist_keys(other.zobrist_keys),
       zobrist_side_to_move(other.zobrist_side_to_move),
-      white_king_on_board(other.white_king_on_board),
-      black_king_on_board(other.black_king_on_board),
+      white_king_is_alive(other.white_king_is_alive),
+      black_king_is_alive(other.black_king_is_alive),
       queens_on_board(other.queens_on_board),
       number_of_main_pieces_left(other.number_of_main_pieces_left),
       is_end_game(other.is_end_game)
@@ -93,93 +93,27 @@ void BoardState::setup_default_board()
   chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
 }
 
-auto BoardState::setup_custom_board(const std::string &board_configuration)
-    -> bool
-{
-  std::regex board_config_pattern(R"([kqbnrpKQBNRP\-]{64}[wb]{1})");
-  if (!std::regex_match(board_configuration, board_config_pattern))
-  {
-    return false;
-  }
-
-  int board_configuration_index = 0;
-  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
-  {
-    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
-    {
-      char piece_char = board_configuration[board_configuration_index];
-      PieceColor piece_color =
-          (islower(piece_char) != 0) ? PieceColor::BLACK : PieceColor::WHITE;
-      PieceType piece_type = CHAR_TO_PIECE_TYPE.at(std::tolower(piece_char));
-
-      // Clear old piece to avoid memory leaks. All empty squares point to the
-      // same Piece instance so no need to delete them.
-      if (chess_board[x_position][y_position] != &empty_piece)
-      {
-        delete chess_board[x_position][y_position];
-      }
-
-      // Whether a piece has moved only matters for kings, rooks, and pawns.
-      // For kings and Rooks, we just assume they have not moved yet wherever
-      // they are. When possible moves are calculated, they have to be in their
-      // default starting positions for castling to be possible so this won't
-      // cause any issues.
-      bool has_moved = true;
-      switch (piece_type)
-      {
-      case PieceType::PAWN:
-        // If the pawn is at the starting position, assume it has not moved.
-        if ((piece_color == PieceColor::WHITE && y_position == Y2_RANK) ||
-            (piece_color == PieceColor::BLACK && y_position == Y7_RANK))
-        {
-          has_moved = false;
-        }
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, has_moved);
-        break;
-
-      case PieceType::ROOK:
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, false);
-        break;
-
-      case PieceType::KING:
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, false);
-        break;
-
-      case PieceType::EMPTY:
-        chess_board[x_position][y_position] = &empty_piece;
-        break;
-
-      default:
-        chess_board[x_position][y_position] =
-            new Piece(piece_type, piece_color, true);
-        break;
-      }
-      ++board_configuration_index;
-    }
-  }
-
-  color_to_move = (board_configuration.back() == parts::WHITE_PIECE_CHAR)
-                      ? PieceColor::WHITE
-                      : PieceColor::BLACK;
-
-  return true;
-}
-
 void BoardState::reset_board()
 {
+  // Empty previous move stack.
   while (!previous_move_stack.empty())
   {
     undo_move();
   }
+
   color_to_move = PieceColor::WHITE;
-  white_king_on_board = true;
-  black_king_on_board = true;
+  white_king_is_alive = true;
+  black_king_is_alive = true;
   queens_on_board = START_QUEENS_COUNT;
   number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
+  white_king_y_position = Y1_RANK;
+  white_king_x_position = XE_FILE;
+  black_king_y_position = Y8_RANK;
+  black_king_x_position = XE_FILE;
+  white_has_castled = false;
+  black_has_castled = false;
   is_end_game = false;
+
   clear_pointers();
   setup_default_board();
 }
@@ -291,9 +225,8 @@ void BoardState::apply_move(Move &move)
 
   if (move.promotion_piece_type != PieceType::EMPTY)
   {
-    // If pawn is promoting, moving piece will become promotion piece type.
-    chess_board[move.to_x][move.to_y] =
-        new Piece(move.promotion_piece_type, move.moving_piece->piece_color);
+    // If pawn is promoting, update piece type to promotion piece type.
+    chess_board[move.to_x][move.to_y]->piece_type = move.promotion_piece_type;
   }
 
   if (move.captured_piece != nullptr && !move.capture_is_en_passant)
@@ -382,10 +315,8 @@ void BoardState::undo_move()
 
   if (move.promotion_piece_type != PieceType::EMPTY)
   {
-    // If pawn was promoted, pawn piece is replaced.
-    // Add back the pawn piece, and delete the promotion piece.
-    delete chess_board[move.to_x][move.to_y];
-    chess_board[move.to_x][move.to_y] = move.moving_piece;
+    // If pawn was promoted, change piece type back to pawn.
+    chess_board[move.to_x][move.to_y]->piece_type = PieceType::PAWN;
   }
 
   if (move.captured_piece != nullptr && !move.capture_is_en_passant)
@@ -444,20 +375,14 @@ auto BoardState::square_is_attacked(int x_position,
 
 auto BoardState::king_is_checked(PieceColor &color_of_king) -> bool
 {
-  for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
+  if (color_of_king == PieceColor::WHITE)
   {
-    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
-    {
-      Piece *test_piece = chess_board[x_position][y_position];
-      if (test_piece->piece_type == PieceType::KING &&
-          test_piece->piece_color == color_of_king)
-      {
-        return BoardState::square_is_attacked(x_position, y_position,
-                                              color_of_king);
-      }
-    }
+    return square_is_attacked(white_king_x_position, white_king_y_position,
+                              color_of_king);
   }
-  return false;
+
+  return square_is_attacked(black_king_x_position, black_king_y_position,
+                            color_of_king);
 }
 
 auto BoardState::move_leaves_king_in_check(Move &move) -> bool
@@ -494,6 +419,23 @@ auto BoardState::compute_zobrist_hash() const -> size_t
   }
 
   return hash;
+}
+
+void BoardState::make_all_squares_empty()
+{
+  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+  {
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
+    {
+      // Clear old piece to avoid memory leaks. All empty squares point to the
+      // same empty piece.
+      if (chess_board[x_position][y_position] != &empty_piece)
+      {
+        delete chess_board[x_position][y_position];
+        chess_board[x_position][y_position] = &empty_piece;
+      }
+    }
+  }
 }
 
 // PRIVATE FUNCTIONS
@@ -668,11 +610,11 @@ void BoardState::manage_piece_counts_on_apply(Move &move)
   case PieceType::KING:
     if (move.captured_piece->piece_color == PieceColor::WHITE)
     {
-      white_king_on_board = false;
+      white_king_is_alive = false;
     }
     else
     {
-      black_king_on_board = false;
+      black_king_is_alive = false;
     }
     break;
   case PieceType::QUEEN:
@@ -682,6 +624,22 @@ void BoardState::manage_piece_counts_on_apply(Move &move)
   default:
     --number_of_main_pieces_left;
     is_end_game_check();
+    break;
+  }
+
+  if (move.promotion_piece_type == PieceType::EMPTY)
+  {
+    return;
+  }
+
+  switch (move.promotion_piece_type)
+  {
+  case PieceType::QUEEN:
+    ++queens_on_board;
+    break;
+
+  default:
+    ++number_of_main_pieces_left;
     break;
   }
 }
@@ -702,20 +660,36 @@ void BoardState::manage_piece_counts_on_undo(Move &move)
   case PieceType::KING:
     if (move.captured_piece->piece_color == PieceColor::WHITE)
     {
-      white_king_on_board = true;
+      white_king_is_alive = true;
     }
     else
     {
-      black_king_on_board = true;
+      black_king_is_alive = true;
     }
     break;
   case PieceType::QUEEN:
-    queens_on_board++;
+    ++queens_on_board;
     is_end_game_check();
     break;
   default:
     ++number_of_main_pieces_left;
     is_end_game_check();
+    break;
+  }
+
+  if (move.promotion_piece_type == PieceType::EMPTY)
+  {
+    return;
+  }
+
+  switch (move.promotion_piece_type)
+  {
+  case PieceType::QUEEN:
+    --queens_on_board;
+    break;
+
+  default:
+    --number_of_main_pieces_left;
     break;
   }
 }
