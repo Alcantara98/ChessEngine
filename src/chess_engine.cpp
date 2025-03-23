@@ -118,6 +118,11 @@ void ChessEngine::engine_vs_player_state()
 
 void ChessEngine::check_and_handle_if_game_over()
 {
+  if (game_board_state.current_state_has_been_repeated_three_times())
+  {
+    printf("\nThreefold Repetition, It's a draw!\n");
+    game_over = true;
+  }
   if (!game_over && engine::parts::SearchEngine::is_stalemate(game_board_state))
   {
     printf("\nStalemate, It's a draw!\n");

@@ -168,16 +168,32 @@ public:
   auto move_leaves_king_in_check(Move &move) -> bool;
 
   /**
-   * @brief Computes the Zobrist hash for the current board state.
-   *
-   * @return The Zobrist hash value.
-   */
-  [[nodiscard]] auto compute_zobrist_hash() const -> uint64_t;
-
-  /**
    * @brief Makes all squares empty.
    */
   void make_all_squares_empty();
+
+  /**
+   * @brief Gets the board state hash from visisted_states_hash_stack. The
+   * current board state hash will be calculated after a move is applied in
+   * apply_move and stored in the visisted_states_hash_stack and
+   * visisted_states_hash_map.
+   */
+  auto get_current_state_hash() -> uint64_t;
+
+  /**
+   * @brief Checks if the current state has been repeated three times. This is
+   * used to detect three fold repetition. Game is drawn if the same state is
+   * repeated three times.
+   *
+   * @return True if the current state has been repeated three times, false
+   * otherwise.
+   */
+  auto current_state_has_been_repeated_three_times() -> bool;
+
+  /**
+   * @brief Checks if the current state has been visited.
+   */
+  auto current_state_has_been_visited() -> bool;
 
 private:
   // PROPERTIES
@@ -194,6 +210,17 @@ private:
   /// @brief All empty squares point to the same Piece instance.
   Piece empty_piece;
 
+  /// @brief Map to keep track of visited states. This is used to detect three
+  /// fold repetition. Game is drawn if the same state is repeated three times.
+  std::map<uint64_t, int> visisted_states_hash_map;
+
+  /// @brief Stack to keep track of the sequence of states that have been
+  /// visited (analogous to previous_move_stack, but for the hash of the state).
+  /// This is allows us to know which state in visisted_states_hash_map to
+  /// decrement or remove when undoing a move.
+  /// @note Top of the stack will always be the hash of the current state.
+  std::stack<uint64_t> visisted_states_hash_stack;
+
   // FUNCTIONS
 
   /**
@@ -205,6 +232,30 @@ private:
    * @brief Initializes the Zobrist keys.
    */
   void initialize_zobrist_keys();
+
+  /**
+   * @brief Computes the Zobrist hash for the current board state.
+   *
+   * @return The Zobrist hash value.
+   */
+  [[nodiscard]] auto compute_zobrist_hash() const -> uint64_t;
+
+  /**
+   * @brief Add hash to visited states map and stack.
+   *
+   * @note If the state has never been visited, it will be added to the map with
+   * a count of 1. If the state has been visited before, the count will be
+   * incremented by 1.
+   */
+  void add_hash_to_visited_states();
+
+  /**
+   * @brief Remove hash from visited states map and stack.
+   *
+   * @note If the state has been visited before, the count will be decremented
+   * by 1. If the count is 0, the state will be removed from the map.
+   */
+  void remove_hash_from_visited_states();
 
   /**
    * @brief Helper function to check if a square is attacked by a pawn.

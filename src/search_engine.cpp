@@ -137,24 +137,45 @@ auto SearchEngine::search_and_execute_best_move() -> bool
     printf("\n");
   }
 
-  // A move cannot leave your king in check. Filter out moves that do and apply
-  // the first move that does not.
-  for (std::pair<Move, int> move_score : move_scores)
+  // A move cannot leave your king in check. Filter out moves that do.
+  std::vector<std::pair<Move, int>> move_scores_filtered;
+  for (auto move_score : move_scores)
   {
     if (!game_board_state.move_leaves_king_in_check(move_score.first))
     {
-      // If not in check, apply move and return true.
-      game_board_state.apply_move(move_score.first);
-      previous_move_evals.push(move_score.second);
-      printf("Engine's Move: %s\n",
-             MoveInterface::move_to_string(move_score.first).c_str());
-      printf("Evaluation of Engine's Move: %d\n", -move_score.second);
-      return true;
+      move_scores_filtered.push_back(move_score);
     }
   }
 
-  // No valid moves found.
-  return false;
+  // If all moves leave the king in check, no valid moves are available.
+  if (move_scores_filtered.empty())
+  {
+    return false;
+  }
+
+  // Moves that re-visit a position are penalized, this will make the engine
+  // avoid threefold repetition.
+  for (auto move_score_filtered : move_scores_filtered)
+  {
+    game_board_state.apply_move(move_score_filtered.first);
+    if (game_board_state.current_state_has_been_visited())
+    {
+      move_score_filtered.second -= 1;
+    }
+    game_board_state.undo_move();
+  }
+
+  // Sort moves by score so that the best move is first at index 0.
+  sort_moves(move_scores_filtered);
+
+  // Apply the best move.
+  game_board_state.apply_move(move_scores_filtered[0].first);
+  previous_move_evals.push(move_scores_filtered[0].second);
+  printf("Engine's Move: %s\n",
+         MoveInterface::move_to_string(move_scores_filtered[0].first).c_str());
+  printf("Evaluation of Engine's Move: %d\n", -move_scores_filtered[0].second);
+
+  return true;
 }
 
 void SearchEngine::run_iterative_deepening_search_evaluation(
@@ -369,6 +390,15 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
+  // CHECK FOR THREEFOLD REPETITION DRAW
+
+  // Check if the current state has been repeated three times. If it has, the
+  // game is drawn. Evaluation for a draw is 0.
+  if (board_state.current_state_has_been_repeated_three_times())
+  {
+    return 0;
+  }
+
   // CHECKMATE DETECTION
 
   // If the king is no longer in the board, checkmate has occurred.
@@ -396,7 +426,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   int tt_flag;
   int tt_entry_search_depth;
   int tt_entry_best_move_index = -1;
-  uint64_t hash = board_state.compute_zobrist_hash();
+  uint64_t hash = board_state.get_current_state_hash();
   // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_value,
                                    tt_flag, tt_entry_best_move_index))
@@ -502,6 +532,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
                                      beta, best_move_index);
+
   return max_eval;
 }
 
