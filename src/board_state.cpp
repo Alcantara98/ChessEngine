@@ -394,9 +394,9 @@ auto BoardState::move_leaves_king_in_check(Move &move) -> bool
   return king_is_checked_after_move;
 }
 
-auto BoardState::compute_zobrist_hash() const -> size_t
+auto BoardState::compute_zobrist_hash() const -> uint64_t
 {
-  size_t hash = 0;
+  uint64_t hash = 0;
 
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
@@ -459,7 +459,7 @@ void BoardState::clear_pointers()
 void BoardState::initialize_zobrist_keys()
 {
   std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
-  std::uniform_int_distribution<size_t> dist;
+  std::uniform_int_distribution<uint64_t> dist;
 
   for (int square = 0; square < NUM_OF_SQUARES; ++square)
   {

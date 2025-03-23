@@ -172,7 +172,7 @@ public:
    *
    * @return The Zobrist hash value.
    */
-  [[nodiscard]] auto compute_zobrist_hash() const -> size_t;
+  [[nodiscard]] auto compute_zobrist_hash() const -> uint64_t;
 
   /**
    * @brief Makes all squares empty.
@@ -183,12 +183,13 @@ private:
   // PROPERTIES
 
   /// @brief Zobrist keys.
-  std::array<std::array<std::array<size_t, NUM_OF_COLORS>, NUM_OF_PIECE_TYPES>,
-             NUM_OF_SQUARES>
+  std::array<
+      std::array<std::array<uint64_t, NUM_OF_COLORS>, NUM_OF_PIECE_TYPES>,
+      NUM_OF_SQUARES>
       zobrist_keys;
 
   /// @brief Zobrist key for the side to move.
-  size_t zobrist_side_to_move;
+  uint64_t zobrist_side_to_move;
 
   /// @brief All empty squares point to the same Piece instance.
   Piece empty_piece;
