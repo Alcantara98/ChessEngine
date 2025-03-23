@@ -472,7 +472,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
-    return evaluate_leaf_node(board_state, eval);
+    return evaluate_leaf_node(alpha, beta, board_state);
   }
 
   // NULL MOVE PRUNING HEURISTIC
@@ -536,14 +536,12 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   return max_eval;
 }
 
-auto SearchEngine::evaluate_leaf_node(BoardState &board_state, int &eval) -> int
+auto SearchEngine::evaluate_leaf_node(int alpha, int beta, BoardState &board_state) -> int
 {
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  /// @todo Implement quiescence search.
-
-  eval = engine::parts::position_evaluator::evaluate_position(board_state);
+  int eval = quiescenceSearch(alpha, beta, board_state);
 
   // The evaluator returns evaluations where positive eval is good for white
   // and negative eval is good for black. Since negamax nodes are always
@@ -698,4 +696,40 @@ void SearchEngine::reset_and_print_performance_matrix(
   nodes_visited = 0;
   leaf_nodes_visited = 0;
 }
+
+auto SearchEngine::quiescenceSearch(int alpha, int beta, BoardState &board_state) -> int
+{
+  int current_eval = engine::parts::position_evaluator::evaluate_position(board_state);
+  int best_value = current_eval;
+
+  if (current_eval >= beta)
+    return current_eval;
+
+  if (current_eval > alpha)
+    alpha = current_eval;
+
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(board_state);
+
+  for (Move move : possible_moves)
+  {
+    if (move.captured_piece == nullptr)
+      break;
+
+    board_state.apply_move(move);
+    int eval = -quiescenceSearch(-beta, -alpha, board_state);
+    board_state.undo_move();
+
+    if (eval > best_value)
+    {
+      best_value = eval;
+      if (eval >= beta)
+        return eval;
+      if (eval > alpha)
+        alpha = eval;
+    }
+  }
+  return best_value;
+}
+
 } // namespace engine::parts

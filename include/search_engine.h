@@ -265,14 +265,12 @@ private:
    * where the search tree ends and the evaluation of the board state is
    * performed.
    *
-   * @todo Implement quiescence search.
-   *
    * @param board_state BoardState object to search.
    * @param eval Evaluation score to be updated.
    *
    * @return Evaluation score of the leaf node.
    */
-  auto evaluate_leaf_node(BoardState &board_state, int &eval) -> int;
+  auto evaluate_leaf_node(int alpha, int beta, BoardState &board_state) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -383,6 +381,20 @@ private:
       int iterative_depth,
       std::chrono::time_point<std::chrono::steady_clock> search_start_time,
       std::chrono::time_point<std::chrono::steady_clock> search_end_time);
+
+  /** @brief Quiescence search.
+   *
+   * @details Quiescence search is a search that only searches moves that are
+   * likely to change the evaluation score of the board state. This is done to
+   * avoid the horizon effect where the search stops at a quiet position and
+   * misses a capture that changes the evaluation score of the board state.
+   *
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   *
+   * @return Evaluation score from quiescence search.
+   */
+  auto quiescenceSearch(int alpha, int beta, BoardState &board_state) -> int;
 };
 } // namespace engine::parts
 
