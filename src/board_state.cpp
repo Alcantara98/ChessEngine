@@ -8,6 +8,7 @@ BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
   initialize_zobrist_keys();
   setup_default_board();
+  add_hash_to_visited_states();
 }
 
 BoardState::BoardState(const BoardState &other)
@@ -19,7 +20,16 @@ BoardState::BoardState(const BoardState &other)
       black_king_is_alive(other.black_king_is_alive),
       queens_on_board(other.queens_on_board),
       number_of_main_pieces_left(other.number_of_main_pieces_left),
-      is_end_game(other.is_end_game)
+      is_end_game(other.is_end_game),
+      visisted_states_hash_map(other.visisted_states_hash_map),
+      visisted_states_hash_stack(other.visisted_states_hash_stack),
+      empty_piece(other.empty_piece),
+      white_king_x_position(other.white_king_x_position),
+      white_king_y_position(other.white_king_y_position),
+      black_king_x_position(other.black_king_x_position),
+      black_king_y_position(other.black_king_y_position),
+      white_has_castled(other.white_has_castled),
+      black_has_castled(other.black_has_castled)
 {
   for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
   {
@@ -248,6 +258,9 @@ void BoardState::apply_move(Move &move)
   // Store move in previous moves stack for undoing moves.
   previous_move_stack.push(move);
   manage_piece_counts_on_apply(move);
+
+  // Update hash for new board state.
+  add_hash_to_visited_states();
 }
 
 void BoardState::undo_move()
@@ -341,6 +354,9 @@ void BoardState::undo_move()
   // Remove move from moves stack, move is undone.
   previous_move_stack.pop();
   manage_piece_counts_on_undo(move);
+
+  // Update hash for new board state.
+  remove_hash_from_visited_states();
 }
 
 void BoardState::apply_null_move()
@@ -394,9 +410,75 @@ auto BoardState::move_leaves_king_in_check(Move &move) -> bool
   return king_is_checked_after_move;
 }
 
-auto BoardState::compute_zobrist_hash() const -> size_t
+void BoardState::make_all_squares_empty()
 {
-  size_t hash = 0;
+  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+  {
+    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
+    {
+      // Clear old piece to avoid memory leaks. All empty squares point to the
+      // same empty piece.
+      if (chess_board[x_position][y_position] != &empty_piece)
+      {
+        delete chess_board[x_position][y_position];
+        chess_board[x_position][y_position] = &empty_piece;
+      }
+    }
+  }
+}
+
+auto BoardState::get_current_state_hash() -> uint64_t
+{
+  return visisted_states_hash_stack.top();
+}
+
+auto BoardState::current_state_has_been_repeated_three_times() -> bool
+{
+  return visisted_states_hash_map[get_current_state_hash()] >= 3;
+}
+
+auto BoardState::current_state_has_been_visited() -> bool
+{
+  return visisted_states_hash_map[get_current_state_hash()] > 1;
+}
+
+// PRIVATE FUNCTIONS
+
+void BoardState::clear_pointers()
+{
+  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
+  {
+    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+    {
+      if (chess_board[x_position][y_position] != nullptr &&
+          chess_board[x_position][y_position] != &empty_piece)
+      {
+        delete chess_board[x_position][y_position];
+        chess_board[x_position][y_position] = nullptr;
+      }
+    }
+  }
+}
+
+void BoardState::initialize_zobrist_keys()
+{
+  std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
+  std::uniform_int_distribution<uint64_t> dist;
+
+  for (int square = 0; square < NUM_OF_SQUARES; ++square)
+  {
+    for (int piece = 0; piece < NUM_OF_PIECE_TYPES; ++piece)
+    {
+      zobrist_keys[square][piece][0] = dist(rng); // White piece
+      zobrist_keys[square][piece][1] = dist(rng); // Black piece
+    }
+  }
+  zobrist_side_to_move = dist(rng);
+}
+
+auto BoardState::compute_zobrist_hash() const -> uint64_t
+{
+  uint64_t hash = 0;
 
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
@@ -421,55 +503,39 @@ auto BoardState::compute_zobrist_hash() const -> size_t
   return hash;
 }
 
-void BoardState::make_all_squares_empty()
+void BoardState::add_hash_to_visited_states()
 {
-  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+  uint64_t current_state_hash = compute_zobrist_hash();
+  visisted_states_hash_stack.push(current_state_hash);
+  if (visisted_states_hash_map.find(current_state_hash) ==
+      visisted_states_hash_map.end())
   {
-    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
-    {
-      // Clear old piece to avoid memory leaks. All empty squares point to the
-      // same empty piece.
-      if (chess_board[x_position][y_position] != &empty_piece)
-      {
-        delete chess_board[x_position][y_position];
-        chess_board[x_position][y_position] = &empty_piece;
-      }
-    }
+    // If the state has never been visited, it will be added to the map with a
+    // count of 1.
+    visisted_states_hash_map[current_state_hash] = 1;
+  }
+  else
+  {
+    // If the state has been visited before, the count will be incremented by 1.
+    visisted_states_hash_map[current_state_hash]++;
   }
 }
 
-// PRIVATE FUNCTIONS
-
-void BoardState::clear_pointers()
+void BoardState::remove_hash_from_visited_states()
 {
-  for (int x_position = X_MIN; x_position <= Y_MAX; ++x_position)
+  uint64_t current_state_hash = get_current_state_hash();
+  if (visisted_states_hash_map.find(current_state_hash) !=
+      visisted_states_hash_map.end())
   {
-    for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+    // If the state has been visited before, the count will be decremented by 1.
+    visisted_states_hash_map[current_state_hash]--;
+    if (visisted_states_hash_map[current_state_hash] == 0)
     {
-      if (chess_board[x_position][y_position] != nullptr &&
-          chess_board[x_position][y_position] != &empty_piece)
-      {
-        delete chess_board[x_position][y_position];
-        chess_board[x_position][y_position] = nullptr;
-      }
+      // If the count is 0, the state will be removed from the map.
+      visisted_states_hash_map.erase(current_state_hash);
     }
   }
-}
-
-void BoardState::initialize_zobrist_keys()
-{
-  std::mt19937_64 rng(0); // Use a fixed seed for reproducibility
-  std::uniform_int_distribution<size_t> dist;
-
-  for (int square = 0; square < NUM_OF_SQUARES; ++square)
-  {
-    for (int piece = 0; piece < NUM_OF_PIECE_TYPES; ++piece)
-    {
-      zobrist_keys[square][piece][0] = dist(rng); // White piece
-      zobrist_keys[square][piece][1] = dist(rng); // Black piece
-    }
-  }
-  zobrist_side_to_move = dist(rng);
+  visisted_states_hash_stack.pop();
 }
 
 auto BoardState::square_is_attacked_by_pawn(
