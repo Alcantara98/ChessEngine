@@ -422,13 +422,13 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // If tt_entry_best_move_index is -1, it means there is no best move
   // associated with the position.
   int eval;
-  int tt_value;
+  int tt_eval;
   int tt_flag;
   int tt_entry_search_depth;
   int tt_entry_best_move_index = -1;
   uint64_t hash = board_state.get_current_state_hash();
   // Check transposition table if position has been searched before.
-  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_value,
+  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
                                    tt_flag, tt_entry_best_move_index))
   {
     // Check if tt_value can be used.
@@ -440,14 +440,14 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       switch (tt_flag)
       {
       case EXACT: // alpha < eval < beta
-        return tt_value;
+        return tt_eval;
 
       case FAILED_HIGH: // eval >= beta
-        alpha = std::max(alpha, tt_value);
+        alpha = std::max(alpha, tt_eval);
         break;
 
       case FAILED_LOW: // eval <= alpha
-        beta = std::min(beta, tt_value);
+        beta = std::min(beta, tt_eval);
         break;
 
       default:
@@ -460,7 +460,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       // If flag is FAILED_LOW, (tt_value <= alpha)
       if (alpha >= beta)
       {
-        return tt_value;
+        return tt_eval;
       }
     }
   }
@@ -543,7 +543,8 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  int eval = quiescenceSearch(alpha, beta, board_state);
+  int current_eval = position_evaluator::evaluate_position(board_state);
+  int eval = quiescenceSearch(current_eval, alpha, beta, board_state);
 
   // The evaluator returns evaluations where positive eval is good for white
   // and negative eval is good for black. Since negamax nodes are always
@@ -647,7 +648,8 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
                                                       int &max_eval,
                                                       int &alpha,
                                                       int &beta,
-                                                      int &best_move_index)
+                                                      int &best_move_index,
+                                                      bool is_quiescence)
 {
   // Store in transposition table.
   int tt_flag_to_store;
@@ -664,7 +666,7 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
     tt_flag_to_store = EXACT;
   }
   transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
-                            best_move_index);
+                            best_move_index, is_quiescence);
 }
 
 void SearchEngine::reset_and_print_performance_matrix(
@@ -699,11 +701,49 @@ void SearchEngine::reset_and_print_performance_matrix(
   leaf_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescenceSearch(int alpha,
+auto SearchEngine::quiescenceSearch(int &current_eval,
+                                    int alpha,
                                     int beta,
                                     BoardState &board_state) -> int
 {
-  int current_eval = position_evaluator::evaluate_position(board_state);
+  // Increment nodes visited.
+  nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+  int original_alpha = alpha;
+
+  uint64_t hash = board_state.get_current_state_hash();
+  int tt_eval;
+  int tt_search_depth = 0; // Not used in quiescence search.
+  int tt_flag;
+  int tt_best_move_index = -1;
+  if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
+                                   tt_best_move_index, true))
+  {
+
+    switch (tt_flag)
+    {
+    case EXACT: // alpha < eval < beta
+      return tt_eval;
+
+    case FAILED_HIGH: // eval >= beta
+      alpha = std::max(alpha, tt_eval);
+      break;
+
+    case FAILED_LOW: // eval <= alpha
+      beta = std::min(beta, tt_eval);
+      break;
+
+    default:
+      // Handle unexpected tt_flag value.
+      printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+    }
+
+    if (alpha >= beta)
+    {
+      return tt_eval;
+    }
+  }
+
   int best_value = current_eval;
 
   // If the eval is not within the alpha beta window, return the eval.
@@ -718,32 +758,50 @@ auto SearchEngine::quiescenceSearch(int alpha,
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(board_state);
 
-  for (Move move : possible_moves)
+  // Put best moves first in the list to be searched first if it exists.
+  if (tt_best_move_index >= 0 && tt_best_move_index < possible_moves.size())
+  {
+    std::swap(possible_moves[0], possible_moves[tt_best_move_index]);
+  }
+  int best_move_index = 0;
+
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     // calculate_possible_moves returns a list of moves that is sorted so that
     // captures come first. If the move is not a capture, we can break out of
     // the loop as the rest of the moves will not be captures.
-    if (move.captured_piece == nullptr)
+    if (possible_moves[move_index].captured_piece == nullptr)
     {
       break;
     }
 
-    board_state.apply_move(move);
-    int eval = -quiescenceSearch(-beta, -alpha, board_state);
+    board_state.apply_move(possible_moves[move_index]);
+
+    int new_current_eval = -position_evaluator::quiescence_evaluation(
+        current_eval, possible_moves[move_index].captured_piece->piece_type);
+
+    int eval = -quiescenceSearch(new_current_eval, -beta, -alpha, board_state);
+
     board_state.undo_move();
 
     if (eval > best_value)
     {
       best_value = eval;
+      best_move_index = move_index;
 
       if (eval >= beta)
       {
-        return eval;
+        break;
       }
 
       alpha = std::max(eval, alpha);
     }
   }
+
+  // Store in transposition table.
+  store_state_in_transposition_table(hash, tt_search_depth, best_value,
+                                     original_alpha, beta, best_move_index,
+                                     true);
   return best_value;
 }
 

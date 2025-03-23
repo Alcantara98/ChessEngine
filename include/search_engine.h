@@ -362,13 +362,15 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param best_move_index Index of best move.
+   * @param is_quiescence Flag to check if the entry is a quiescence search.
    */
   void store_state_in_transposition_table(uint64_t &hash,
                                           int &depth,
                                           int &max_eval,
                                           int &alpha,
                                           int &beta,
-                                          int &best_move_index);
+                                          int &best_move_index,
+                                          bool is_quiescence = false);
 
   /**
    * @brief Resets and prints the performance matrix.
@@ -394,7 +396,10 @@ private:
    *
    * @return Evaluation score from quiescence search.
    */
-  auto quiescenceSearch(int alpha, int beta, BoardState &board_state) -> int;
+  auto quiescenceSearch(int &current_eval,
+                        int alpha,
+                        int beta,
+                        BoardState &board_state) -> int;
 };
 } // namespace engine::parts
 

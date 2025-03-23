@@ -17,7 +17,8 @@ void TranspositionTable::store(uint64_t &hash,
                                int search_depth,
                                int eval_score,
                                int flag,
-                               int best_move_index)
+                               int best_move_index,
+                               bool is_quiescence)
 {
   // Get the entry.
   TranspositionTableEntry &entry = tt_table[hash % max_size];
@@ -31,13 +32,15 @@ void TranspositionTable::store(uint64_t &hash,
   entry.flag = flag;
   entry.best_move_index = best_move_index;
   entry.checksum = checksum;
+  entry.is_quiescence = is_quiescence;
 }
 
 auto TranspositionTable::retrieve(uint64_t &hash,
                                   int &search_depth,
                                   int &eval_score,
                                   int &flag,
-                                  int &best_move_index) -> bool
+                                  int &best_move_index,
+                                  bool is_quiescene) -> bool
 {
   // We need to mod the hash to get the index because the hash has a larger
   // range than the table size. This will cause collisions, and potentially
@@ -56,6 +59,10 @@ auto TranspositionTable::retrieve(uint64_t &hash,
     uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
                                            best_move_index);
     if (checksum == entry.checksum)
+    {
+      return true;
+    }
+    if (is_quiescene && entry.is_quiescence)
     {
       return true;
     }

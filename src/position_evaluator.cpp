@@ -63,6 +63,30 @@ auto evaluate_position(BoardState &board_state) -> int
   return eval;
 }
 
+auto quiescence_evaluation(int &current_eval,
+                           PieceType &captured_piece_type) -> int
+{
+  switch (captured_piece_type)
+  {
+  case PieceType::PAWN:
+    return current_eval + PAWN_VALUE;
+  case PieceType::ROOK:
+    return current_eval + ROOK_VALUE;
+  case PieceType::KNIGHT:
+    return current_eval + KNIGHT_VALUE;
+  case PieceType::BISHOP:
+    return current_eval + BISHOP_VALUE;
+  case PieceType::QUEEN:
+    return current_eval + QUEEN_VALUE;
+  case PieceType::KING:
+    return INF;
+
+  default:
+    // Bug if we reach here.
+    return 0;
+  }
+}
+
 // PRIVATE FUNCTIONS
 
 void evaluate_pawn(int x_position,

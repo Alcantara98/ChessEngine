@@ -17,22 +17,25 @@ struct TranspositionTableEntry
   // PROPERTIES
 
   /// @brief Hash of the board state.
-  uint64_t hash;
+  uint64_t hash = 0;
 
   /// @brief Maximum depth of the search.
-  int search_depth;
+  int search_depth = 0;
 
   /// @brief Value of the board state.
-  int eval_score;
+  int eval_score = 0;
 
   /// @brief Flag of the value. 0 = exact, 1 = lower bound, 2 = upper bound.
-  int flag;
+  int flag = 0;
 
   /// @brief Index of the best move in the board state.
-  int best_move_index;
+  int best_move_index = 0;
+
+  /// @brief Flag to check if the entry is a quiescence search.
+  bool is_quiescence = false;
 
   /// @brief Checksum of the entry.
-  uint32_t checksum;
+  uint32_t checksum = 0;
 };
 
 /**
@@ -67,12 +70,14 @@ public:
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    * @param best_move_index Index of the best move in the board state.
+   * @param is_quiescence Flag to check if the entry is a quiescence search.
    */
   void store(uint64_t &hash,
              int search_depth,
              int eval_score,
              int flag,
-             int best_move_index);
+             int best_move_index,
+             bool is_quiescence = false);
 
   /**
    * @brief Retrieve an entry from the transposition table.
@@ -89,7 +94,8 @@ public:
                 int &search_depth,
                 int &eval_score,
                 int &flag,
-                int &best_move_index) -> bool;
+                int &best_move_index,
+                bool is_quiescene = false) -> bool;
 
   /**
    * @brief Clear the transposition table.
