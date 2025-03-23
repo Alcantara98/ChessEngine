@@ -82,7 +82,8 @@ auto quiescence_evaluation(int &current_eval,
     return INF;
 
   default:
-    // Bug if we reach here.
+    printf("BREAKPOINT quiescence_evaluation; captured_piece_type: %d",
+           captured_piece_type);
     return 0;
   }
 }

@@ -58,11 +58,12 @@ auto TranspositionTable::retrieve(uint64_t &hash,
 
     uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
                                            best_move_index);
-    if (checksum == entry.checksum)
+    if (checksum != entry.checksum)
     {
-      return true;
+      return false;
     }
-    if (is_quiescene && entry.is_quiescence)
+    if (is_quiescene && entry.is_quiescence ||
+        is_quiescene && entry.is_quiescence)
     {
       return true;
     }

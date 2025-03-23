@@ -399,6 +399,7 @@ private:
   auto quiescenceSearch(int &current_eval,
                         int alpha,
                         int beta,
+                        int depth,
                         BoardState &board_state) -> int;
 };
 } // namespace engine::parts

@@ -544,7 +544,10 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
   int current_eval = position_evaluator::evaluate_position(board_state);
-  int eval = quiescenceSearch(current_eval, alpha, beta, board_state);
+  int quiescence_depth = (engine_color != board_state.color_to_move) ? 2 : 3;
+  int eval = quiescenceSearch(current_eval, alpha, beta, quiescence_depth,
+                              board_state);
+  // int eval = position_evaluator::evaluate_position(board_state);
 
   // The evaluator returns evaluations where positive eval is good for white
   // and negative eval is good for black. Since negamax nodes are always
@@ -704,47 +707,61 @@ void SearchEngine::reset_and_print_performance_matrix(
 auto SearchEngine::quiescenceSearch(int &current_eval,
                                     int alpha,
                                     int beta,
+                                    int depth,
                                     BoardState &board_state) -> int
 {
+  // Check if the engine wants to stop searching.
+  if (!running_search_flag)
+  {
+    return 0;
+  }
+
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+  if (depth <= 0)
+  {
+    return current_eval;
+  }
 
   int original_alpha = alpha;
 
   uint64_t hash = board_state.get_current_state_hash();
   int tt_eval;
-  int tt_search_depth = 0; // Not used in quiescence search.
+  int tt_search_depth;
   int tt_flag;
   int tt_best_move_index = -1;
   if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
                                    tt_best_move_index, true))
   {
-
-    switch (tt_flag)
+    if (depth == tt_search_depth)
     {
-    case EXACT: // alpha < eval < beta
-      return tt_eval;
+      switch (tt_flag)
+      {
+      case EXACT: // alpha < eval < beta
+        return tt_eval;
 
-    case FAILED_HIGH: // eval >= beta
-      alpha = std::max(alpha, tt_eval);
-      break;
+      case FAILED_HIGH: // eval >= beta
+        alpha = std::max(alpha, tt_eval);
+        break;
 
-    case FAILED_LOW: // eval <= alpha
-      beta = std::min(beta, tt_eval);
-      break;
+      case FAILED_LOW: // eval <= alpha
+        beta = std::min(beta, tt_eval);
+        break;
 
-    default:
-      // Handle unexpected tt_flag value.
-      printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
-    }
+      default:
+        // Handle unexpected tt_flag value.
+        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+      }
 
-    if (alpha >= beta)
-    {
-      return tt_eval;
+      if (alpha >= beta)
+      {
+        return tt_eval;
+      }
     }
   }
 
-  int best_value = current_eval;
+  int best_eval = current_eval;
 
   // If the eval is not within the alpha beta window, return the eval.
   // Otherwise, we will do too many unnecessary quiescence searches.
@@ -756,7 +773,7 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
   alpha = std::max(alpha, current_eval);
 
   std::vector<Move> possible_moves =
-      move_generator::calculate_possible_moves(board_state);
+      move_generator::calculate_possible_moves(board_state, true);
 
   // Put best moves first in the list to be searched first if it exists.
   if (tt_best_move_index >= 0 && tt_best_move_index < possible_moves.size())
@@ -767,26 +784,19 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
 
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
-    // calculate_possible_moves returns a list of moves that is sorted so that
-    // captures come first. If the move is not a capture, we can break out of
-    // the loop as the rest of the moves will not be captures.
-    if (possible_moves[move_index].captured_piece == nullptr)
-    {
-      break;
-    }
-
     board_state.apply_move(possible_moves[move_index]);
 
     int new_current_eval = -position_evaluator::quiescence_evaluation(
         current_eval, possible_moves[move_index].captured_piece->piece_type);
 
-    int eval = -quiescenceSearch(new_current_eval, -beta, -alpha, board_state);
+    int eval = -quiescenceSearch(new_current_eval, -beta, -alpha, depth - 1,
+                                 board_state);
 
     board_state.undo_move();
 
-    if (eval > best_value)
+    if (eval > best_eval)
     {
-      best_value = eval;
+      best_eval = eval;
       best_move_index = move_index;
 
       if (eval >= beta)
@@ -798,11 +808,19 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
     }
   }
 
+  // If search has stopped, don't save the states in the transposition
+  // table. This will cause invalid states to be stored with eval scores of 0.
+  // This may be saved as exact values in the transposition table, causing
+  // incorrect cutoffs in future searches.
+  if (!running_search_flag)
+  {
+    return 0;
+  }
+
   // Store in transposition table.
-  store_state_in_transposition_table(hash, tt_search_depth, best_value,
-                                     original_alpha, beta, best_move_index,
-                                     true);
-  return best_value;
+  store_state_in_transposition_table(hash, depth, best_eval, original_alpha,
+                                     beta, best_move_index, true);
+  return best_eval;
 }
 
 } // namespace engine::parts
