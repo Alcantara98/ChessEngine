@@ -536,7 +536,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   return max_eval;
 }
 
-auto SearchEngine::evaluate_leaf_node(int alpha, int beta, BoardState &board_state) -> int
+auto SearchEngine::evaluate_leaf_node(int alpha,
+                                      int beta,
+                                      BoardState &board_state) -> int
 {
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
@@ -697,24 +699,34 @@ void SearchEngine::reset_and_print_performance_matrix(
   leaf_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescenceSearch(int alpha, int beta, BoardState &board_state) -> int
+auto SearchEngine::quiescenceSearch(int alpha,
+                                    int beta,
+                                    BoardState &board_state) -> int
 {
-  int current_eval = engine::parts::position_evaluator::evaluate_position(board_state);
+  int current_eval = position_evaluator::evaluate_position(board_state);
   int best_value = current_eval;
 
+  // If the eval is not within the alpha beta window, return the eval.
+  // Otherwise, we will do too many unnecessary quiescence searches.
   if (current_eval >= beta)
+  {
     return current_eval;
+  }
 
-  if (current_eval > alpha)
-    alpha = current_eval;
+  alpha = std::max(alpha, current_eval);
 
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(board_state);
 
   for (Move move : possible_moves)
   {
+    // calculate_possible_moves returns a list of moves that is sorted so that
+    // captures come first. If the move is not a capture, we can break out of
+    // the loop as the rest of the moves will not be captures.
     if (move.captured_piece == nullptr)
+    {
       break;
+    }
 
     board_state.apply_move(move);
     int eval = -quiescenceSearch(-beta, -alpha, board_state);
@@ -723,10 +735,13 @@ auto SearchEngine::quiescenceSearch(int alpha, int beta, BoardState &board_state
     if (eval > best_value)
     {
       best_value = eval;
+
       if (eval >= beta)
+      {
         return eval;
-      if (eval > alpha)
-        alpha = eval;
+      }
+
+      alpha = std::max(eval, alpha);
     }
   }
   return best_value;
