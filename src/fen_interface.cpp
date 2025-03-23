@@ -322,13 +322,21 @@ auto validate_en_passant_target(BoardState &board_state,
   int pawn_x_position = en_passant_file - 'a';
   int pawn_y_position = (en_passant_rank == Y3_RANK) ? Y4_RANK : Y5_RANK;
 
-  // Get color of the pawn that can be captured en passant.
-  int original_rank = (pawn_y_position == Y4_RANK) ? Y2_RANK : Y7_RANK;
+  Piece *pawn_piece = board_state.chess_board[pawn_x_position][pawn_y_position];
+
+  // Check if the piece is a pawn.
+  if (pawn_piece == nullptr || pawn_piece->piece_type != PieceType::PAWN)
+  {
+    return false;
+  }
+
+  // Determine the original rank of the pawn.
+  int original_rank =
+      (pawn_piece->piece_color == PieceColor::WHITE) ? Y2_RANK : Y7_RANK;
 
   Move previous_pawn_move =
       Move(pawn_x_position, original_rank, pawn_x_position, pawn_y_position,
-           board_state.chess_board[pawn_x_position][pawn_y_position], true,
-           true, pawn_x_position, pawn_y_position);
+           pawn_piece, true, true, pawn_x_position, pawn_y_position);
 
   board_state.previous_move_stack.push(previous_pawn_move);
 
