@@ -18,7 +18,7 @@ namespace engine::parts::move_generator
  * @brief Calculates all possible moves of current board state.
  *
  * @param board_state BoardState object to calculate moves from.
- * @param capture_only Flag to calculate only capture moves.
+ * @param capture_only If true, only capture moves are calculated.
  *
  * @return Vector of possible moves.
  */

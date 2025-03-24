@@ -269,8 +269,9 @@ private:
    * where the search tree ends and the evaluation of the board state is
    * performed.
    *
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    * @param board_state BoardState object to search.
-   * @param eval Evaluation score to be updated.
    *
    * @return Evaluation score of the leaf node.
    */
@@ -388,12 +389,13 @@ private:
       std::chrono::time_point<std::chrono::steady_clock> search_start_time,
       std::chrono::time_point<std::chrono::steady_clock> search_end_time);
 
-  /** @brief Quiescence search.
+  /** @brief Quiescence search to lessen horizon effect.
    *
-   * @details Quiescence search is a search that only searches moves that are
-   * likely to change the evaluation score of the board state. This is done to
-   * avoid the horizon effect where the search stops at a quiet position and
-   * misses a capture that changes the evaluation score of the board state.
+   * @details Our quiescence search will explore all possible capture moves of
+   * the given board state.
+   *
+   * @note We currently only run the quiescence search if the last move at a
+   * leaf node is a capture move.
    *
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.

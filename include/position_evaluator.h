@@ -21,16 +21,6 @@ namespace engine::parts::position_evaluator
 auto evaluate_position(BoardState &board_state) -> int;
 
 /**
- * @brief Evaluates the current position by only adjusting current_eval by the
- * value of the captured piece.
- *
- * @param current_eval Current evaluation score.
- * @param captured_piece_type Type of the captured piece.
- */
-auto quiescence_evaluation(int &current_eval,
-                           PieceType &captured_piece_type) -> int;
-
-/**
  * @brief Evaluates pawn at given position.
  *
  * @param x_position, y_position Position of the pawn.

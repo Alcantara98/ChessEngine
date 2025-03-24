@@ -54,7 +54,7 @@ private:
   bool game_over = false;
 
   /// @brief Flag to allow pondering.
-  bool allow_pondering = true;
+  bool allow_pondering = false;
 
   /// @brief Current state. Uses main_menu_state by default.
   void (ChessEngine::*current_state)() = &ChessEngine::main_menu_state;

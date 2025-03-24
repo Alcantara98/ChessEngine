@@ -62,8 +62,7 @@ auto TranspositionTable::retrieve(uint64_t &hash,
     {
       return false;
     }
-    if (is_quiescene && entry.is_quiescence ||
-        is_quiescene && entry.is_quiescence)
+    if (is_quiescene == entry.is_quiescence)
     {
       return true;
     }
