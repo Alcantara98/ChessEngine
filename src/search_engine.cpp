@@ -171,9 +171,11 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   // Apply the best move.
   game_board_state.apply_move(move_scores_filtered[0].first);
   previous_move_evals.push(move_scores_filtered[0].second);
+  int eval_score = move_scores_filtered[0].second;
+  eval_score = (engine_color == PieceColor::WHITE) ? eval_score : -eval_score;
   printf("Engine's Move: %s\n",
          MoveInterface::move_to_string(move_scores_filtered[0].first).c_str());
-  printf("Evaluation of Engine's Move: %d\n", -move_scores_filtered[0].second);
+  printf("Evaluation of Engine's Move: %d\n", eval_score);
 
   return true;
 }
