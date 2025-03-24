@@ -126,7 +126,8 @@ private:
                                  int depth,
                                  int eval_score,
                                  int flag,
-                                 int best_move_index) -> uint32_t;
+                                 int best_move_index,
+                                 bool is_quiescence) -> uint32_t;
 };
 } // namespace engine::parts
 

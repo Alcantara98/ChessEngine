@@ -151,7 +151,7 @@ void evaluate_bishop(int x_position,
   {
     direction = NEGATIVE_DIRECTION;
   }
-  if (y_position + direction >= Y_MIN && y_position + direction <= Y_MAX)
+  if (y_position - direction >= Y_MIN && y_position - direction <= Y_MAX)
   {
     if (board_state.chess_board[x_position][y_position - direction]
             ->piece_type == PieceType::PAWN)

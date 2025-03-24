@@ -95,7 +95,7 @@ const int END_GAME_CONDITION_NO_QUEENS = 8;
 
 // CHECKSUM CONSTANTS
 const uint32_t CHECKSUM_SEED = 0x811C9DC5;
-const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
+const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 3> ASPIRATION_WINDOWS = {
