@@ -105,7 +105,7 @@ auto MoveInterface::create_move_from_string(Move &move,
       // Initial x coordinate for both white and black king.
       move.from_x = XE_FILE;
       // King-side : Queen-side.
-      move.to_x = matches[1] == "O-O" ? XG_FILE : XB_FILE;
+      move.to_x = matches[1] == "O-O" ? XG_FILE : XC_FILE;
       move.from_y = move.to_y =
           game_board_state.color_to_move == PieceColor::WHITE ? Y_MIN : Y_MAX;
     }

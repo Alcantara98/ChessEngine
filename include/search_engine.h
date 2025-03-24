@@ -144,6 +144,10 @@ private:
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<int> nodes_visited = 0;
 
+  /// @brief Number of quiescence nodes visited.
+  /// NOTE: Atomic because it is accessed by multiple search threads.
+  std::atomic<int> quiescence_nodes_visited = 0;
+
   /// @brief See BoardState.
   BoardState &game_board_state;
 
@@ -393,11 +397,12 @@ private:
    *
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
+   * @param depth Current depth of search.
+   * @param board_state BoardState object to search.
    *
    * @return Evaluation score from quiescence search.
    */
-  auto quiescenceSearch(int &current_eval,
-                        int alpha,
+  auto quiescenceSearch(int alpha,
                         int beta,
                         int depth,
                         BoardState &board_state) -> int;

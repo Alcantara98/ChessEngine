@@ -543,10 +543,7 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  int current_eval = position_evaluator::evaluate_position(board_state);
-  int quiescence_depth = (engine_color != board_state.color_to_move) ? 2 : 3;
-  int eval = quiescenceSearch(current_eval, alpha, beta, quiescence_depth,
-                              board_state);
+  int eval = quiescenceSearch(alpha, beta, 3, board_state);
   // int eval = position_evaluator::evaluate_position(board_state);
 
   // The evaluator returns evaluations where positive eval is good for white
@@ -686,26 +683,33 @@ void SearchEngine::reset_and_print_performance_matrix(
   if ((show_performance && !engine_is_pondering) ||
       (show_ponder_performance && engine_is_pondering))
   {
+    int kilo_nodes_per_second = static_cast<int>(nodes_visited / duration);
+
+    int quiescence_node_percentage = static_cast<int>(
+        (static_cast<double>(quiescence_nodes_visited) / nodes_visited) *
+        PERCENTAGE);
+
+    int normal_node_percentage = static_cast<int>(
+        (static_cast<double>(nodes_visited - quiescence_nodes_visited) /
+         nodes_visited) *
+        PERCENTAGE);
+
     printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
     printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
-    printf("Nodes Visited %d\n", nodes_visited.load());
-    printf("Leaf Nodes per second: %d kN/s\n",
-           static_cast<int>(leaf_nodes_visited /
-                            (duration / MILLISECONDS_TO_SECONDS) /
-                            NODES_TO_KILONODES));
-    printf(
-        "Nodes per second: %d kN/s\n\n",
-        static_cast<int>(nodes_visited / (duration / MILLISECONDS_TO_SECONDS) /
-                         NODES_TO_KILONODES));
+    printf("Quiessence Nodes Visited: %d\n", quiescence_nodes_visited.load());
+    printf("Nodes Visited: %d\n", nodes_visited.load());
+    printf("Quiescence Node Percentage: %d%%\n", quiescence_node_percentage);
+    printf("Normal Node Percentage: %d%%\n", normal_node_percentage);
+    printf("Nodes per second: %d kN/s\n\n", kilo_nodes_per_second);
   }
 
   // Reset performance metrics.
   nodes_visited = 0;
   leaf_nodes_visited = 0;
+  quiescence_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescenceSearch(int &current_eval,
-                                    int alpha,
+auto SearchEngine::quiescenceSearch(int alpha,
                                     int beta,
                                     int depth,
                                     BoardState &board_state) -> int
@@ -718,13 +722,11 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
 
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
-  if (depth <= 0)
-  {
-    return current_eval;
-  }
+  quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
   int original_alpha = alpha;
+
+  // TRANSPOSITION TABLE LOOKUP
 
   uint64_t hash = board_state.get_current_state_hash();
   int tt_eval;
@@ -761,7 +763,14 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
     }
   }
 
-  int best_eval = current_eval;
+  // QUIESCENCE SEARCH PRE-PROCEDURE
+
+  int current_eval = position_evaluator::evaluate_position(board_state);
+
+  if (depth <= 0)
+  {
+    return current_eval;
+  }
 
   // If the eval is not within the alpha beta window, return the eval.
   // Otherwise, we will do too many unnecessary quiescence searches.
@@ -782,15 +791,15 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
   }
   int best_move_index = 0;
 
+  // QUIESCENCE SEARCH
+
+  int best_eval = current_eval;
+
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     board_state.apply_move(possible_moves[move_index]);
 
-    int new_current_eval = -position_evaluator::quiescence_evaluation(
-        current_eval, possible_moves[move_index].captured_piece->piece_type);
-
-    int eval = -quiescenceSearch(new_current_eval, -beta, -alpha, depth - 1,
-                                 board_state);
+    int eval = -quiescenceSearch(-beta, -alpha, depth - 1, board_state);
 
     board_state.undo_move();
 
@@ -808,6 +817,8 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
     }
   }
 
+  // AFTER SEARCH PROCEDURE
+
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
   // This may be saved as exact values in the transposition table, causing
@@ -817,7 +828,7 @@ auto SearchEngine::quiescenceSearch(int &current_eval,
     return 0;
   }
 
-  // Store in transposition table.
+  // Store in transposition table with quiescence flag set to true.
   store_state_in_transposition_table(hash, depth, best_eval, original_alpha,
                                      beta, best_move_index, true);
   return best_eval;
