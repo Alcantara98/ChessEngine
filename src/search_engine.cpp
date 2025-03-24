@@ -543,8 +543,15 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  int eval = quiescenceSearch(alpha, beta, 3, board_state);
-  // int eval = position_evaluator::evaluate_position(board_state);
+  int eval = 0;
+  if (board_state.previous_move_stack.top().captured_piece != nullptr)
+  {
+    eval = quiescenceSearch(alpha, beta, 3, board_state);
+  }
+  else
+  {
+    eval = position_evaluator::evaluate_position(board_state);
+  }
 
   // The evaluator returns evaluations where positive eval is good for white
   // and negative eval is good for black. Since negamax nodes are always
