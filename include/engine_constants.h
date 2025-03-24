@@ -61,6 +61,7 @@ const int PERCENTAGE = 100;
 
 // SEARCH ENGINE CONSTANTS
 const int MAX_SEARCH_DEPTH = 100;
+const int MAX_QUIESCENCE_DEPTH = 4;
 const int MAX_SEARCH_TIME = 600000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;

@@ -546,7 +546,7 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   int eval = 0;
   if (board_state.previous_move_stack.top().captured_piece != nullptr)
   {
-    eval = quiescenceSearch(alpha, beta, 3, board_state);
+    eval = quiescenceSearch(alpha, beta, MAX_QUIESCENCE_DEPTH, board_state);
   }
   else
   {
@@ -743,7 +743,7 @@ auto SearchEngine::quiescenceSearch(int alpha,
   if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
                                    tt_best_move_index, true))
   {
-    if (depth == tt_search_depth)
+    if (depth <= tt_search_depth)
     {
       switch (tt_flag)
       {
