@@ -10,13 +10,13 @@ namespace engine::parts
  */
 enum class PieceType : std::uint8_t
 {
-  EMPTY,
   PAWN,
   KNIGHT,
   BISHOP,
   ROOK,
   QUEEN,
-  KING
+  KING,
+  EMPTY,
 };
 
 /**

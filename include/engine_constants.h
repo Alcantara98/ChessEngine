@@ -93,6 +93,18 @@ const int END_GAME_CONDITION_TWO_QUEENS = 2;
 const int END_GAME_CONDITION_ONE_QUEEN = 5;
 const int END_GAME_CONDITION_NO_QUEENS = 8;
 
+// MVV-LVA CONSTANTS
+// First index represents the victim piece, second index represents the attacker
+// piece.
+const std::array<std::array<int, 6>, 6> MVV_LVA_VALUES = {
+    {// Victim:  P   N   B   R   Q   K
+     /* Pawn */ {15, 14, 13, 12, 11, 10},
+     /* Knight */ {25, 24, 23, 22, 21, 20},
+     /* Bishop */ {35, 34, 33, 32, 31, 30},
+     /* Rook */ {45, 44, 43, 42, 41, 40},
+     /* Queen */ {55, 54, 53, 52, 51, 50},
+     /* King */ {65, 64, 63, 62, 61, 60}}};
+
 // CHECKSUM CONSTANTS
 const uint32_t CHECKSUM_SEED = 0x811C9DC5;
 const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
