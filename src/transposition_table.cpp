@@ -40,7 +40,7 @@ auto TranspositionTable::retrieve(uint64_t &hash,
                                   int &eval_score,
                                   int &flag,
                                   int &best_move_index,
-                                  bool is_quiescene) -> bool
+                                  bool is_quiescence) -> bool
 {
   // We need to mod the hash to get the index because the hash has a larger
   // range than the table size. This will cause collisions, and potentially
@@ -59,16 +59,17 @@ auto TranspositionTable::retrieve(uint64_t &hash,
   flag = entry.flag;
   best_move_index = entry.best_move_index;
   bool tt_is_quiescence = entry.is_quiescence;
+  uint32_t tt_checksum = entry.checksum;
 
   uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
-                                         best_move_index, is_quiescene);
+                                         best_move_index, tt_is_quiescence);
 
-  if (checksum != entry.checksum)
+  if (checksum != tt_checksum)
   {
     return false;
   }
 
-  if (is_quiescene != tt_is_quiescence)
+  if (is_quiescence != tt_is_quiescence)
   {
     return false;
   }
