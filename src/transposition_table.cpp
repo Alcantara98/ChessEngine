@@ -49,27 +49,31 @@ auto TranspositionTable::retrieve(uint64_t &hash,
   // We handle this by using a checksum to verify the data.
   TranspositionTableEntry entry = tt_table[hash % max_size];
 
-  if (entry.hash == hash)
+  if (entry.hash != hash)
   {
-    search_depth = entry.search_depth;
-    eval_score = entry.eval_score;
-    flag = entry.flag;
-    best_move_index = entry.best_move_index;
-    int tt_is_quiescence = static_cast<int>(entry.is_quiescence);
-
-    uint32_t checksum =
-        calculate_checksum(hash, search_depth, eval_score, flag,
-                           best_move_index, tt_is_quiescence != 0);
-    if (checksum != entry.checksum)
-    {
-      return false;
-    }
-    if (static_cast<int>(is_quiescene) == tt_is_quiescence)
-    {
-      return true;
-    }
+    return false;
   }
-  return false;
+
+  search_depth = entry.search_depth;
+  eval_score = entry.eval_score;
+  flag = entry.flag;
+  best_move_index = entry.best_move_index;
+  bool tt_is_quiescence = entry.is_quiescence;
+
+  uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
+                                         best_move_index, is_quiescene);
+
+  if (checksum != entry.checksum)
+  {
+    return false;
+  }
+
+  if (is_quiescene != tt_is_quiescence)
+  {
+    return false;
+  }
+
+  return true;
 }
 
 void TranspositionTable::clear()
