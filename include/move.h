@@ -16,6 +16,7 @@ struct Move
   Piece *moving_piece;
 
   /// @brief The piece that is captured by moving_piece.
+  /// @note If no piece is captured, this will be nullptr.
   Piece *captured_piece;
 
   /// @brief If pawn is promoted, it will be promoted to this piece type.

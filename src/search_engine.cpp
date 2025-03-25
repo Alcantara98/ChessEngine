@@ -171,9 +171,11 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   // Apply the best move.
   game_board_state.apply_move(move_scores_filtered[0].first);
   previous_move_evals.push(move_scores_filtered[0].second);
+  int eval_score = move_scores_filtered[0].second;
+  eval_score = (engine_color == PieceColor::WHITE) ? eval_score : -eval_score;
   printf("Engine's Move: %s\n",
          MoveInterface::move_to_string(move_scores_filtered[0].first).c_str());
-  printf("Evaluation of Engine's Move: %d\n", -move_scores_filtered[0].second);
+  printf("Evaluation of Engine's Move: %d\n", eval_score);
 
   return true;
 }
@@ -422,13 +424,13 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // If tt_entry_best_move_index is -1, it means there is no best move
   // associated with the position.
   int eval;
-  int tt_value;
+  int tt_eval;
   int tt_flag;
   int tt_entry_search_depth;
   int tt_entry_best_move_index = -1;
   uint64_t hash = board_state.get_current_state_hash();
   // Check transposition table if position has been searched before.
-  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_value,
+  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
                                    tt_flag, tt_entry_best_move_index))
   {
     // Check if tt_value can be used.
@@ -440,14 +442,14 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       switch (tt_flag)
       {
       case EXACT: // alpha < eval < beta
-        return tt_value;
+        return tt_eval;
 
       case FAILED_HIGH: // eval >= beta
-        alpha = std::max(alpha, tt_value);
+        alpha = std::max(alpha, tt_eval);
         break;
 
       case FAILED_LOW: // eval <= alpha
-        beta = std::min(beta, tt_value);
+        beta = std::min(beta, tt_eval);
         break;
 
       default:
@@ -460,7 +462,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       // If flag is FAILED_LOW, (tt_value <= alpha)
       if (alpha >= beta)
       {
-        return tt_value;
+        return tt_eval;
       }
     }
   }
@@ -472,7 +474,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
-    return evaluate_leaf_node(board_state, eval);
+    return evaluate_leaf_node(alpha, beta, board_state);
   }
 
   // NULL MOVE PRUNING HEURISTIC
@@ -482,7 +484,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // the search too shallow and return BS evals.
   if (!is_null_move_line &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
-      !board_state.is_end_game)
+      !board_state.is_end_game &&
+      !board_state.king_is_checked(board_state.color_to_move))
   {
 
     if (do_null_move_search(board_state, alpha, beta, depth, eval))
@@ -536,14 +539,22 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   return max_eval;
 }
 
-auto SearchEngine::evaluate_leaf_node(BoardState &board_state, int &eval) -> int
+auto SearchEngine::evaluate_leaf_node(int alpha,
+                                      int beta,
+                                      BoardState &board_state) -> int
 {
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  /// @todo Implement quiescence search.
-
-  eval = engine::parts::position_evaluator::evaluate_position(board_state);
+  int eval = 0;
+  if (board_state.previous_move_stack.top().captured_piece != nullptr)
+  {
+    eval = quiescenceSearch(alpha, beta, MAX_QUIESCENCE_DEPTH, board_state);
+  }
+  else
+  {
+    eval = position_evaluator::evaluate_position(board_state);
+  }
 
   // The evaluator returns evaluations where positive eval is good for white
   // and negative eval is good for black. Since negamax nodes are always
@@ -647,7 +658,8 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
                                                       int &max_eval,
                                                       int &alpha,
                                                       int &beta,
-                                                      int &best_move_index)
+                                                      int &best_move_index,
+                                                      bool is_quiescence)
 {
   // Store in transposition table.
   int tt_flag_to_store;
@@ -664,7 +676,7 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
     tt_flag_to_store = EXACT;
   }
   transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
-                            best_move_index);
+                            best_move_index, is_quiescence);
 }
 
 void SearchEngine::reset_and_print_performance_matrix(
@@ -681,21 +693,155 @@ void SearchEngine::reset_and_print_performance_matrix(
   if ((show_performance && !engine_is_pondering) ||
       (show_ponder_performance && engine_is_pondering))
   {
+    int kilo_nodes_per_second = static_cast<int>(nodes_visited / duration);
+
+    int quiescence_node_percentage = static_cast<int>(
+        (static_cast<double>(quiescence_nodes_visited) / nodes_visited) *
+        PERCENTAGE);
+
+    int normal_node_percentage = static_cast<int>(
+        (static_cast<double>(nodes_visited - quiescence_nodes_visited) /
+         nodes_visited) *
+        PERCENTAGE);
+
     printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
     printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
-    printf("Nodes Visited %d\n", nodes_visited.load());
-    printf("Leaf Nodes per second: %d kN/s\n",
-           static_cast<int>(leaf_nodes_visited /
-                            (duration / MILLISECONDS_TO_SECONDS) /
-                            NODES_TO_KILONODES));
-    printf(
-        "Nodes per second: %d kN/s\n\n",
-        static_cast<int>(nodes_visited / (duration / MILLISECONDS_TO_SECONDS) /
-                         NODES_TO_KILONODES));
+    printf("Quiessence Nodes Visited: %d\n", quiescence_nodes_visited.load());
+    printf("Nodes Visited: %d\n", nodes_visited.load());
+    printf("Quiescence Node Percentage: %d%%\n", quiescence_node_percentage);
+    printf("Normal Node Percentage: %d%%\n", normal_node_percentage);
+    printf("Nodes per second: %d kN/s\n\n", kilo_nodes_per_second);
   }
 
   // Reset performance metrics.
   nodes_visited = 0;
   leaf_nodes_visited = 0;
+  quiescence_nodes_visited = 0;
 }
+
+auto SearchEngine::quiescenceSearch(int alpha,
+                                    int beta,
+                                    int depth,
+                                    BoardState &board_state) -> int
+{
+  // Check if the engine wants to stop searching.
+  if (!running_search_flag)
+  {
+    return 0;
+  }
+
+  // Increment nodes visited.
+  nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+  int original_alpha = alpha;
+
+  // TRANSPOSITION TABLE LOOKUP
+
+  uint64_t hash = board_state.get_current_state_hash();
+  int tt_eval;
+  int tt_search_depth;
+  int tt_flag;
+  int tt_best_move_index = -1;
+  if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
+                                   tt_best_move_index, true))
+  {
+    if (depth <= tt_search_depth)
+    {
+      switch (tt_flag)
+      {
+      case EXACT: // alpha < eval < beta
+        return tt_eval;
+
+      case FAILED_HIGH: // eval >= beta
+        alpha = std::max(alpha, tt_eval);
+        break;
+
+      case FAILED_LOW: // eval <= alpha
+        beta = std::min(beta, tt_eval);
+        break;
+
+      default:
+        // Handle unexpected tt_flag value.
+        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+      }
+
+      if (alpha >= beta)
+      {
+        return tt_eval;
+      }
+    }
+  }
+
+  // QUIESCENCE SEARCH PRE-PROCEDURE
+
+  int current_eval = position_evaluator::evaluate_position(board_state);
+
+  if (depth <= 0)
+  {
+    return current_eval;
+  }
+
+  // If the eval is not within the alpha beta window, return the eval.
+  // Otherwise, we will do too many unnecessary quiescence searches.
+  if (current_eval >= beta)
+  {
+    return current_eval;
+  }
+
+  alpha = std::max(alpha, current_eval);
+
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(board_state, true);
+
+  // Put best moves first in the list to be searched first if it exists.
+  if (tt_best_move_index >= 0 && tt_best_move_index < possible_moves.size())
+  {
+    std::swap(possible_moves[0], possible_moves[tt_best_move_index]);
+  }
+  int best_move_index = 0;
+
+  // QUIESCENCE SEARCH
+
+  int best_eval = current_eval;
+
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+  {
+    board_state.apply_move(possible_moves[move_index]);
+
+    int eval = -quiescenceSearch(-beta, -alpha, depth - 1, board_state);
+
+    board_state.undo_move();
+
+    if (eval > best_eval)
+    {
+      best_eval = eval;
+      best_move_index = move_index;
+
+      if (eval >= beta)
+      {
+        break;
+      }
+
+      alpha = std::max(eval, alpha);
+    }
+  }
+
+  // AFTER SEARCH PROCEDURE
+
+  // If search has stopped, don't save the states in the transposition
+  // table. This will cause invalid states to be stored with eval scores of 0.
+  // This may be saved as exact values in the transposition table, causing
+  // incorrect cutoffs in future searches.
+  if (!running_search_flag)
+  {
+    return 0;
+  }
+
+  // Store in transposition table with quiescence flag set to true.
+  store_state_in_transposition_table(hash, depth, best_eval, original_alpha,
+                                     beta, best_move_index, true);
+  return best_eval;
+}
+
 } // namespace engine::parts

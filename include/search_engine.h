@@ -144,6 +144,10 @@ private:
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<int> nodes_visited = 0;
 
+  /// @brief Number of quiescence nodes visited.
+  /// NOTE: Atomic because it is accessed by multiple search threads.
+  std::atomic<int> quiescence_nodes_visited = 0;
+
   /// @brief See BoardState.
   BoardState &game_board_state;
 
@@ -265,14 +269,13 @@ private:
    * where the search tree ends and the evaluation of the board state is
    * performed.
    *
-   * @todo Implement quiescence search.
-   *
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    * @param board_state BoardState object to search.
-   * @param eval Evaluation score to be updated.
    *
    * @return Evaluation score of the leaf node.
    */
-  auto evaluate_leaf_node(BoardState &board_state, int &eval) -> int;
+  auto evaluate_leaf_node(int alpha, int beta, BoardState &board_state) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -364,13 +367,15 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param best_move_index Index of best move.
+   * @param is_quiescence Flag to check if the entry is a quiescence search.
    */
   void store_state_in_transposition_table(uint64_t &hash,
                                           int &depth,
                                           int &max_eval,
                                           int &alpha,
                                           int &beta,
-                                          int &best_move_index);
+                                          int &best_move_index,
+                                          bool is_quiescence = false);
 
   /**
    * @brief Resets and prints the performance matrix.
@@ -383,6 +388,26 @@ private:
       int iterative_depth,
       std::chrono::time_point<std::chrono::steady_clock> search_start_time,
       std::chrono::time_point<std::chrono::steady_clock> search_end_time);
+
+  /** @brief Quiescence search to lessen horizon effect.
+   *
+   * @details Our quiescence search will explore all possible capture moves of
+   * the given board state.
+   *
+   * @note We currently only run the quiescence search if the last move at a
+   * leaf node is a capture move.
+   *
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param depth Current depth of search.
+   * @param board_state BoardState object to search.
+   *
+   * @return Evaluation score from quiescence search.
+   */
+  auto quiescenceSearch(int alpha,
+                        int beta,
+                        int depth,
+                        BoardState &board_state) -> int;
 };
 } // namespace engine::parts
 

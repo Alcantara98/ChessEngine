@@ -57,11 +57,11 @@ const int FAILED_HIGH = 1;
 const int EXACT = 0;
 
 // PERFORMANCE MATRIX CONVERSIONS
-const int NODES_TO_KILONODES = 1000;
-const double MILLISECONDS_TO_SECONDS = 1000.0;
+const int PERCENTAGE = 100;
 
 // SEARCH ENGINE CONSTANTS
 const int MAX_SEARCH_DEPTH = 100;
+const int MAX_QUIESCENCE_DEPTH = 4;
 const int MAX_SEARCH_TIME = 600000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;
@@ -95,7 +95,7 @@ const int END_GAME_CONDITION_NO_QUEENS = 8;
 
 // CHECKSUM CONSTANTS
 const uint32_t CHECKSUM_SEED = 0x811C9DC5;
-const std::array<int, 4> CHECKSUM_PRIMES = {31, 37, 41, 43};
+const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 3> ASPIRATION_WINDOWS = {

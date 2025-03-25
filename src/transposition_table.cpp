@@ -17,12 +17,13 @@ void TranspositionTable::store(uint64_t &hash,
                                int search_depth,
                                int eval_score,
                                int flag,
-                               int best_move_index)
+                               int best_move_index,
+                               bool is_quiescence)
 {
   // Get the entry.
   TranspositionTableEntry &entry = tt_table[hash % max_size];
-  uint32_t checksum =
-      calculate_checksum(hash, search_depth, eval_score, flag, best_move_index);
+  uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
+                                         best_move_index, is_quiescence);
 
   // Update the entry.
   entry.hash = hash;
@@ -30,6 +31,7 @@ void TranspositionTable::store(uint64_t &hash,
   entry.eval_score = eval_score;
   entry.flag = flag;
   entry.best_move_index = best_move_index;
+  entry.is_quiescence = is_quiescence;
   entry.checksum = checksum;
 }
 
@@ -37,7 +39,8 @@ auto TranspositionTable::retrieve(uint64_t &hash,
                                   int &search_depth,
                                   int &eval_score,
                                   int &flag,
-                                  int &best_move_index) -> bool
+                                  int &best_move_index,
+                                  bool is_quiescene) -> bool
 {
   // We need to mod the hash to get the index because the hash has a larger
   // range than the table size. This will cause collisions, and potentially
@@ -52,10 +55,16 @@ auto TranspositionTable::retrieve(uint64_t &hash,
     eval_score = entry.eval_score;
     flag = entry.flag;
     best_move_index = entry.best_move_index;
+    int tt_is_quiescence = static_cast<int>(entry.is_quiescence);
 
-    uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
-                                           best_move_index);
-    if (checksum == entry.checksum)
+    uint32_t checksum =
+        calculate_checksum(hash, search_depth, eval_score, flag,
+                           best_move_index, tt_is_quiescence != 0);
+    if (checksum != entry.checksum)
+    {
+      return false;
+    }
+    if (static_cast<int>(is_quiescene) == tt_is_quiescence)
     {
       return true;
     }
@@ -74,7 +83,8 @@ auto TranspositionTable::calculate_checksum(uint64_t hash,
                                             int depth,
                                             int eval_score,
                                             int flag,
-                                            int best_move_index) -> uint32_t
+                                            int best_move_index,
+                                            bool is_quiescence) -> uint32_t
 {
   uint32_t checksum = CHECKSUM_SEED;
   checksum ^= hash;
@@ -85,6 +95,7 @@ auto TranspositionTable::calculate_checksum(uint64_t hash,
   checksum ^= eval_score * CHECKSUM_PRIMES[1];
   checksum ^= flag * CHECKSUM_PRIMES[2];
   checksum ^= best_move_index * CHECKSUM_PRIMES[3];
+  checksum ^= static_cast<int>(is_quiescence) * CHECKSUM_PRIMES[4];
 
   return checksum;
 }

@@ -18,10 +18,12 @@ namespace engine::parts::move_generator
  * @brief Calculates all possible moves of current board state.
  *
  * @param board_state BoardState object to calculate moves from.
+ * @param capture_only If true, only capture moves are calculated.
  *
  * @return Vector of possible moves.
  */
-auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
+auto calculate_possible_moves(BoardState &board_state,
+                              bool capture_only = false) -> std::vector<Move>;
 
 /**
  * @brief Generates all possible moves for a given pawn.
@@ -36,7 +38,8 @@ auto calculate_possible_moves(BoardState &board_state) -> std::vector<Move>;
 static void generate_pawn_moves(BoardState &board_state,
                                 int x_position,
                                 int y_position,
-                                std::vector<Move> &possible_moves);
+                                std::vector<Move> &possible_moves,
+                                bool capture_only = false);
 
 /**
  * @brief Generates one square forward and two squares forward moves for a pawn.
@@ -121,7 +124,8 @@ generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
 static void generate_king_moves(BoardState &board_state,
                                 int x_position,
                                 int y_position,
-                                std::vector<Move> &possible_moves);
+                                std::vector<Move> &possible_moves,
+                                bool capture_only = false);
 
 /**
  * @brief Generates all possible moves for a given queen.
@@ -168,7 +172,8 @@ static auto can_castle(BoardState &board_state,
 static void generate_knight_moves(BoardState &board_state,
                                   int x_position,
                                   int y_position,
-                                  std::vector<Move> &possible_moves);
+                                  std::vector<Move> &possible_moves,
+                                  bool capture_only = false);
 
 /**
  * @brief Generates all possible moves for a given bishop.
@@ -183,7 +188,8 @@ static void generate_knight_moves(BoardState &board_state,
 static void generate_bishop_moves(BoardState &board_state,
                                   int x_position,
                                   int y_position,
-                                  std::vector<Move> &possible_moves);
+                                  std::vector<Move> &possible_moves,
+                                  bool capture_only = false);
 
 /**
  * @brief Generates all possible moves for a given rook.
@@ -198,7 +204,8 @@ static void generate_bishop_moves(BoardState &board_state,
 static void generate_rook_moves(BoardState &board_state,
                                 int x_position,
                                 int y_position,
-                                std::vector<Move> &possible_moves);
+                                std::vector<Move> &possible_moves,
+                                bool capture_only = false);
 
 /**
  * @brief Generates all possible moves for a given queen.
@@ -213,7 +220,8 @@ static void generate_rook_moves(BoardState &board_state,
 static void generate_queen_moves(BoardState &board_state,
                                  int x_position,
                                  int y_position,
-                                 std::vector<Move> &possible_moves);
+                                 std::vector<Move> &possible_moves,
+                                 bool capture_only = false);
 
 /**
  * @brief Generates bishop and rook moves in one given direction.
@@ -229,8 +237,8 @@ static void rook_bishop_move_helper(BoardState &board_state,
                                     int y_position,
                                     int x_direction,
                                     int y_direction,
-                                    std::vector<Move> &possible_moves);
-
+                                    std::vector<Move> &possible_moves,
+                                    bool capture_only = false);
 } // namespace engine::parts::move_generator
 
 #endif // MOVE_GENERATOR_H
