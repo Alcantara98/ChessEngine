@@ -484,7 +484,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // the search too shallow and return BS evals.
   if (!is_null_move_line &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
-      !board_state.is_end_game)
+      !board_state.is_end_game &&
+      !board_state.king_is_checked(board_state.color_to_move))
   {
 
     if (do_null_move_search(board_state, alpha, beta, depth, eval))
