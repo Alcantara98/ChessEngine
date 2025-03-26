@@ -558,7 +558,7 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
                   ? MAX_QUIESCENCE_DEPTH_EVEN
                   : MAX_QUIESCENCE_DEPTH_ODD;
 
-  return quiescenceSearch(alpha, beta, depth, board_state);
+  return quiescence_search(alpha, beta, depth, board_state);
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -714,7 +714,7 @@ void SearchEngine::reset_and_print_performance_matrix(
   quiescence_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescenceSearch(int alpha,
+auto SearchEngine::quiescence_search(int alpha,
                                     int beta,
                                     int depth,
                                     BoardState &board_state) -> int
@@ -868,7 +868,7 @@ void SearchEngine::run_quiescence_search_procedure(
 
     board_state.apply_move(possible_moves[move_index]);
 
-    int eval = -quiescenceSearch(-beta, -alpha, depth - 1, board_state);
+    int eval = -quiescence_search(-beta, -alpha, depth - 1, board_state);
 
     board_state.undo_move();
 

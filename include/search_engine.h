@@ -404,7 +404,7 @@ private:
    *
    * @return Evaluation score from quiescence search.
    */
-  auto quiescenceSearch(int alpha,
+  auto quiescence_search(int alpha,
                         int beta,
                         int depth,
                         BoardState &board_state) -> int;
