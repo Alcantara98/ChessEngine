@@ -725,6 +725,13 @@ auto SearchEngine::quiescenceSearch(int alpha,
     return 0;
   }
 
+  // Check if the current state has been repeated three times. If it has, the
+  // game is drawn. Evaluation for a draw is 0.
+  if (board_state.current_state_has_been_repeated_three_times())
+  {
+    return 0;
+  }
+
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
   quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
