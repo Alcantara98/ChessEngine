@@ -61,7 +61,8 @@ const int PERCENTAGE = 100;
 
 // SEARCH ENGINE CONSTANTS
 const int MAX_SEARCH_DEPTH = 100;
-const int MAX_QUIESCENCE_DEPTH = 4;
+const int MAX_QUIESCENCE_DEPTH_EVEN = 4;
+const int MAX_QUIESCENCE_DEPTH_ODD = 3;
 const int MAX_SEARCH_TIME = 600000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;
@@ -73,6 +74,9 @@ const int BISHOP_VALUE = 330;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
+// For getting MVV_LVA_VALUES.
+const std::array<int, 6> PIECE_VALUES = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE,
+                                         ROOK_VALUE, QUEEN_VALUE,  KING_VALUE};
 
 // EVALUATION POINTS
 const int EXTREMELY_SMALL_EVAL_VALUE = 2;
@@ -92,6 +96,18 @@ const int START_QUEENS_COUNT = 2;
 const int END_GAME_CONDITION_TWO_QUEENS = 2;
 const int END_GAME_CONDITION_ONE_QUEEN = 5;
 const int END_GAME_CONDITION_NO_QUEENS = 8;
+
+// MVV-LVA CONSTANTS
+// First index represents the victim piece, second index represents the attacker
+// piece.
+const std::array<std::array<int, 6>, 6> MVV_LVA_VALUES = {
+    {// Victim:  P   N   B   R   Q   K
+     /* Pawn */ {15, 14, 13, 12, 11, 10},
+     /* Knight */ {25, 24, 23, 22, 21, 20},
+     /* Bishop */ {35, 34, 33, 32, 31, 30},
+     /* Rook */ {45, 44, 43, 42, 41, 40},
+     /* Queen */ {55, 54, 53, 52, 51, 50},
+     /* King */ {65, 64, 63, 62, 61, 60}}};
 
 // CHECKSUM CONSTANTS
 const uint32_t CHECKSUM_SEED = 0x811C9DC5;

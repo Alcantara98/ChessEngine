@@ -95,7 +95,7 @@ public:
                 int &eval_score,
                 int &flag,
                 int &best_move_index,
-                bool is_quiescene = false) -> bool;
+                bool is_quiescence = false) -> bool;
 
   /**
    * @brief Clear the transposition table.

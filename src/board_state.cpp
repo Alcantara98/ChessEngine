@@ -8,7 +8,7 @@ BoardState::BoardState(PieceColor color_to_move) : color_to_move(color_to_move)
 {
   initialize_zobrist_keys();
   setup_default_board();
-  add_hash_to_visited_states();
+  add_current_state_to_visited_states();
 }
 
 BoardState::BoardState(const BoardState &other)
@@ -111,6 +111,13 @@ void BoardState::reset_board()
     undo_move();
   }
 
+  // Clear visited states hash map and stack.
+  visisted_states_hash_map.clear();
+  while (!visisted_states_hash_stack.empty())
+  {
+    visisted_states_hash_stack.pop();
+  }
+
   color_to_move = PieceColor::WHITE;
   white_king_is_alive = true;
   black_king_is_alive = true;
@@ -126,6 +133,7 @@ void BoardState::reset_board()
 
   clear_pointers();
   setup_default_board();
+  add_current_state_to_visited_states();
 }
 
 void BoardState::print_board(PieceColor color)
@@ -260,7 +268,7 @@ void BoardState::apply_move(Move &move)
   manage_piece_counts_on_apply(move);
 
   // Update hash for new board state.
-  add_hash_to_visited_states();
+  add_current_state_to_visited_states();
 }
 
 void BoardState::undo_move()
@@ -356,7 +364,7 @@ void BoardState::undo_move()
   manage_piece_counts_on_undo(move);
 
   // Update hash for new board state.
-  remove_hash_from_visited_states();
+  remove_current_state_from_visited_states();
 }
 
 void BoardState::apply_null_move()
@@ -364,6 +372,8 @@ void BoardState::apply_null_move()
   // Update move color, it is now the other player's turn.
   color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
                                                        : PieceColor::WHITE;
+  // Need to update hash since color_to_move also affects hash of board state.
+  add_current_state_to_visited_states();
 }
 
 void BoardState::undo_null_move()
@@ -371,6 +381,8 @@ void BoardState::undo_null_move()
   // Update move color, it is now the other player's turn.
   color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
                                                        : PieceColor::WHITE;
+  // Need to update hash since color_to_move also affects hash of board state.
+  remove_current_state_from_visited_states();
 }
 
 auto BoardState::square_is_attacked(int x_position,
@@ -410,8 +422,34 @@ auto BoardState::move_leaves_king_in_check(Move &move) -> bool
   return king_is_checked_after_move;
 }
 
-void BoardState::make_all_squares_empty()
+void BoardState::clear_chess_board()
 {
+  // Empty previous move stack.
+  while (!previous_move_stack.empty())
+  {
+    undo_move();
+  }
+
+  // Clear visited states hash map and stack.
+  visisted_states_hash_map.clear();
+  while (!visisted_states_hash_stack.empty())
+  {
+    visisted_states_hash_stack.pop();
+  }
+
+  color_to_move = PieceColor::NONE;
+  white_king_is_alive = false;
+  black_king_is_alive = false;
+  queens_on_board = 0;
+  number_of_main_pieces_left = 0;
+  white_king_y_position = -1;
+  white_king_x_position = -1;
+  black_king_y_position = -1;
+  black_king_x_position = -1;
+  white_has_castled = false;
+  black_has_castled = false;
+  is_end_game = false;
+
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
     for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
@@ -429,6 +467,10 @@ void BoardState::make_all_squares_empty()
 
 auto BoardState::get_current_state_hash() -> uint64_t
 {
+  if (visisted_states_hash_stack.empty())
+  {
+    return 0;
+  }
   return visisted_states_hash_stack.top();
 }
 
@@ -440,6 +482,57 @@ auto BoardState::current_state_has_been_repeated_three_times() -> bool
 auto BoardState::current_state_has_been_visited() -> bool
 {
   return visisted_states_hash_map[get_current_state_hash()] > 1;
+}
+
+void BoardState::add_current_state_to_visited_states()
+{
+  uint64_t current_state_hash = compute_zobrist_hash();
+  visisted_states_hash_stack.push(current_state_hash);
+  if (visisted_states_hash_map.find(current_state_hash) ==
+      visisted_states_hash_map.end())
+  {
+    // If the state has never been visited, it will be added to the map with a
+    // count of 1.
+    visisted_states_hash_map[current_state_hash] = 1;
+  }
+  else
+  {
+    // If the state has been visited before, the count will be incremented by 1.
+    visisted_states_hash_map[current_state_hash]++;
+  }
+}
+
+void BoardState::remove_current_state_from_visited_states()
+{
+  uint64_t current_state_hash = get_current_state_hash();
+  if (visisted_states_hash_map.find(current_state_hash) !=
+      visisted_states_hash_map.end())
+  {
+    // If the state has been visited before, the count will be decremented by 1.
+    visisted_states_hash_map[current_state_hash]--;
+    if (visisted_states_hash_map[current_state_hash] == 0)
+    {
+      // If the count is 0, the state will be removed from the map.
+      visisted_states_hash_map.erase(current_state_hash);
+    }
+  }
+  visisted_states_hash_stack.pop();
+}
+
+void BoardState::is_end_game_check()
+{
+  if (queens_on_board == 2)
+  {
+    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_TWO_QUEENS;
+  }
+  else if (queens_on_board == 1)
+  {
+    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_ONE_QUEEN;
+  }
+  else
+  {
+    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_NO_QUEENS;
+  }
 }
 
 // PRIVATE FUNCTIONS
@@ -501,41 +594,6 @@ auto BoardState::compute_zobrist_hash() const -> uint64_t
   }
 
   return hash;
-}
-
-void BoardState::add_hash_to_visited_states()
-{
-  uint64_t current_state_hash = compute_zobrist_hash();
-  visisted_states_hash_stack.push(current_state_hash);
-  if (visisted_states_hash_map.find(current_state_hash) ==
-      visisted_states_hash_map.end())
-  {
-    // If the state has never been visited, it will be added to the map with a
-    // count of 1.
-    visisted_states_hash_map[current_state_hash] = 1;
-  }
-  else
-  {
-    // If the state has been visited before, the count will be incremented by 1.
-    visisted_states_hash_map[current_state_hash]++;
-  }
-}
-
-void BoardState::remove_hash_from_visited_states()
-{
-  uint64_t current_state_hash = get_current_state_hash();
-  if (visisted_states_hash_map.find(current_state_hash) !=
-      visisted_states_hash_map.end())
-  {
-    // If the state has been visited before, the count will be decremented by 1.
-    visisted_states_hash_map[current_state_hash]--;
-    if (visisted_states_hash_map[current_state_hash] == 0)
-    {
-      // If the count is 0, the state will be removed from the map.
-      visisted_states_hash_map.erase(current_state_hash);
-    }
-  }
-  visisted_states_hash_stack.pop();
 }
 
 auto BoardState::square_is_attacked_by_pawn(
@@ -757,22 +815,6 @@ void BoardState::manage_piece_counts_on_undo(Move &move)
   default:
     --number_of_main_pieces_left;
     break;
-  }
-}
-
-void BoardState::is_end_game_check()
-{
-  if (queens_on_board == 2)
-  {
-    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_TWO_QUEENS;
-  }
-  else if (queens_on_board == 1)
-  {
-    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_ONE_QUEEN;
-  }
-  else
-  {
-    is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_NO_QUEENS;
   }
 }
 } // namespace engine::parts

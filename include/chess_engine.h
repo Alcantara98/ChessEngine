@@ -181,7 +181,7 @@ private:
    * @return Valid integer input.
    */
   auto
-  getValidIntInput(const std::string &user_message, int min, int max) -> int;
+  get_valid_int_input(const std::string &user_message, int min, int max) -> int;
 
   /**
    * @brief Gets a valid character input from the user.
@@ -191,8 +191,8 @@ private:
    *
    * @return Valid character input.
    */
-  auto getValidCharInput(const std::string &user_message,
-                         const std::string &valid_chars) -> char;
+  auto get_valid_char_input(const std::string &user_message,
+                            const std::string &valid_chars) -> char;
 
   /**
    * @brief Prints all the moves applied to the board.

@@ -12,7 +12,8 @@ namespace engine::parts::position_evaluator
 /**
  * @brief Evaluates current position using chess heuristics.
  *
- * @note Positive score is good for white, negative score is good for black.
+ * @note Positive score is good for white, negative score is good for black, and
+ * 0 means the position is equal.
  *
  * @param board_state BoardState object to evaluate.
  *

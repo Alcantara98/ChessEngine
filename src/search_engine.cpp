@@ -337,8 +337,8 @@ void SearchEngine::run_iterative_deepening_search_pondering()
 auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
                                                      int depth) -> int
 {
-  int alpha;
-  int beta;
+  int alpha = INF;
+  int beta = -INF;
   int eval = last_move_eval();
 
   // Try aspiration windows until a valid window is found.
@@ -355,8 +355,14 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     }
     else
     {
-      beta = eval + window_increment;
-      alpha = eval - window_increment;
+      if (eval >= beta)
+      {
+        beta = eval + window_increment;
+      }
+      if (eval <= alpha)
+      {
+        alpha = eval - window_increment;
+      }
     }
 
     // Swap and negate alpha and beta and negate the eval because of the negamax
@@ -510,9 +516,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   {
     std::swap(possible_moves[0], possible_moves[tt_entry_best_move_index]);
   }
+  int best_move_index = 0;
 
   int max_eval = -INF;
-  int best_move_index = 0;
 
   // Search and evaluate each move.
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
@@ -546,24 +552,13 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  int eval = 0;
-  if (board_state.previous_move_stack.top().captured_piece != nullptr)
-  {
-    eval = quiescenceSearch(alpha, beta, MAX_QUIESCENCE_DEPTH, board_state);
-  }
-  else
-  {
-    eval = position_evaluator::evaluate_position(board_state);
-  }
+  // I think it is better to evaluate when it is the engine's turn to move, but
+  // I am not sure.
+  int depth = (engine_color == board_state.color_to_move)
+                  ? MAX_QUIESCENCE_DEPTH_EVEN
+                  : MAX_QUIESCENCE_DEPTH_ODD;
 
-  // The evaluator returns evaluations where positive eval is good for white
-  // and negative eval is good for black. Since negamax nodes are always
-  // maximizing nodes, we need to negate the evalualtion for black.
-  if (board_state.color_to_move == PieceColor::BLACK)
-  {
-    return -eval;
-  }
-  return eval;
+  return quiescence_search(alpha, beta, depth, board_state);
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -719,10 +714,10 @@ void SearchEngine::reset_and_print_performance_matrix(
   quiescence_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescenceSearch(int alpha,
-                                    int beta,
-                                    int depth,
-                                    BoardState &board_state) -> int
+auto SearchEngine::quiescence_search(int alpha,
+                                     int beta,
+                                     int depth,
+                                     BoardState &board_state) -> int
 {
   // Check if the engine wants to stop searching.
   if (!running_search_flag)
@@ -730,9 +725,28 @@ auto SearchEngine::quiescenceSearch(int alpha,
     return 0;
   }
 
+  // Check if the current state has been repeated three times. If it has, the
+  // game is drawn. Evaluation for a draw is 0.
+  if (board_state.current_state_has_been_repeated_three_times())
+  {
+    return 0;
+  }
+
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
   quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+
+  // CHECKMATE DETECTION
+
+  // If the king is no longer in the board, checkmate has occurred.
+  // Return -INF evaluation for the side that has lost its king.
+  if ((board_state.color_to_move == PieceColor::WHITE &&
+       !board_state.white_king_is_alive) ||
+      (board_state.color_to_move == PieceColor::BLACK &&
+       !board_state.black_king_is_alive))
+  {
+    return -INF;
+  }
 
   int original_alpha = alpha;
 
@@ -805,27 +819,9 @@ auto SearchEngine::quiescenceSearch(int alpha,
 
   int best_eval = current_eval;
 
-  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
-  {
-    board_state.apply_move(possible_moves[move_index]);
-
-    int eval = -quiescenceSearch(-beta, -alpha, depth - 1, board_state);
-
-    board_state.undo_move();
-
-    if (eval > best_eval)
-    {
-      best_eval = eval;
-      best_move_index = move_index;
-
-      if (eval >= beta)
-      {
-        break;
-      }
-
-      alpha = std::max(eval, alpha);
-    }
-  }
+  run_quiescence_search_procedure(board_state, alpha, beta, best_eval, depth,
+                                  best_move_index, current_eval,
+                                  possible_moves);
 
   // AFTER SEARCH PROCEDURE
 
@@ -842,6 +838,53 @@ auto SearchEngine::quiescenceSearch(int alpha,
   store_state_in_transposition_table(hash, depth, best_eval, original_alpha,
                                      beta, best_move_index, true);
   return best_eval;
+}
+
+void SearchEngine::run_quiescence_search_procedure(
+    BoardState &board_state,
+    int &alpha,
+    int &beta,
+    int &best_eval,
+    int &depth,
+    int &best_move_index,
+    int &current_eval,
+    std::vector<Move> &possible_moves)
+{
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+  {
+    // DELTA PRUNING
+    // If the current_eval is so low that the score gained from capturing the
+    // piece in the move + a queen's value (900) will not bring it back up to
+    // alpha, then it is most likely not worth searching the move.
+    // Don't do it in the end game since it is more likely that bad moves are
+    // the best a player could do.
+    if (!board_state.is_end_game &&
+        (current_eval + QUEEN_VALUE +
+         PIECE_VALUES[static_cast<uint8_t>(
+             possible_moves[move_index].captured_piece->piece_type)]) < alpha)
+    {
+      continue;
+    }
+
+    board_state.apply_move(possible_moves[move_index]);
+
+    int eval = -quiescence_search(-beta, -alpha, depth - 1, board_state);
+
+    board_state.undo_move();
+
+    if (eval > best_eval)
+    {
+      best_eval = eval;
+      best_move_index = move_index;
+
+      if (eval >= beta)
+      {
+        break;
+      }
+
+      alpha = std::max(eval, alpha);
+    }
+  }
 }
 
 } // namespace engine::parts

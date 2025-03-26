@@ -7,7 +7,8 @@ namespace engine::parts::move_generator
 auto calculate_possible_moves(BoardState &board_state,
                               bool capture_only) -> std::vector<Move>
 {
-  std::vector<Move> possible_moves;
+  std::vector<Move> possible_normal_moves;
+  std::vector<Move> possible_capture_moves;
   for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
   {
     for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
@@ -21,31 +22,37 @@ auto calculate_possible_moves(BoardState &board_state,
         {
         case PieceType::PAWN:
           generate_pawn_moves(board_state, x_position, y_position,
-                              possible_moves, capture_only);
+                              possible_normal_moves, possible_capture_moves,
+                              capture_only);
           break;
         case PieceType::ROOK:
           generate_rook_moves(board_state, x_position, y_position,
-                              possible_moves, capture_only);
+                              possible_normal_moves, possible_capture_moves,
+                              capture_only);
           break;
         case PieceType::KNIGHT:
           generate_knight_moves(board_state, x_position, y_position,
-                                possible_moves, capture_only);
+                                possible_normal_moves, possible_capture_moves,
+                                capture_only);
           break;
         case PieceType::BISHOP:
           generate_bishop_moves(board_state, x_position, y_position,
-                                possible_moves, capture_only);
+                                possible_normal_moves, possible_capture_moves,
+                                capture_only);
           break;
         case PieceType::QUEEN:
           generate_queen_moves(board_state, x_position, y_position,
-                               possible_moves, capture_only);
+                               possible_normal_moves, possible_capture_moves,
+                               capture_only);
           break;
         case PieceType::KING:
           generate_king_moves(board_state, x_position, y_position,
-                              possible_moves, capture_only);
+                              possible_normal_moves, possible_capture_moves,
+                              capture_only);
           if (!capture_only)
           {
             generate_castle_king_moves(board_state, x_position, y_position,
-                                       possible_moves);
+                                       possible_normal_moves);
           }
           break;
         default:
@@ -55,16 +62,19 @@ auto calculate_possible_moves(BoardState &board_state,
       }
     }
   }
+  sort_moves_mvv_lvv(possible_capture_moves);
 
-  if (!capture_only)
+  if (capture_only)
   {
-    // Put captures at the front of the list.
-    std::stable_partition(possible_moves.begin(), possible_moves.end(),
-                          [](const Move &move)
-                          { return move.captured_piece != nullptr; });
+    return std::move(possible_capture_moves);
   }
 
-  return std::move(possible_moves);
+  // Put capture moves first starting from index 0.
+  possible_normal_moves.insert(possible_normal_moves.begin(),
+                               possible_capture_moves.begin(),
+                               possible_capture_moves.end());
+
+  return std::move(possible_normal_moves);
 }
 
 // STATIC FUNCTIONS
@@ -72,7 +82,8 @@ auto calculate_possible_moves(BoardState &board_state,
 void generate_pawn_moves(BoardState &board_state,
                          int x_position,
                          int y_position,
-                         std::vector<Move> &possible_moves,
+                         std::vector<Move> &possible_normal_moves,
+                         std::vector<Move> &possible_capture_moves,
                          bool capture_only)
 {
   chess_board_type &chess_board = board_state.chess_board;
@@ -96,18 +107,18 @@ void generate_pawn_moves(BoardState &board_state,
   if (!capture_only)
   {
     generate_normal_pawn_moves(chess_board, x_position, y_position,
-                               possible_moves, pawn_piece, pawn_direction,
-                               first_move, promotion_rank);
+                               possible_normal_moves, pawn_piece,
+                               pawn_direction, first_move, promotion_rank);
   }
 
   generate_pawn_capture_moves(chess_board, x_position, y_position,
-                              possible_moves, pawn_piece, pawn_direction,
-                              first_move, promotion_rank);
+                              possible_capture_moves, pawn_piece,
+                              pawn_direction, first_move, promotion_rank);
 
   if (!board_state.previous_move_stack.empty())
   {
     generate_en_passant_pawn_capture_moves(
-        chess_board, x_position, y_position, possible_moves, pawn_piece,
+        chess_board, x_position, y_position, possible_capture_moves, pawn_piece,
         pawn_direction, first_move, board_state.previous_move_stack.top());
   }
 }
@@ -115,7 +126,7 @@ void generate_pawn_moves(BoardState &board_state,
 void generate_normal_pawn_moves(chess_board_type &chess_board,
                                 int x_position,
                                 int y_position,
-                                std::vector<Move> &possible_moves,
+                                std::vector<Move> &possible_normal_moves,
                                 Piece *pawn_piece,
                                 int pawn_direction,
                                 bool first_move,
@@ -135,15 +146,17 @@ void generate_normal_pawn_moves(chess_board_type &chess_board,
         for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
                                 PieceType::KNIGHT, PieceType::ROOK})
         {
-          possible_moves.emplace_back(x_position, y_position, x_position,
-                                      new_y_position, pawn_piece, piece_type);
+          possible_normal_moves.emplace_back(x_position, y_position, x_position,
+                                             new_y_position, pawn_piece,
+                                             piece_type);
         }
       }
       else
       {
         // Normal move.
-        possible_moves.emplace_back(x_position, y_position, x_position,
-                                    new_y_position, pawn_piece, first_move);
+        possible_normal_moves.emplace_back(x_position, y_position, x_position,
+                                           new_y_position, pawn_piece,
+                                           first_move);
       }
     }
     // Two square move forward.
@@ -155,9 +168,9 @@ void generate_normal_pawn_moves(chess_board_type &chess_board,
         chess_board[x_position][new_y_position_two_squares]->piece_type ==
             PieceType::EMPTY)
     {
-      possible_moves.emplace_back(x_position, y_position, x_position,
-                                  new_y_position_two_squares, pawn_piece, true,
-                                  true, x_position, new_y_position_two_squares);
+      possible_normal_moves.emplace_back(
+          x_position, y_position, x_position, new_y_position_two_squares,
+          pawn_piece, true, true, x_position, new_y_position_two_squares);
     }
   }
 }
@@ -165,7 +178,7 @@ void generate_normal_pawn_moves(chess_board_type &chess_board,
 void generate_pawn_capture_moves(chess_board_type &chess_board,
                                  int x_position,
                                  int y_position,
-                                 std::vector<Move> &possible_moves,
+                                 std::vector<Move> &possible_capture_moves,
                                  Piece *pawn_piece,
                                  int pawn_direction,
                                  bool first_move,
@@ -189,31 +202,32 @@ void generate_pawn_capture_moves(chess_board_type &chess_board,
           for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
                                   PieceType::KNIGHT, PieceType::ROOK})
           {
-            possible_moves.emplace_back(x_position, y_position, new_x_position,
-                                        new_y_position, pawn_piece,
-                                        captured_piece, piece_type);
+            possible_capture_moves.emplace_back(
+                x_position, y_position, new_x_position, new_y_position,
+                pawn_piece, captured_piece, piece_type);
           }
         }
         else
         {
           // Normal capture move.
-          possible_moves.emplace_back(x_position, y_position, new_x_position,
-                                      new_y_position, pawn_piece,
-                                      captured_piece, first_move);
+          possible_capture_moves.emplace_back(
+              x_position, y_position, new_x_position, new_y_position,
+              pawn_piece, captured_piece, first_move);
         }
       }
     }
   }
 }
 
-void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
-                                            int x_position,
-                                            int y_position,
-                                            std::vector<Move> &possible_moves,
-                                            Piece *pawn_piece,
-                                            int pawn_direction,
-                                            bool first_move,
-                                            Move &previous_move)
+void generate_en_passant_pawn_capture_moves(
+    chess_board_type &chess_board,
+    int x_position,
+    int y_position,
+    std::vector<Move> &possible_capture_moves,
+    Piece *pawn_piece,
+    int pawn_direction,
+    bool first_move,
+    Move &previous_move)
 {
   // En-passant moves can only be made on the 5th rank for white and 4th rank
   // for black.
@@ -236,9 +250,9 @@ void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
                 PieceType::EMPTY)
         {
 
-          possible_moves.emplace_back(x_position, y_position, new_x_position,
-                                      new_y_position, pawn_piece,
-                                      captured_piece, first_move, true);
+          possible_capture_moves.emplace_back(
+              x_position, y_position, new_x_position, new_y_position,
+              pawn_piece, captured_piece, first_move, true);
         }
       }
     }
@@ -248,7 +262,8 @@ void generate_en_passant_pawn_capture_moves(chess_board_type &chess_board,
 void generate_king_moves(BoardState &board_state,
                          int x_position,
                          int y_position,
-                         std::vector<Move> &possible_moves,
+                         std::vector<Move> &possible_normal_moves,
+                         std::vector<Move> &possible_capture_moves,
                          bool capture_only)
 {
   chess_board_type &board = board_state.chess_board;
@@ -270,15 +285,15 @@ void generate_king_moves(BoardState &board_state,
     {
       if (!capture_only)
       {
-        possible_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                    king_piece, first_move);
+        possible_normal_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                           king_piece, first_move);
       }
     }
     // Capture move.
     else if (target_piece->piece_color != king_piece->piece_color)
     {
-      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                  king_piece, target_piece, first_move);
+      possible_capture_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                          king_piece, target_piece, first_move);
     }
   }
 }
@@ -286,7 +301,7 @@ void generate_king_moves(BoardState &board_state,
 void generate_castle_king_moves(BoardState &board_state,
                                 int x_position,
                                 int y_position,
-                                std::vector<Move> &possible_moves)
+                                std::vector<Move> &possible_normal_moves)
 {
   chess_board_type &chess_board = board_state.chess_board;
   Piece *king_piece = chess_board[x_position][y_position];
@@ -300,8 +315,9 @@ void generate_castle_king_moves(BoardState &board_state,
     if (can_castle(board_state, king_piece, y_position, potential_rook_piece,
                    {XF_FILE, XG_FILE}))
     {
-      possible_moves.emplace_back(x_position, y_position, x_position + 2,
-                                  y_position, king_piece, first_move, false);
+      possible_normal_moves.emplace_back(x_position, y_position, x_position + 2,
+                                         y_position, king_piece, first_move,
+                                         false);
     }
 
     // Castle queen side.
@@ -309,8 +325,9 @@ void generate_castle_king_moves(BoardState &board_state,
     if (can_castle(board_state, king_piece, y_position, potential_rook_piece,
                    {XB_FILE, XC_FILE, XD_FILE}))
     {
-      possible_moves.emplace_back(x_position, y_position, x_position - 2,
-                                  y_position, king_piece, first_move, false);
+      possible_normal_moves.emplace_back(x_position, y_position, x_position - 2,
+                                         y_position, king_piece, first_move,
+                                         false);
     }
   }
 }
@@ -345,7 +362,8 @@ auto can_castle(BoardState &board_state,
 void generate_knight_moves(BoardState &board_state,
                            int x_position,
                            int y_position,
-                           std::vector<Move> &possible_moves,
+                           std::vector<Move> &possible_normal_moves,
+                           std::vector<Move> &possible_capture_moves,
                            bool capture_only)
 {
   chess_board_type &board = board_state.chess_board;
@@ -367,15 +385,16 @@ void generate_knight_moves(BoardState &board_state,
     {
       if (!capture_only)
       {
-        possible_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                    knight_piece, first_move);
+        possible_normal_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                           knight_piece, first_move);
       }
     }
     // Capture move.
     else if (target_piece->piece_color != knight_piece->piece_color)
     {
-      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                  knight_piece, target_piece, first_move);
+      possible_capture_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                          knight_piece, target_piece,
+                                          first_move);
     }
   }
 }
@@ -383,21 +402,24 @@ void generate_knight_moves(BoardState &board_state,
 void generate_bishop_moves(BoardState &board_state,
                            int x_position,
                            int y_position,
-                           std::vector<Move> &possible_moves,
+                           std::vector<Move> &possible_normal_moves,
+                           std::vector<Move> &possible_capture_moves,
                            bool capture_only)
 {
   // Each respective pair of x and y directions represent a diagonal.
   for (auto direction : BISHOP_DIRECTIONS)
   {
     rook_bishop_move_helper(board_state, x_position, y_position, direction[0],
-                            direction[1], possible_moves, capture_only);
+                            direction[1], possible_normal_moves,
+                            possible_capture_moves, capture_only);
   }
 }
 
 void generate_rook_moves(BoardState &board_state,
                          int x_position,
                          int y_position,
-                         std::vector<Move> &possible_moves,
+                         std::vector<Move> &possible_normal_moves,
+                         std::vector<Move> &possible_capture_moves,
                          bool capture_only)
 {
   // Each respective pair of x and y directions represent horizontal or
@@ -405,20 +427,24 @@ void generate_rook_moves(BoardState &board_state,
   for (auto direction : ROOK_DIRECTIONS)
   {
     rook_bishop_move_helper(board_state, x_position, y_position, direction[0],
-                            direction[1], possible_moves, capture_only);
+                            direction[1], possible_normal_moves,
+                            possible_capture_moves, capture_only);
   }
 }
 
 void generate_queen_moves(BoardState &board_state,
                           int x_position,
                           int y_position,
-                          std::vector<Move> &possible_moves,
+                          std::vector<Move> &possible_normal_moves,
+                          std::vector<Move> &possible_capture_moves,
                           bool capture_only)
 {
   // Queen moves are a combination of rook and bishop moves.
-  generate_rook_moves(board_state, x_position, y_position, possible_moves,
+  generate_rook_moves(board_state, x_position, y_position,
+                      possible_normal_moves, possible_capture_moves,
                       capture_only);
-  generate_bishop_moves(board_state, x_position, y_position, possible_moves,
+  generate_bishop_moves(board_state, x_position, y_position,
+                        possible_normal_moves, possible_capture_moves,
                         capture_only);
 }
 
@@ -428,7 +454,8 @@ void rook_bishop_move_helper(BoardState &board_state,
                              int y_position,
                              int x_direction,
                              int y_direction,
-                             std::vector<Move> &possible_moves,
+                             std::vector<Move> &possible_normal_moves,
+                             std::vector<Move> &possible_capture_moves,
                              bool capture_only)
 {
   chess_board_type &board = board_state.chess_board;
@@ -446,15 +473,16 @@ void rook_bishop_move_helper(BoardState &board_state,
     {
       if (!capture_only)
       {
-        possible_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                    moving_piece, first_move);
+        possible_normal_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                           moving_piece, first_move);
       }
     }
     // Capture move.
     else if (target_piece->piece_color != moving_piece->piece_color)
     {
-      possible_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                  moving_piece, target_piece, first_move);
+      possible_capture_moves.emplace_back(x_position, y_position, new_x, new_y,
+                                          moving_piece, target_piece,
+                                          first_move);
       break;
     }
     else
@@ -462,5 +490,21 @@ void rook_bishop_move_helper(BoardState &board_state,
       break;
     }
   }
+}
+
+static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
+{
+  std::sort(possible_capture_moves.begin(), possible_capture_moves.end(),
+            [](const Move &move1, const Move &move2)
+            {
+              return MVV_LVA_VALUES[static_cast<uint8_t>(
+                         move1.captured_piece->piece_type)]
+                                   [static_cast<uint8_t>(
+                                       move1.moving_piece->piece_type)] >
+                     MVV_LVA_VALUES[static_cast<uint8_t>(
+                         move2.captured_piece->piece_type)]
+                                   [static_cast<uint8_t>(
+                                       move2.moving_piece->piece_type)];
+            });
 }
 } // namespace engine::parts::move_generator
