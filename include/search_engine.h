@@ -417,6 +417,27 @@ private:
                                        int &best_move_index,
                                        int &current_eval,
                                        std::vector<Move> &possible_moves);
+
+  /**
+   * @brief Checks if the given move can be delta pruned.
+   *
+   * @note If the current_eval is so low that the score gained from
+   * capturing the piece in the move + a queen or rook piece value (900 and 500)
+   * will not bring it back up to alpha, then it is not worth
+   * searching the move.
+   *
+   * @note Don't do it in the end game since it is more likely
+   * that bad moves are the best a player could do.
+   *
+   * @param board_state BoardState object to search.
+   * @param move Move to check.
+   * @param current_eval Current evaluation score.
+   * @param alpha Highest score to be picked by maximizing node.
+   */
+  static auto delta_prune_move(const BoardState &board_state,
+                               const Move &move,
+                               const int &current_eval,
+                               const int &alpha) -> bool;
 };
 } // namespace engine::parts
 
