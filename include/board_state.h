@@ -23,6 +23,9 @@ using chess_board_type =
 
 /**
  * @brief Class to represent the current state of the chess board.
+ *
+ * @note Ensure that new properties are reset accordingly in reset_board and
+ * clear_chess_board functions.
  */
 class BoardState
 {
@@ -168,9 +171,12 @@ public:
   auto move_leaves_king_in_check(Move &move) -> bool;
 
   /**
-   * @brief Makes all squares empty.
+   * @brief Clears all pieces from the chess board.
+   *
+   * @details Also resets properties to null values since there are no pieces on
+   * the board.
    */
-  void make_all_squares_empty();
+  void clear_chess_board();
 
   /**
    * @brief Gets the board state hash from visisted_states_hash_stack. The
@@ -194,6 +200,29 @@ public:
    * @brief Checks if the current state has been visited.
    */
   auto current_state_has_been_visited() -> bool;
+
+  /**
+   * @brief Add hash to visited states map and stack.
+   *
+   * @note If the state has never been visited, it will be added to the map with
+   * a count of 1. If the state has been visited before, the count will be
+   * incremented by 1.
+   */
+  void add_current_state_to_visited_states();
+
+  /**
+   * @brief Remove hash from visited states map and stack.
+   *
+   * @note If the state has been visited before, the count will be decremented
+   * by 1. If the count is 0, the state will be removed from the map.
+   */
+  void remove_current_state_from_visited_states();
+
+  /**
+   * @brief Checks if the game is in an end game state and updates the
+   * is_end_game property.
+   */
+  void is_end_game_check();
 
 private:
   // PROPERTIES
@@ -239,23 +268,6 @@ private:
    * @return The Zobrist hash value.
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> uint64_t;
-
-  /**
-   * @brief Add hash to visited states map and stack.
-   *
-   * @note If the state has never been visited, it will be added to the map with
-   * a count of 1. If the state has been visited before, the count will be
-   * incremented by 1.
-   */
-  void add_hash_to_visited_states();
-
-  /**
-   * @brief Remove hash from visited states map and stack.
-   *
-   * @note If the state has been visited before, the count will be decremented
-   * by 1. If the count is 0, the state will be removed from the map.
-   */
-  void remove_hash_from_visited_states();
 
   /**
    * @brief Helper function to check if a square is attacked by a pawn.
@@ -338,12 +350,6 @@ private:
    * @param move Manage piece counts for this move.
    */
   void manage_piece_counts_on_undo(Move &move);
-
-  /**
-   * @brief Checks if the game is in an end game state and updates the
-   * is_end_game property.
-   */
-  void is_end_game_check();
 };
 } // namespace engine::parts
 

@@ -5,8 +5,6 @@ namespace engine::parts::fen_interface
 auto setup_custom_board(BoardState &board_state,
                         const std::string &fen_configuration) -> bool
 {
-  board_state.reset_board();
-
   board_state.queens_on_board = 0;
   board_state.number_of_main_pieces_left = 0;
 
@@ -49,14 +47,17 @@ auto setup_custom_board(BoardState &board_state,
       (color_to_move_local[0] == parts::WHITE_PIECE_CHAR) ? PieceColor::WHITE
                                                           : PieceColor::BLACK;
 
+  // Add the initial board state to the visited states hash map.
+  board_state.add_current_state_to_visited_states();
+
   return true;
 }
 
 auto initialize_board(BoardState &board_state,
                       std::string board_configuration) -> bool
 {
-  // Set all squares to empty.
-  board_state.make_all_squares_empty();
+  // Set all squares to empty and set properties to null values.
+  board_state.clear_chess_board();
 
   int board_configuration_index = 0;
   for (int y_position = Y_MAX; y_position >= Y_MIN; --y_position)
@@ -97,6 +98,7 @@ auto initialize_board(BoardState &board_state,
       ++board_configuration_index;
     }
   }
+  board_state.is_end_game_check();
 
   return true;
 }
@@ -128,11 +130,13 @@ void create_pieces(BoardState &board_state,
   case PieceType::KING:
     if (piece_color == PieceColor::WHITE)
     {
+      board_state.white_king_is_alive = true;
       board_state.white_king_x_position = x_position;
       board_state.white_king_y_position = y_position;
     }
     else
     {
+      board_state.black_king_is_alive = true;
       board_state.black_king_x_position = x_position;
       board_state.black_king_y_position = y_position;
     }

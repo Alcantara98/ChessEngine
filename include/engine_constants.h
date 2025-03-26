@@ -61,7 +61,8 @@ const int PERCENTAGE = 100;
 
 // SEARCH ENGINE CONSTANTS
 const int MAX_SEARCH_DEPTH = 100;
-const int MAX_QUIESCENCE_DEPTH = 4;
+const int MAX_QUIESCENCE_DEPTH_EVEN = 4;
+const int MAX_QUIESCENCE_DEPTH_ODD = 3;
 const int MAX_SEARCH_TIME = 600000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;
@@ -73,6 +74,9 @@ const int BISHOP_VALUE = 330;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
+// For getting MVV_LVA_VALUES.
+const std::array<int, 6> PIECE_VALUES = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE,
+                                         ROOK_VALUE, QUEEN_VALUE,  KING_VALUE};
 
 // EVALUATION POINTS
 const int EXTREMELY_SMALL_EVAL_VALUE = 2;

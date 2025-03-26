@@ -60,6 +60,14 @@ auto evaluate_position(BoardState &board_state) -> int
       }
     }
   }
+
+  // In raw evaluations, positive eval is good for white and negative eval is
+  // good for black. Since negamax nodes are always maximizing nodes, we need to
+  // negate the evalualtion for black.
+  if (board_state.color_to_move == PieceColor::BLACK)
+  {
+    return -eval;
+  }
   return eval;
 }
 

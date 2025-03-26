@@ -408,6 +408,15 @@ private:
                         int beta,
                         int depth,
                         BoardState &board_state) -> int;
+
+  void run_quiescence_search_procedure(BoardState &board_state,
+                                       int &alpha,
+                                       int &beta,
+                                       int &best_eval,
+                                       int &depth,
+                                       int &best_move_index,
+                                       int &current_eval,
+                                       std::vector<Move> &possible_moves);
 };
 } // namespace engine::parts
 
