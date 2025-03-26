@@ -715,9 +715,9 @@ void SearchEngine::reset_and_print_performance_matrix(
 }
 
 auto SearchEngine::quiescence_search(int alpha,
-                                    int beta,
-                                    int depth,
-                                    BoardState &board_state) -> int
+                                     int beta,
+                                     int depth,
+                                     BoardState &board_state) -> int
 {
   // Check if the engine wants to stop searching.
   if (!running_search_flag)

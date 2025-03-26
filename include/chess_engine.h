@@ -192,7 +192,7 @@ private:
    * @return Valid character input.
    */
   auto get_valid_char_input(const std::string &user_message,
-                         const std::string &valid_chars) -> char;
+                            const std::string &valid_chars) -> char;
 
   /**
    * @brief Prints all the moves applied to the board.

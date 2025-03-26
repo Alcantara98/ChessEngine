@@ -227,7 +227,8 @@ auto ChessEngine::update_search_engine_parameters(const std::string &user_input)
   else if (user_input == "update-timelimit")
   {
     user_message = "Enter Search Time for Each Move in Milliseconds";
-    int search_time = get_valid_int_input(user_message, 1, parts::MAX_SEARCH_TIME);
+    int search_time =
+        get_valid_int_input(user_message, 1, parts::MAX_SEARCH_TIME);
     search_engine.max_search_time_milliseconds = search_time;
   }
   else if (user_input == "update-window")
@@ -245,7 +246,8 @@ auto ChessEngine::update_search_engine_parameters(const std::string &user_input)
     if (allow_pondering)
     {
       user_message = "Show Pondering Performance?";
-      char show_ponder_performance_char = get_valid_char_input(user_message, "yn");
+      char show_ponder_performance_char =
+          get_valid_char_input(user_message, "yn");
       search_engine.show_ponder_performance =
           show_ponder_performance_char == 'y';
     }
@@ -487,8 +489,8 @@ auto ChessEngine::handle_general_commands(const std::string &user_input) -> bool
 }
 
 auto ChessEngine::get_valid_int_input(const std::string &user_message,
-                                   int min,
-                                   int max) -> int
+                                      int min,
+                                      int max) -> int
 {
   int int_input;
   std::string user_input;
@@ -524,7 +526,7 @@ auto ChessEngine::get_valid_int_input(const std::string &user_message,
 }
 
 auto ChessEngine::get_valid_char_input(const std::string &user_message,
-                                    const std::string &valid_chars) -> char
+                                       const std::string &valid_chars) -> char
 {
   char char_input;
   std::string user_input;
