@@ -552,13 +552,26 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  // I think it is better to evaluate when it is the engine's turn to move, but
-  // I am not sure.
-  int depth = (engine_color == board_state.color_to_move)
-                  ? MAX_QUIESCENCE_DEPTH_EVEN
-                  : MAX_QUIESCENCE_DEPTH_ODD;
+  int eval = position_evaluator::evaluate_position(board_state);
 
-  return quiescence_search(alpha, beta, depth, board_state);
+  // FUTILITY PRUNING
+  // Futitliy pruning is a heuristic that stops searching a branch if the
+  // evaluation of the leaf node is so bad that it is not worth searching
+  // further.
+  // If current eval + the value of a pawn is less than alpha, we
+  // return the eval.
+  // Do not apply futility pruning if the game is in the end game, the previous
+  // move was a capture move, and if the king is in check. Only apply
+  // futility pruning in quiet positions.
+  if (!board_state.is_end_game &&
+      board_state.previous_move_stack.top().captured_piece == nullptr &&
+      (eval + PAWN_VALUE) < alpha &&
+      !board_state.king_is_checked(PieceColor::BLACK) &&
+      !board_state.king_is_checked(PieceColor::WHITE))
+  {
+    return eval;
+  }
+  return quiescence_search(alpha, beta, board_state);
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -716,7 +729,6 @@ void SearchEngine::reset_and_print_performance_matrix(
 
 auto SearchEngine::quiescence_search(int alpha,
                                      int beta,
-                                     int depth,
                                      BoardState &board_state) -> int
 {
   // Check if the engine wants to stop searching.
@@ -760,41 +772,33 @@ auto SearchEngine::quiescence_search(int alpha,
   if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
                                    tt_best_move_index, true))
   {
-    if (depth <= tt_search_depth)
+    switch (tt_flag)
     {
-      switch (tt_flag)
-      {
-      case EXACT: // alpha < eval < beta
-        return tt_eval;
+    case EXACT: // alpha < eval < beta
+      return tt_eval;
 
-      case FAILED_HIGH: // eval >= beta
-        alpha = std::max(alpha, tt_eval);
-        break;
+    case FAILED_HIGH: // eval >= beta
+      alpha = std::max(alpha, tt_eval);
+      break;
 
-      case FAILED_LOW: // eval <= alpha
-        beta = std::min(beta, tt_eval);
-        break;
+    case FAILED_LOW: // eval <= alpha
+      beta = std::min(beta, tt_eval);
+      break;
 
-      default:
-        // Handle unexpected tt_flag value.
-        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
-      }
+    default:
+      // Handle unexpected tt_flag value.
+      printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+    }
 
-      if (alpha >= beta)
-      {
-        return tt_eval;
-      }
+    if (alpha >= beta)
+    {
+      return tt_eval;
     }
   }
 
   // QUIESCENCE SEARCH PRE-PROCEDURE
 
   int current_eval = position_evaluator::evaluate_position(board_state);
-
-  if (depth <= 0)
-  {
-    return current_eval;
-  }
 
   // If the eval is not within the alpha beta window, return the eval.
   // Otherwise, we will do too many unnecessary quiescence searches.
@@ -819,7 +823,7 @@ auto SearchEngine::quiescence_search(int alpha,
 
   int best_eval = current_eval;
 
-  run_quiescence_search_procedure(board_state, alpha, beta, best_eval, depth,
+  run_quiescence_search_procedure(board_state, alpha, beta, best_eval,
                                   best_move_index, current_eval,
                                   possible_moves);
 
@@ -835,7 +839,8 @@ auto SearchEngine::quiescence_search(int alpha,
   }
 
   // Store in transposition table with quiescence flag set to true.
-  store_state_in_transposition_table(hash, depth, best_eval, original_alpha,
+  int tt_depth = 0;
+  store_state_in_transposition_table(hash, tt_depth, best_eval, original_alpha,
                                      beta, best_move_index, true);
   return best_eval;
 }
@@ -845,7 +850,6 @@ void SearchEngine::run_quiescence_search_procedure(
     int &alpha,
     int &beta,
     int &best_eval,
-    int &depth,
     int &best_move_index,
     int &current_eval,
     std::vector<Move> &possible_moves)
@@ -861,7 +865,7 @@ void SearchEngine::run_quiescence_search_procedure(
 
     board_state.apply_move(possible_moves[move_index]);
 
-    int eval = -quiescence_search(-beta, -alpha, depth - 1, board_state);
+    int eval = -quiescence_search(-beta, -alpha, board_state);
 
     board_state.undo_move();
 
@@ -893,7 +897,7 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
 
   return (
       !board_state.is_end_game &&
-      (current_eval + QUEEN_VALUE +
+      (current_eval + (PAWN_VALUE * 2) +
        PIECE_VALUES[static_cast<uint8_t>(move.captured_piece->piece_type)]) <
           alpha);
 }

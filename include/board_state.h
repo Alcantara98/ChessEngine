@@ -159,7 +159,7 @@ public:
    *
    * @return True if the king is in check, false otherwise.
    */
-  auto king_is_checked(PieceColor &color_of_king) -> bool;
+  auto king_is_checked(PieceColor color_of_king) -> bool;
 
   /**
    * @brief Checks if the given move leaves the king in check.

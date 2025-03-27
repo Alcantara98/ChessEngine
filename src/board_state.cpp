@@ -401,7 +401,7 @@ auto BoardState::square_is_attacked(int x_position,
                                     color_being_attacked);
 }
 
-auto BoardState::king_is_checked(PieceColor &color_of_king) -> bool
+auto BoardState::king_is_checked(PieceColor color_of_king) -> bool
 {
   if (color_of_king == PieceColor::WHITE)
   {
