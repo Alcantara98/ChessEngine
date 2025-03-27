@@ -404,16 +404,12 @@ private:
    *
    * @return Evaluation score from quiescence search.
    */
-  auto quiescence_search(int alpha,
-                         int beta,
-                         int depth,
-                         BoardState &board_state) -> int;
+  auto quiescence_search(int alpha, int beta, BoardState &board_state) -> int;
 
   void run_quiescence_search_procedure(BoardState &board_state,
                                        int &alpha,
                                        int &beta,
                                        int &best_eval,
-                                       int &depth,
                                        int &best_move_index,
                                        int &current_eval,
                                        std::vector<Move> &possible_moves);
