@@ -852,16 +852,9 @@ void SearchEngine::run_quiescence_search_procedure(
 {
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
-    // DELTA PRUNING
-    // If the current_eval is so low that the score gained from capturing the
-    // piece in the move + a queen's value (900) will not bring it back up to
-    // alpha, then it is most likely not worth searching the move.
-    // Don't do it in the end game since it is more likely that bad moves are
-    // the best a player could do.
-    if (!board_state.is_end_game &&
-        (current_eval + QUEEN_VALUE +
-         PIECE_VALUES[static_cast<uint8_t>(
-             possible_moves[move_index].captured_piece->piece_type)]) < alpha)
+    // Check if the move can be delta pruned.
+    if (delta_prune_move(board_state, possible_moves[move_index], current_eval,
+                         alpha))
     {
       continue;
     }
@@ -885,6 +878,24 @@ void SearchEngine::run_quiescence_search_procedure(
       alpha = std::max(eval, alpha);
     }
   }
+}
+
+auto SearchEngine::delta_prune_move(const BoardState &board_state,
+                                    const Move &move,
+                                    const int &current_eval,
+                                    const int &alpha) -> bool
+{
+  // If the current_eval is so low that the score gained from capturing the
+  // piece in the move + a queen's value (900) will not bring it back up to
+  // alpha, then it is most likely not worth searching the move.
+  // Don't do it in the end game since it is more likely that bad moves are
+  // the best a player could do.
+
+  return (
+      !board_state.is_end_game &&
+      (current_eval + QUEEN_VALUE +
+       PIECE_VALUES[static_cast<uint8_t>(move.captured_piece->piece_type)]) <
+          alpha);
 }
 
 } // namespace engine::parts
