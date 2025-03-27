@@ -181,18 +181,19 @@ void BoardState::print_board(PieceColor color)
 
 void BoardState::apply_move(Move &move)
 {
+  Piece &moving_piece = *chess_board[move.from_x][move.from_y];
   if (move.capture_is_en_passant)
   {
     // Remove captured pawn.
-    int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
+    int captured_y_pos = (moving_piece.piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
                              : move.to_y + 1;
     chess_board[move.to_x][captured_y_pos] = &empty_piece;
   }
-  else if (move.moving_piece->piece_type == PieceType::KING)
+  else if (moving_piece.piece_type == PieceType::KING)
   {
     // Keep track of the king's positions for evaluation.
-    if (move.moving_piece->piece_color == PieceColor::WHITE)
+    if (moving_piece.piece_color == PieceColor::WHITE)
     {
       white_king_x_position = move.to_x;
       white_king_y_position = move.to_y;
@@ -207,7 +208,7 @@ void BoardState::apply_move(Move &move)
     if (king_move_distance == 2 || king_move_distance == -2)
     {
       // Keep track of castling for evaluation.
-      if (move.moving_piece->piece_color == PieceColor::WHITE)
+      if (moving_piece.piece_color == PieceColor::WHITE)
       {
         white_has_castled = true;
       }
@@ -256,7 +257,7 @@ void BoardState::apply_move(Move &move)
 
   if (move.first_move_of_moving_piece)
   {
-    move.moving_piece->piece_has_moved = true;
+    moving_piece.piece_has_moved = true;
   }
 
   // Update move color, it is now the other player's turn.
@@ -277,19 +278,22 @@ void BoardState::undo_move()
   {
     return;
   }
+
   Move &move = previous_move_stack.top();
+  Piece &moving_piece = *chess_board[move.to_x][move.to_y];
+
   if (move.capture_is_en_passant)
   {
-    int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
+    int captured_y_pos = (moving_piece.piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
                              : move.to_y + 1;
     // Add captured pawn.
     chess_board[move.to_x][captured_y_pos] = move.captured_piece;
   }
-  else if (move.moving_piece->piece_type == PieceType::KING)
+  else if (moving_piece.piece_type == PieceType::KING)
   {
     // Keep track of the king's positions for evaluation.
-    if (move.moving_piece->piece_color == PieceColor::WHITE)
+    if (moving_piece.piece_color == PieceColor::WHITE)
     {
       white_king_x_position = move.from_x;
       white_king_y_position = move.from_y;
@@ -304,7 +308,7 @@ void BoardState::undo_move()
     if (king_move_distance == 2 || king_move_distance == -2)
     {
       // Keep track of castling for evaluation.
-      if (move.moving_piece->piece_color == PieceColor::WHITE)
+      if (moving_piece.piece_color == PieceColor::WHITE)
       {
         white_has_castled = false;
       }
@@ -352,7 +356,7 @@ void BoardState::undo_move()
 
   if (move.first_move_of_moving_piece)
   {
-    move.moving_piece->piece_has_moved = false;
+    moving_piece.piece_has_moved = false;
   }
 
   // Update move color, it is now the other player's turn.
@@ -416,8 +420,8 @@ auto BoardState::king_is_checked(PieceColor color_of_king) -> bool
 auto BoardState::move_leaves_king_in_check(Move &move) -> bool
 {
   apply_move(move);
-  bool king_is_checked_after_move =
-      king_is_checked(move.moving_piece->piece_color);
+  Piece &moving_piece = *chess_board[move.to_x][move.to_y];
+  bool king_is_checked_after_move = king_is_checked(moving_piece.piece_color);
   undo_move();
   return king_is_checked_after_move;
 }

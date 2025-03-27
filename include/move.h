@@ -12,26 +12,23 @@ struct Move
 {
   // PROPERTIES
 
-  /// @brief The piece that is moving.
-  Piece *moving_piece;
-
-  /// @brief The piece that is captured by moving_piece.
+  /// @brief The piece that is captured by the moving piece.
   /// @note If no piece is captured, this will be nullptr.
   Piece *captured_piece;
 
   /// @brief If pawn is promoted, it will be promoted to this piece type.
   PieceType promotion_piece_type;
 
-  /// @brief moving_piece coordinates before applying this move.
+  /// @brief Moving piece coordinates before applying this move.
   int from_x, from_y;
 
-  /// @brief moving_piece coordinates after applying this move.
+  /// @brief Moving piece coordinates after applying this move.
   int to_x, to_y;
 
-  /// @brief True if moving_piece (has to be a pawn) captures En Passant.
+  /// @brief True if the moving piece (has to be a pawn) captures En Passant.
   bool capture_is_en_passant;
 
-  /// @brief Specifies whether this is the moving_piece's first move.
+  /// @brief Specifies whether this is the moving piece's first move.
   bool first_move_of_moving_piece;
 
   /// @brief Specifies whether a pawn moved two squares forward on this move.
@@ -46,16 +43,15 @@ struct Move
   /**
    * @brief Constructor with all parameters.
    *
-   * @param from_x, from_y moving_piece coordinates before applying this move.
-   * @param to_x, to_y moving_piece coordinates after applying this move.
-   * @param moving_piece The piece that is moving.
-   * @param captured_piece The piece that is captured by moving_piece.
+   * @param from_x, from_y Moving piece coordinates before applying this move.
+   * @param to_x, to_y Moving piece coordinates after applying this move.
+   * @param captured_piece The piece that is captured by the moving piece.
    * @param promotion_piece_type If pawn is promoted, it will be promoted to
    * this piece type.
-   * @param capture_is_en_passant True if moving_piece (has to be a pawn)
+   * @param capture_is_en_passant True if the moving piece (has to be a pawn)
    * captures En Passant.
-   * @param first_move_of_moving_piece True if this is the moving_piece's first
-   * move.
+   * @param first_move_of_moving_piece True if this is the moving piece's
+   * first move.
    * @param pawn_moved_two_squares Specifies whether a pawn moved two squares
    * forward on this move.
    * @param pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y If a pawn
@@ -65,7 +61,6 @@ struct Move
        int from_y,
        int to_x,
        int to_y,
-       Piece *moving_piece,
        Piece *captured_piece,
        PieceType promotion_piece_type,
        bool capture_is_en_passant,
@@ -77,10 +72,10 @@ struct Move
   /**
    * @brief Constructor for normal move without captures.
    *
-   * @param from_x, from_y moving_piece coordinates before applying this move.
-   * @param to_x, to_y moving_piece coordinates after applying this move.
-   * @param moving_piece The piece that is moving.
-   * @param first_move_of_moving_piece True if this is the moving_piece's first
+   * @param from_x, from_y Moving piece coordinates before applying this move.
+   * @param to_x, to_y Moving piece coordinates after applying this move.
+   * @param first_move_of_moving_piece True if this is the moving piece's
+   * first move.
    * @param pawn_moved_two_squares Specifies whether a pawn moved two squares
    * forward on this move.
    * @param pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y If a pawn
@@ -90,7 +85,6 @@ struct Move
        int from_y,
        int to_x,
        int to_y,
-       Piece *moving_piece,
        bool first_move_of_moving_piece = false,
        bool pawn_moved_two_squares = false,
        int pawn_moved_two_squares_to_x = -1,
@@ -99,19 +93,18 @@ struct Move
   /**
    * @brief Constructor for captures.
    *
-   * @param from_x, from_y moving_piece coordinates before applying this move.
-   * @param to_x, to_y moving_piece coordinates after applying this move.
-   * @param moving_piece The piece that is moving.
-   * @param captured_piece The piece that is captured by moving_piece.
-   * @param first_move_of_moving_piece True if this is the moving_piece's first
-   * @param capture_is_en_passant True if moving_piece (has to be a pawn)
+   * @param from_x, from_y Moving piece coordinates before applying this move.
+   * @param to_x, to_y Moving piece coordinates after applying this move.
+   * @param captured_piece The piece that is captured by the moving piece.
+   * @param first_move_of_moving_piece True if this is the moving piece's
+   * first move.
+   * @param capture_is_en_passant True if the moving piece (has to be a pawn)
    * captures En Passant.
    */
   Move(int from_x,
        int from_y,
        int to_x,
        int to_y,
-       Piece *moving_piece,
        Piece *captured_piece,
        bool first_move_of_moving_piece = false,
        bool capture_is_en_passant = false);
@@ -119,9 +112,8 @@ struct Move
   /**
    * @brief Constructor for pawn promotion through normal move.
    *
-   * @param from_x, from_y moving_piece coordinates before applying this move.
-   * @param to_x, to_y moving_piece coordinates after applying this move.
-   * @param moving_piece The piece that is moving.
+   * @param from_x, from_y Moving piece coordinates before applying this move.
+   * @param to_x, to_y Moving piece coordinates after applying this move.
    * @param promotion_piece_type If pawn is promoted, it will be promoted to
    * this piece type.
    */
@@ -129,16 +121,14 @@ struct Move
        int from_y,
        int to_x,
        int to_y,
-       Piece *moving_piece,
        PieceType promotion_piece_type);
 
   /**
    * @brief Constructor for pawn promotion through captures.
    *
-   * @param from_x, from_y moving_piece coordinates before applying this move.
-   * @param to_x, to_y moving_piece coordinates after applying this move.
-   * @param moving_piece The piece that is moving.
-   * @param captured_piece The piece that is captured by moving_piece.
+   * @param from_x, from_y Moving piece coordinates before applying this move.
+   * @param to_x, to_y Moving piece coordinates after applying this move.
+   * @param captured_piece The piece that is captured by the moving piece.
    * @param promotion_piece_type If pawn is promoted, it will be promoted to
    * this piece type.
    */
@@ -146,7 +136,6 @@ struct Move
        int from_y,
        int to_x,
        int to_y,
-       Piece *moving_piece,
        Piece *captured_piece,
        PieceType promotion_piece_type);
 

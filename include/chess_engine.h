@@ -41,9 +41,6 @@ private:
   /// @brief Best move finder object.
   parts::SearchEngine search_engine;
 
-  /// @brief Move interface object.
-  parts::MoveInterface move_interface;
-
   /// @brief Player color.
   parts::PieceColor player_color = parts::PieceColor::NONE;
 

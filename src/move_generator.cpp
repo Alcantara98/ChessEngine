@@ -62,7 +62,7 @@ auto calculate_possible_moves(BoardState &board_state,
       }
     }
   }
-  sort_moves_mvv_lvv(possible_capture_moves);
+  sort_moves_mvv_lvv(possible_capture_moves, board_state);
 
   if (capture_only)
   {
@@ -147,16 +147,14 @@ void generate_normal_pawn_moves(chess_board_type &chess_board,
                                 PieceType::KNIGHT, PieceType::ROOK})
         {
           possible_normal_moves.emplace_back(x_position, y_position, x_position,
-                                             new_y_position, pawn_piece,
-                                             piece_type);
+                                             new_y_position, piece_type);
         }
       }
       else
       {
         // Normal move.
         possible_normal_moves.emplace_back(x_position, y_position, x_position,
-                                           new_y_position, pawn_piece,
-                                           first_move);
+                                           new_y_position, first_move);
       }
     }
     // Two square move forward.
@@ -169,8 +167,8 @@ void generate_normal_pawn_moves(chess_board_type &chess_board,
             PieceType::EMPTY)
     {
       possible_normal_moves.emplace_back(
-          x_position, y_position, x_position, new_y_position_two_squares,
-          pawn_piece, true, true, x_position, new_y_position_two_squares);
+          x_position, y_position, x_position, new_y_position_two_squares, true,
+          true, x_position, new_y_position_two_squares);
     }
   }
 }
@@ -202,17 +200,17 @@ void generate_pawn_capture_moves(chess_board_type &chess_board,
           for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
                                   PieceType::KNIGHT, PieceType::ROOK})
           {
-            possible_capture_moves.emplace_back(
-                x_position, y_position, new_x_position, new_y_position,
-                pawn_piece, captured_piece, piece_type);
+            possible_capture_moves.emplace_back(x_position, y_position,
+                                                new_x_position, new_y_position,
+                                                captured_piece, piece_type);
           }
         }
         else
         {
           // Normal capture move.
-          possible_capture_moves.emplace_back(
-              x_position, y_position, new_x_position, new_y_position,
-              pawn_piece, captured_piece, first_move);
+          possible_capture_moves.emplace_back(x_position, y_position,
+                                              new_x_position, new_y_position,
+                                              captured_piece, first_move);
         }
       }
     }
@@ -250,9 +248,9 @@ void generate_en_passant_pawn_capture_moves(
                 PieceType::EMPTY)
         {
 
-          possible_capture_moves.emplace_back(
-              x_position, y_position, new_x_position, new_y_position,
-              pawn_piece, captured_piece, first_move, true);
+          possible_capture_moves.emplace_back(x_position, y_position,
+                                              new_x_position, new_y_position,
+                                              captured_piece, first_move, true);
         }
       }
     }
@@ -286,14 +284,14 @@ void generate_king_moves(BoardState &board_state,
       if (!capture_only)
       {
         possible_normal_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                           king_piece, first_move);
+                                           first_move);
       }
     }
     // Capture move.
     else if (target_piece->piece_color != king_piece->piece_color)
     {
       possible_capture_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                          king_piece, target_piece, first_move);
+                                          target_piece, first_move);
     }
   }
 }
@@ -316,8 +314,7 @@ void generate_castle_king_moves(BoardState &board_state,
                    {XF_FILE, XG_FILE}))
     {
       possible_normal_moves.emplace_back(x_position, y_position, x_position + 2,
-                                         y_position, king_piece, first_move,
-                                         false);
+                                         y_position, first_move, false);
     }
 
     // Castle queen side.
@@ -326,8 +323,7 @@ void generate_castle_king_moves(BoardState &board_state,
                    {XB_FILE, XC_FILE, XD_FILE}))
     {
       possible_normal_moves.emplace_back(x_position, y_position, x_position - 2,
-                                         y_position, king_piece, first_move,
-                                         false);
+                                         y_position, first_move, false);
     }
   }
 }
@@ -386,15 +382,14 @@ void generate_knight_moves(BoardState &board_state,
       if (!capture_only)
       {
         possible_normal_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                           knight_piece, first_move);
+                                           first_move);
       }
     }
     // Capture move.
     else if (target_piece->piece_color != knight_piece->piece_color)
     {
       possible_capture_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                          knight_piece, target_piece,
-                                          first_move);
+                                          target_piece, first_move);
     }
   }
 }
@@ -449,16 +444,16 @@ void generate_queen_moves(BoardState &board_state,
 }
 
 // PRIVATE FUNCTIONS
-void rook_bishop_move_helper(BoardState &board_state,
-                             int x_position,
-                             int y_position,
-                             int x_direction,
-                             int y_direction,
+void rook_bishop_move_helper(const BoardState &board_state,
+                             const int &x_position,
+                             const int &y_position,
+                             const int &x_direction,
+                             const int &y_direction,
                              std::vector<Move> &possible_normal_moves,
                              std::vector<Move> &possible_capture_moves,
                              bool capture_only)
 {
-  chess_board_type &board = board_state.chess_board;
+  const chess_board_type &board = board_state.chess_board;
   Piece *moving_piece = board[x_position][y_position];
   bool first_move = !moving_piece->piece_has_moved;
 
@@ -474,15 +469,14 @@ void rook_bishop_move_helper(BoardState &board_state,
       if (!capture_only)
       {
         possible_normal_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                           moving_piece, first_move);
+                                           first_move);
       }
     }
     // Capture move.
     else if (target_piece->piece_color != moving_piece->piece_color)
     {
       possible_capture_moves.emplace_back(x_position, y_position, new_x, new_y,
-                                          moving_piece, target_piece,
-                                          first_move);
+                                          target_piece, first_move);
       break;
     }
     else
@@ -492,19 +486,24 @@ void rook_bishop_move_helper(BoardState &board_state,
   }
 }
 
-static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
+static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves,
+                               BoardState &board_state)
 {
-  std::sort(possible_capture_moves.begin(), possible_capture_moves.end(),
-            [](const Move &move1, const Move &move2)
-            {
-              return MVV_LVA_VALUES[static_cast<uint8_t>(
-                         move1.captured_piece->piece_type)]
-                                   [static_cast<uint8_t>(
-                                       move1.moving_piece->piece_type)] >
-                     MVV_LVA_VALUES[static_cast<uint8_t>(
-                         move2.captured_piece->piece_type)]
-                                   [static_cast<uint8_t>(
-                                       move2.moving_piece->piece_type)];
-            });
+  std::sort(
+      possible_capture_moves.begin(), possible_capture_moves.end(),
+      [board_state](const Move &move1, const Move &move2)
+      {
+        PieceType &moving_piece_type1 =
+            board_state.chess_board[move1.from_x][move1.from_y]->piece_type;
+        PieceType &moving_piece_type2 =
+            board_state.chess_board[move2.from_x][move2.from_y]->piece_type;
+
+        return MVV_LVA_VALUES[static_cast<uint8_t>(
+                   move1.captured_piece->piece_type)]
+                             [static_cast<uint8_t>(moving_piece_type1)] >
+               MVV_LVA_VALUES[static_cast<uint8_t>(
+                   move2.captured_piece->piece_type)]
+                             [static_cast<uint8_t>(moving_piece_type2)];
+      });
 }
 } // namespace engine::parts::move_generator

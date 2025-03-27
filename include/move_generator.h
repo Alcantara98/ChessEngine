@@ -253,11 +253,11 @@ static void generate_queen_moves(BoardState &board_state,
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
-static void rook_bishop_move_helper(BoardState &board_state,
-                                    int x_position,
-                                    int y_position,
-                                    int x_direction,
-                                    int y_direction,
+static void rook_bishop_move_helper(const BoardState &board_state,
+                                    const int &x_position,
+                                    const int &y_position,
+                                    const int &x_direction,
+                                    const int &y_direction,
                                     std::vector<Move> &possible_normal_moves,
                                     std::vector<Move> &possible_capture_moves,
                                     bool capture_only = false);
@@ -267,8 +267,10 @@ static void rook_bishop_move_helper(BoardState &board_state,
  *
  * @param possible_capture_moves Reference to the list of possible capture moves
  * of current board_state.
+ * @param board_state Reference of the current board state.
  */
-static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves);
+static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves,
+                               BoardState &board_state);
 } // namespace engine::parts::move_generator
 
 #endif // MOVE_GENERATOR_H

@@ -340,7 +340,7 @@ auto validate_en_passant_target(BoardState &board_state,
 
   Move previous_pawn_move =
       Move(pawn_x_position, original_rank, pawn_x_position, pawn_y_position,
-           pawn_piece, true, true, pawn_x_position, pawn_y_position);
+           true, true, pawn_x_position, pawn_y_position);
 
   board_state.previous_move_stack.push(previous_pawn_move);
 

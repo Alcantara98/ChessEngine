@@ -5,8 +5,7 @@ namespace engine
 // CONSTRUCTORS
 
 ChessEngine::ChessEngine()
-    : search_engine(parts::SearchEngine(game_board_state)),
-      move_interface(parts::MoveInterface(game_board_state))
+    : search_engine(parts::SearchEngine(game_board_state))
 {
 }
 
@@ -322,9 +321,9 @@ void ChessEngine::handle_player_turn()
       printf("\n");
       continue;
     }
-    if (move_interface.input_to_move(
+    if (parts::move_interface::input_to_move(
             parts::move_generator::calculate_possible_moves(game_board_state),
-            user_input))
+            user_input, game_board_state))
     {
       // Move was valid and played, end player's turn.
       break;
@@ -575,7 +574,9 @@ void ChessEngine::print_applied_moves()
   for (int index = previous_moves_temp.size() - 1; index >= 0; --index)
   {
     parts::Move move = previous_moves_temp[index];
-    printf("%s\n", parts::MoveInterface::move_to_string(move).c_str());
+    printf(
+        "%s\n",
+        parts::move_interface::move_to_string(move, game_board_state).c_str());
     // Add move back to previous move stack.
     game_board_state.previous_move_stack.push(move);
   }
