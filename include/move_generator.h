@@ -4,6 +4,7 @@
 #include "board_state.h"
 #include "move.h"
 #include "piece.h"
+#include "search_engine.h"
 
 #include <array>
 #include <vector>
@@ -13,6 +14,11 @@
  */
 namespace engine::parts::move_generator
 {
+/// @brief Array to represent the history heuristic table.
+using history_table_type = std::array<
+    std::array<std::array<std::array<int, BOARD_HEIGHT>, BOARD_WIDTH>,
+               NUM_OF_PIECE_TYPES>,
+    NUM_OF_COLORS>;
 
 /**
  * @brief Calculates all possible moves of current board state.
@@ -23,6 +29,7 @@ namespace engine::parts::move_generator
  * @return Vector of possible moves.
  */
 auto calculate_possible_moves(BoardState &board_state,
+                              history_table_type *history_table = nullptr,
                               bool capture_only = false) -> std::vector<Move>;
 
 /**
@@ -263,12 +270,31 @@ static void rook_bishop_move_helper(BoardState &board_state,
                                     bool capture_only = false);
 
 /**
- * @brief Generates all possible moves for a given piece.
+ * @brief Sorts the given capture moves based on the Most Valuable Victim -
+ * Least Valuable Attacker Heuristic.
+ *
+ * @details The MVV-LVA heuristic is a simple heuristic that sorts moves based
+ * on the value of the captured piece and the value of the attacking piece.
  *
  * @param possible_capture_moves Reference to the list of possible capture moves
  * of current board_state.
  */
 static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves);
+
+/**
+ * @brief Sorts the given normal moves based on the History Heuristic.
+ *
+ * @details The history heuristic is a simple heuristic that sorts moves based
+ * on the number of times a move has caused a beta cutoff.
+ *
+ * @param possible_normal_moves Reference to the list of possible non-capture
+ * moves of current board_state.
+ * @param history_table Reference to the history table.
+ * @param board_state Reference of the current board state.
+ */
+static void
+sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
+                             history_table_type *history_table);
 } // namespace engine::parts::move_generator
 
 #endif // MOVE_GENERATOR_H

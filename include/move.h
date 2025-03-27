@@ -41,6 +41,10 @@ struct Move
   /// moved to.
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
+  /// @brief Index of the move in the move list.
+  /// @note This is used to identify the best move in the possible moves list.
+  int list_index = 0;
+
   // CONSTRUCTORS
 
   /**

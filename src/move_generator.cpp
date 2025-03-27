@@ -5,6 +5,7 @@ namespace engine::parts::move_generator
 //  PUBLIC FUNCTIONS
 
 auto calculate_possible_moves(BoardState &board_state,
+                              history_table_type *history_table,
                               bool capture_only) -> std::vector<Move>
 {
   std::vector<Move> possible_normal_moves;
@@ -67,6 +68,22 @@ auto calculate_possible_moves(BoardState &board_state,
   if (capture_only)
   {
     return std::move(possible_capture_moves);
+  }
+
+  // Assign list index to each move. This is used for identifying the best move.
+  int move_index = 0;
+  for (; move_index < possible_capture_moves.size(); ++move_index)
+  {
+    possible_capture_moves[move_index].list_index = move_index;
+  }
+  for (; move_index < possible_normal_moves.size(); ++move_index)
+  {
+    possible_normal_moves[move_index].list_index = move_index;
+  }
+
+  if (history_table != nullptr)
+  {
+    sort_moves_history_heuristic(possible_normal_moves, history_table);
   }
 
   // Put capture moves first starting from index 0.
@@ -507,4 +524,30 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
                                        move2.moving_piece->piece_type)];
             });
 }
+
+void sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
+                                  history_table_type *history_table)
+{
+  std::sort(possible_normal_moves.begin(), possible_normal_moves.end(),
+            [history_table](const Move &move1, const Move &move2)
+            {
+              const int &color_1 =
+                  static_cast<int>(move1.moving_piece->piece_color);
+              const int &piece_type_1 =
+                  static_cast<int>(move1.moving_piece->piece_type);
+              const int &to_x_1 = move1.to_x;
+              const int &to_y_1 = move1.to_y;
+
+              const int &color_2 =
+                  static_cast<int>(move2.moving_piece->piece_color);
+              const int &piece_type_2 =
+                  static_cast<int>(move2.moving_piece->piece_type);
+              const int &to_x_2 = move2.to_x;
+              const int &to_y_2 = move2.to_y;
+
+              return (*history_table)[color_1][piece_type_1][to_x_1][to_y_1] >
+                     (*history_table)[color_2][piece_type_2][to_x_2][to_y_2];
+            });
+}
+
 } // namespace engine::parts::move_generator

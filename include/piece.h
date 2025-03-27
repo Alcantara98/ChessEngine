@@ -24,9 +24,9 @@ enum class PieceType : std::uint8_t
  */
 enum class PieceColor : std::uint8_t
 {
-  NONE,
   WHITE,
-  BLACK
+  BLACK,
+  NONE,
 };
 
 /**

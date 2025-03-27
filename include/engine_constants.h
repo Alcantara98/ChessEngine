@@ -95,6 +95,10 @@ const int END_GAME_CONDITION_TWO_QUEENS = 2;
 const int END_GAME_CONDITION_ONE_QUEEN = 5;
 const int END_GAME_CONDITION_NO_QUEENS = 8;
 
+// HISTORY HEURISTIC CONSTANTS
+const int DECAY_RATE_NUMERATOR = 9;
+const int DECAY_RATE_DENOMINATOR = 10;
+
 // MVV-LVA CONSTANTS
 // First index represents the victim piece, second index represents the attacker
 // piece.
