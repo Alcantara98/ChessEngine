@@ -552,11 +552,22 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  // FUTILITY PRUNING
   int eval = position_evaluator::evaluate_position(board_state);
+
+  // FUTILITY PRUNING
+  // Futitliy pruning is a heuristic that stops searching a branch if the
+  // evaluation of the leaf node is so bad that it is not worth searching
+  // further.
+  // If current eval + the value of a pawn is less than alpha, we
+  // return the eval.
+  // Do not apply futility pruning if the game is in the end game, the previous
+  // move was a capture move, and if the king is in check. Only apply
+  // futility pruning in quiet positions.
   if (!board_state.is_end_game &&
       board_state.previous_move_stack.top().captured_piece == nullptr &&
-      (eval + PAWN_VALUE) < alpha)
+      (eval + PAWN_VALUE) < alpha &&
+      !board_state.king_is_checked(PieceColor::BLACK) &&
+      !board_state.king_is_checked(PieceColor::WHITE))
   {
     return eval;
   }
@@ -886,7 +897,7 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
 
   return (
       !board_state.is_end_game &&
-      (current_eval + QUEEN_VALUE +
+      (current_eval + (PAWN_VALUE * 2) +
        PIECE_VALUES[static_cast<uint8_t>(move.captured_piece->piece_type)]) <
           alpha);
 }
