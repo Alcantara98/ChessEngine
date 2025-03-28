@@ -580,7 +580,7 @@ auto BoardState::compute_zobrist_hash() const -> uint64_t
       Piece *piece = chess_board[x_position][y_position];
       if (piece->piece_type != PieceType::EMPTY)
       {
-        int piece_index = static_cast<int>(piece->piece_type) - 1;
+        int piece_index = static_cast<int>(piece->piece_type);
         int color_index = (piece->piece_color == PieceColor::WHITE) ? 0 : 1;
         hash ^= zobrist_keys[y_position * BOARD_WIDTH + x_position][piece_index]
                             [color_index];
