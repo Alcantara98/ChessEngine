@@ -190,6 +190,7 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
+    best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -275,6 +276,7 @@ void SearchEngine::run_iterative_deepening_search_pondering()
   for (int iterative_depth = 1; iterative_depth <= MAX_SEARCH_DEPTH;
        ++iterative_depth)
   {
+    best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -329,6 +331,8 @@ void SearchEngine::run_iterative_deepening_search_pondering()
     {
       return;
     }
+    best_eval_of_search_iteration.store(-INF,
+                                        std::memory_order_relaxed); // Reset
 
     auto search_end_time = std::chrono::steady_clock::now();
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
@@ -371,6 +375,16 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
+
+    if (eval <= alpha && best_eval_of_search_iteration.load() > alpha)
+    {
+      break;
+    }
+
+    if (eval > best_eval_of_search_iteration)
+    {
+      best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
+    }
 
     // - Return eval if it is within the window.
     // - Return eval if search has stopped.

@@ -142,6 +142,10 @@ public:
 private:
   // PROPERTIES
 
+  /// @brief Keeps track of the best eval of current search iteration.
+  /// NOTE: Atomic because it is accessed by multiple search threads.
+  std::atomic<int> best_eval_of_search_iteration = -INF;
+
   /// @brief Number of leaf nodes visited.
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<int> leaf_nodes_visited = 0;

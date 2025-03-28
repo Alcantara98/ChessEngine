@@ -528,25 +528,29 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
 void sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
                                   history_table_type *history_table)
 {
-  std::sort(possible_normal_moves.begin(), possible_normal_moves.end(),
-            [history_table](const Move &move1, const Move &move2)
-            {
-              const int &color_1 =
-                  static_cast<int>(move1.moving_piece->piece_color);
-              const int &piece_type_1 =
-                  static_cast<int>(move1.moving_piece->piece_type);
-              const int &to_x_1 = move1.to_x;
-              const int &to_y_1 = move1.to_y;
+  std::sort(
+      possible_normal_moves.begin(), possible_normal_moves.end(),
+      [history_table](const Move &move1, const Move &move2)
+      {
+        if (move1.moving_piece == nullptr || move2.moving_piece == nullptr)
+        {
+          printf("Error: Moving piece is null.\n");
+          return false;
+        }
+        const int &color_1 = static_cast<int>(move1.moving_piece->piece_color);
+        const int &piece_type_1 =
+            static_cast<int>(move1.moving_piece->piece_type);
+        const int &to_x_1 = move1.to_x;
+        const int &to_y_1 = move1.to_y;
 
-              const int &color_2 =
-                  static_cast<int>(move2.moving_piece->piece_color);
-              const int &piece_type_2 =
-                  static_cast<int>(move2.moving_piece->piece_type);
-              const int &to_x_2 = move2.to_x;
-              const int &to_y_2 = move2.to_y;
+        const int &color_2 = static_cast<int>(move2.moving_piece->piece_color);
+        const int &piece_type_2 =
+            static_cast<int>(move2.moving_piece->piece_type);
+        const int &to_x_2 = move2.to_x;
+        const int &to_y_2 = move2.to_y;
 
-              return (*history_table)[color_1][piece_type_1][to_x_1][to_y_1] >
-                     (*history_table)[color_2][piece_type_2][to_x_2][to_y_2];
-            });
+        return (*history_table)[color_1][piece_type_1][to_x_1][to_y_1] >
+               (*history_table)[color_2][piece_type_2][to_x_2][to_y_2];
+      });
 }
 } // namespace engine::parts::move_generator
