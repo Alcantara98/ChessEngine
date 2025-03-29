@@ -364,6 +364,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       if (eval >= beta)
       {
         beta = eval + window_increment;
+        alpha = eval - 1;
       }
       if (eval <= alpha)
       {
