@@ -100,6 +100,37 @@ void evaluate_pawn(int x_position,
   {
     eval += rank_eval;
   }
+
+  // We do not want double pawns.
+  // Check if there is pawn in the first two squares in front of the pawn.
+  // If there is, decrease evaluation.
+  int direction;
+  if (pawn_piece.piece_color == PieceColor::WHITE)
+  {
+    direction = POSITIVE_DIRECTION;
+  }
+  else
+  {
+    direction = NEGATIVE_DIRECTION;
+  }
+  // Check one square in front of the pawn.
+  for (int rank_count = 1; rank_count <= MAX_DOUBLE_PAWN_SQUARES_TO_CHECK;
+       ++rank_count)
+  {
+    if (y_position + (direction * rank_count) >= Y_MIN &&
+        y_position + (direction * rank_count) <= Y_MAX)
+    {
+      Piece &piece =
+          *board_state
+               .chess_board[x_position][y_position + (direction * rank_count)];
+      if (piece.piece_type == PieceType::PAWN &&
+          piece.piece_color == pawn_piece.piece_color)
+      {
+        // Decrease evaluation if there is a pawn in front of the pawn.
+        eval -= MEDIUM_EVAL_VALUE;
+      }
+    }
+  }
 }
 
 void evaluate_knight(int x_position,
@@ -316,8 +347,8 @@ void evaluate_king_safety(int x_position,
       while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
              new_y <= Y_MAX)
       {
-        // Decrease evaluation based on the number of moves as it means king is
-        // less safe.
+        // Decrease evaluation based on the number of moves as it means king
+        // is less safe.
         if (board_state.chess_board[new_x][new_y]->piece_type !=
             PieceType::EMPTY)
         {

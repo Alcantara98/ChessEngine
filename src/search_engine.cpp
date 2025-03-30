@@ -190,6 +190,7 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
        ++iterative_depth)
   {
+    best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -262,6 +263,8 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
                                        search_end_time);
   }
+  // Decay the history table after each engine move.
+  decay_history_table();
 }
 
 void SearchEngine::run_iterative_deepening_search_pondering()
@@ -273,6 +276,7 @@ void SearchEngine::run_iterative_deepening_search_pondering()
   for (int iterative_depth = 1; iterative_depth <= MAX_SEARCH_DEPTH;
        ++iterative_depth)
   {
+    best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
 
     std::vector<std::thread> search_threads;
@@ -327,6 +331,8 @@ void SearchEngine::run_iterative_deepening_search_pondering()
     {
       return;
     }
+    best_eval_of_search_iteration.store(-INF,
+                                        std::memory_order_relaxed); // Reset
 
     auto search_end_time = std::chrono::steady_clock::now();
     reset_and_print_performance_matrix(iterative_depth, search_start_time,
@@ -358,6 +364,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       if (eval >= beta)
       {
         beta = eval + window_increment;
+        alpha = eval - 1;
       }
       if (eval <= alpha)
       {
@@ -369,6 +376,16 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false);
+
+    if (eval <= alpha && best_eval_of_search_iteration.load() > alpha)
+    {
+      break;
+    }
+
+    if (eval > best_eval_of_search_iteration)
+    {
+      best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
+    }
 
     // - Return eval if it is within the window.
     // - Return eval if search has stopped.
@@ -433,11 +450,13 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   int tt_eval;
   int tt_flag;
   int tt_entry_search_depth;
-  int tt_entry_best_move_index = -1;
+  int tt_best_move_index = -1;
   uint64_t hash = board_state.get_current_state_hash();
   // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
-                                   tt_flag, tt_entry_best_move_index))
+                                   tt_flag, tt_best_move_index) &&
+      !(board_state.is_end_game &&
+        board_state.current_state_has_been_visited()))
   {
     // Check if tt_value can be used.
     // If the depth of the stored position is greater than or equal to the
@@ -493,7 +512,6 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       !board_state.is_end_game &&
       !board_state.king_is_checked(board_state.color_to_move))
   {
-
     if (do_null_move_search(board_state, alpha, beta, depth, eval))
     {
       // If we played a null move (which is theoretically a losing move) and get
@@ -504,25 +522,20 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     }
   }
 
-  // NEGAMAX SEARCH
+  // PRINCIPAL VARIATION HEURISTIC
 
   std::vector<Move> possible_moves =
-      move_generator::calculate_possible_moves(board_state);
+      move_generator::calculate_possible_moves(board_state, &history_table);
 
-  // If there is a best move from the transposition table, move it to the
-  // front to be searched first, causing more alpha beta pruning to occur.
-  if (tt_entry_best_move_index >= 0 &&
-      tt_entry_best_move_index < possible_moves.size())
-  {
-    std::swap(possible_moves[0], possible_moves[tt_entry_best_move_index]);
-  }
-  int best_move_index = 0;
+  put_best_move_at_front(possible_moves, tt_best_move_index);
+
+  // NEGAMAX SEARCH
 
   int max_eval = -INF;
 
   // Search and evaluate each move.
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
-                        best_move_index, possible_moves, is_null_move_line);
+                        tt_best_move_index, possible_moves, is_null_move_line);
 
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
@@ -540,7 +553,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   handle_eval_adjustments(max_eval, board_state);
 
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
-                                     beta, best_move_index);
+                                     beta, tt_best_move_index);
 
   return max_eval;
 }
@@ -592,9 +605,9 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          std::vector<Move> &possible_moves,
                                          bool &is_null_move_line)
 {
-  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+  for (auto move : possible_moves)
   {
-    board_state.apply_move(possible_moves[move_index]);
+    board_state.apply_move(move);
 
     // Swap and negate alpha and beta and negate the eval because of the negamax
     // algorithm.
@@ -603,7 +616,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     if (eval > max_eval)
     {
       max_eval = eval;
-      best_move_index = move_index;
+      best_move_index = move.list_index;
     }
     max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
@@ -612,6 +625,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     if (alpha >= beta)
     {
+      udpate_history_table(move, depth);
       break;
     }
   }
@@ -809,22 +823,19 @@ auto SearchEngine::quiescence_search(int alpha,
 
   alpha = std::max(alpha, current_eval);
 
-  std::vector<Move> possible_moves =
-      move_generator::calculate_possible_moves(board_state, true);
+  // PRINCIPAL VARIATION HEURISTIC
 
-  // Put best moves first in the list to be searched first if it exists.
-  if (tt_best_move_index >= 0 && tt_best_move_index < possible_moves.size())
-  {
-    std::swap(possible_moves[0], possible_moves[tt_best_move_index]);
-  }
-  int best_move_index = 0;
+  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
+      board_state, &history_table, true);
+
+  put_best_move_at_front(possible_moves, tt_best_move_index);
 
   // QUIESCENCE SEARCH
 
   int best_eval = current_eval;
 
   run_quiescence_search_procedure(board_state, alpha, beta, best_eval,
-                                  best_move_index, current_eval,
+                                  tt_best_move_index, current_eval,
                                   possible_moves);
 
   // AFTER SEARCH PROCEDURE
@@ -841,7 +852,7 @@ auto SearchEngine::quiescence_search(int alpha,
   // Store in transposition table with quiescence flag set to true.
   int tt_depth = 0;
   store_state_in_transposition_table(hash, tt_depth, best_eval, original_alpha,
-                                     beta, best_move_index, true);
+                                     beta, tt_best_move_index, true);
   return best_eval;
 }
 
@@ -854,16 +865,15 @@ void SearchEngine::run_quiescence_search_procedure(
     int &current_eval,
     std::vector<Move> &possible_moves)
 {
-  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+  for (auto move : possible_moves)
   {
     // Check if the move can be delta pruned.
-    if (delta_prune_move(board_state, possible_moves[move_index], current_eval,
-                         alpha))
+    if (delta_prune_move(board_state, move, current_eval, alpha))
     {
       continue;
     }
 
-    board_state.apply_move(possible_moves[move_index]);
+    board_state.apply_move(move);
 
     int eval = -quiescence_search(-beta, -alpha, board_state);
 
@@ -872,7 +882,7 @@ void SearchEngine::run_quiescence_search_procedure(
     if (eval > best_eval)
     {
       best_eval = eval;
-      best_move_index = move_index;
+      best_move_index = move.list_index;
 
       if (eval >= beta)
       {
@@ -902,4 +912,52 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
+void SearchEngine::udpate_history_table(const Move &move, int &depth)
+{
+  int move_value = depth * depth;
+
+  const int &color = static_cast<int>(move.moving_piece->piece_color);
+  const int &piece_type = static_cast<int>(move.moving_piece->piece_type);
+  const int &to_x = move.to_x;
+  const int &to_y = move.to_y;
+
+  history_table[color][piece_type][to_x][to_y] += move_value;
+}
+
+void SearchEngine::decay_history_table()
+{
+  for (auto &color : history_table)
+  {
+    for (auto &piece_type : color)
+    {
+      for (auto &file : piece_type)
+      {
+        for (auto &entry : file)
+        {
+          // Decay all entries in the history table by 0.9.
+          entry = (entry * DECAY_RATE_NUMERATOR) / DECAY_RATE_DENOMINATOR;
+        }
+      }
+    }
+  }
+}
+
+void SearchEngine::put_best_move_at_front(std::vector<Move> &possible_moves,
+                                          int &best_move_index)
+{
+  // If there is a best move from the transposition table, move it to the
+  // front to be searched first, causing more alpha beta pruning to occur.
+  if (best_move_index >= 0 && best_move_index < possible_moves.size())
+  {
+    for (int move_idnex = 0; move_idnex < possible_moves.size(); ++move_idnex)
+    {
+      if (possible_moves[move_idnex].list_index == best_move_index)
+      {
+        std::swap(possible_moves[0],
+                  possible_moves[move_idnex]); // Swap the actual elements
+        break;
+      }
+    }
+  }
+}
 } // namespace engine::parts

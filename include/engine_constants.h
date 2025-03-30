@@ -76,13 +76,14 @@ const int KING_VALUE = 20000;
 const std::array<int, 6> PIECE_VALUES = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE,
                                          ROOK_VALUE, QUEEN_VALUE,  KING_VALUE};
 
-// EVALUATION POINTS
+// POSITION EVALUATION CONSTANTS
 const int EXTREMELY_SMALL_EVAL_VALUE = 2;
 const int VERY_SMALL_EVAL_VALUE = 5;
 const int SMALL_EVAL_VALUE = 10;
 const int MEDIUM_EVAL_VALUE = 20;
 const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
+const int MAX_DOUBLE_PAWN_SQUARES_TO_CHECK = 3;
 
 // NULL MOVE CONSTANTS
 const int NULL_MOVE_REDUCTION = 2;
@@ -94,6 +95,10 @@ const int START_QUEENS_COUNT = 2;
 const int END_GAME_CONDITION_TWO_QUEENS = 2;
 const int END_GAME_CONDITION_ONE_QUEEN = 5;
 const int END_GAME_CONDITION_NO_QUEENS = 8;
+
+// HISTORY HEURISTIC CONSTANTS
+const int DECAY_RATE_NUMERATOR = 9;
+const int DECAY_RATE_DENOMINATOR = 10;
 
 // MVV-LVA CONSTANTS
 // First index represents the victim piece, second index represents the attacker

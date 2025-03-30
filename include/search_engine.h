@@ -16,9 +16,15 @@
 
 namespace engine::parts
 {
+/// @brief Array to represent the history heuristic table.
+using history_table_type = std::array<
+    std::array<std::array<std::array<int, BOARD_HEIGHT>, BOARD_WIDTH>,
+               NUM_OF_PIECE_TYPES>,
+    NUM_OF_COLORS>;
+
 /**
- * @brief Class to find the best move for the current board state using various
- * search algorithms and heuristics and apply it to the given board.
+ * @brief Class to find the best move for the current board state using
+ * various search algorithms and heuristics and apply it to the given board.
  */
 class SearchEngine
 {
@@ -136,6 +142,10 @@ public:
 private:
   // PROPERTIES
 
+  /// @brief Keeps track of the best eval of current search iteration.
+  /// NOTE: Atomic because it is accessed by multiple search threads.
+  std::atomic<int> best_eval_of_search_iteration = -INF;
+
   /// @brief Number of leaf nodes visited.
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<int> leaf_nodes_visited = 0;
@@ -174,6 +184,9 @@ private:
   ThreadHandler ponder_thread_handler = ThreadHandler(
       running_search_flag,
       [this]() { this->run_iterative_deepening_search_pondering(); });
+
+  /// @brief History Heuristic Table.
+  history_table_type history_table = {};
 
   // FUNCTIONS
 
@@ -434,6 +447,33 @@ private:
                                const Move &move,
                                const int &current_eval,
                                const int &alpha) -> bool;
+
+  /**
+   * @brief Updates the history table.
+   *
+   * @param move Move to update history table with.
+   * @param depth Current depth of search for weighting the move's score.
+   */
+  void udpate_history_table(const Move &move, int &depth);
+
+  /**
+   * @brief Decays the history table.
+   *
+   * @details Decays all entries in the history table by 0.9 after every search.
+   * This is to prevent the history table from being too biased towards a
+   * certain move. The position changes throughout the game, and the history
+   * table should reflect that.
+   */
+  void decay_history_table();
+
+  /**
+   * @brief Puts the best move at the front of the possible moves vector.
+   *
+   * @param possible_moves Reference to the vector of possible moves.
+   * @param best_move_index Reference to the index of the best move.
+   */
+  static void put_best_move_at_front(std::vector<Move> &possible_moves,
+                                     int &best_move_index);
 };
 } // namespace engine::parts
 
