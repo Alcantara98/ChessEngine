@@ -481,7 +481,7 @@ auto BoardState::current_state_has_been_repeated_three_times() -> bool
 
 auto BoardState::current_state_has_been_visited() -> bool
 {
-  return visisted_states_hash_map[get_current_state_hash()] >= 1;
+  return visisted_states_hash_map[get_current_state_hash()] > 1;
 }
 
 void BoardState::add_current_state_to_visited_states()
