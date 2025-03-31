@@ -604,18 +604,30 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          std::vector<Move> &possible_moves,
                                          bool &is_null_move_line)
 {
-  for (auto move : possible_moves)
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
-    board_state.apply_move(move);
+    board_state.apply_move(possible_moves[move_index]);
 
-    // Swap and negate alpha and beta and negate the eval because of the negamax
-    // algorithm.
-    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      is_null_move_line);
+    if (move_index == 0)
+    {
+      eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                        is_null_move_line);
+    }
+    else
+    {
+      eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
+                                        depth - 1, is_null_move_line);
+      if (eval > alpha && beta - alpha > 1)
+      {
+        eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                          is_null_move_line);
+      }
+    }
+
     if (eval > max_eval)
     {
       max_eval = eval;
-      best_move_index = move.list_index;
+      best_move_index = possible_moves[move_index].list_index;
     }
     max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
@@ -624,7 +636,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     if (alpha >= beta)
     {
-      udpate_history_table(move, depth);
+      udpate_history_table(possible_moves[move_index], depth);
       break;
     }
   }
