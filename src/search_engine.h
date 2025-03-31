@@ -322,6 +322,17 @@ private:
                              bool &is_null_move_line);
 
   /**
+   * @brief Runs the Principal Variation Search (PVS) algorithm.
+   */
+  void run_pvs_search(BoardState &board_state,
+                      int &move_index,
+                      int &eval,
+                      int &alpha,
+                      int &beta,
+                      int &depth,
+                      bool &is_null_move_line);
+
+  /**
    * @brief Min search procedure for each possible move.
    *
    * @details The theory behind null move search is that if the current player
