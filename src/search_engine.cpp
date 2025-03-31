@@ -120,7 +120,6 @@ void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
 
 auto SearchEngine::search_and_execute_best_move() -> bool
 {
-  running_search_flag = true;
   std::vector<std::pair<Move, int>> move_scores;
   run_iterative_deepening_search_evaluation(move_scores);
   sort_moves(move_scores);
