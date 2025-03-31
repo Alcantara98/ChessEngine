@@ -347,27 +347,32 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
   int eval = last_move_eval();
 
   // Try aspiration windows until a valid window is found.
-  for (int window_increment : ASPIRATION_WINDOWS)
+  for (int index = 0; index < ASPIRATION_WINDOWS.size(); ++index)
   {
     // If abs(eval) is greater than INF_MINUS_1000, there is a checkmate
     // sequence.
     // If eval is a checkmate line, just set alpha and beta to
     // infinity as all other windows would fail high or low.
-    if (std::abs(eval) > INF_MINUS_1000 || window_increment == INF)
+    if (std::abs(eval) > INF_MINUS_1000 || ASPIRATION_WINDOWS[index] == INF)
     {
       alpha = -INF;
       beta = INF;
+    }
+    else if (index == 0)
+    {
+      alpha = eval - ASPIRATION_WINDOWS[index];
+      beta = eval + ASPIRATION_WINDOWS[index];
     }
     else
     {
       if (eval >= beta)
       {
-        beta = eval + window_increment;
+        beta = eval + ASPIRATION_WINDOWS[index];
         alpha = eval - 1;
       }
       if (eval <= alpha)
       {
-        alpha = eval - window_increment;
+        alpha = eval - ASPIRATION_WINDOWS[index];
       }
     }
 
@@ -381,7 +386,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       break;
     }
 
-    if (eval > best_eval_of_search_iteration)
+    if (eval > best_eval_of_search_iteration && eval > alpha)
     {
       best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
     }
@@ -396,6 +401,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       break;
     }
   }
+
   return eval;
 }
 
