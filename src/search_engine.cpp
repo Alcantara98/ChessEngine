@@ -900,7 +900,7 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
                                     const int &alpha) -> bool
 {
   // If the current_eval is so low that the score gained from capturing the
-  // piece in the move + a queen's value (900) will not bring it back up to
+  // piece in the move + 2 pawn values (100) will not bring it back up to
   // alpha, then it is most likely not worth searching the move.
   // Don't do it in the end game since it is more likely that bad moves are
   // the best a player could do.
