@@ -24,6 +24,7 @@ using history_table_type = std::array<
  * @brief Calculates all possible moves of current board state.
  *
  * @param board_state BoardState object to calculate moves from.
+ * @param history_table Pointer to the history table.
  * @param capture_only If true, only capture moves are calculated.
  *
  * @return Vector of possible moves.

@@ -374,6 +374,12 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       {
         alpha = eval - ASPIRATION_WINDOWS[index];
       }
+
+      if (best_eval_of_search_iteration > alpha)
+      {
+        alpha = best_eval_of_search_iteration;
+        beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
+      }
     }
 
     // Swap and negate alpha and beta and negate the eval because of the negamax
@@ -624,6 +630,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       max_eval = eval;
       best_move_index = possible_moves[move_index].list_index;
     }
+
     max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
 
@@ -651,7 +658,7 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
   }
   else
   {
-    // Do a null window search around the best move eval. We just want to know
+    // Do a null window search around alpha. We just want to know
     // if there is an eval that is greater than alpha. If there is, we do a full
     // search.
     eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
@@ -659,7 +666,8 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
 
     // Check if eval is greater than alpha. If it is, do a full search.
     // If window is already null, don't do a redundant search. This means parent
-    // nodes are doing a null window search, and we just did a null window search above.
+    // nodes are doing a null window search, and we just did a null window
+    // search above.
     if (eval > alpha && beta - alpha > 1)
     {
       eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
@@ -676,8 +684,9 @@ auto SearchEngine::do_null_move_search(BoardState &board_state,
 {
   board_state.apply_null_move();
 
-  // We search with a null window around beta (beta to beta + 1). We just need to find out if there
-  // is an eval greater than beta. If there is, we don't need to search further.
+  // We search with a null window around beta (beta to beta + 1). We just need
+  // to find out if there is an eval greater than beta. If there is, we don't
+  // need to search further.
   eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
                                     depth - NULL_MOVE_REDUCTION, true);
   board_state.undo_null_move();
