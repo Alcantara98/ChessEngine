@@ -333,9 +333,27 @@ private:
    * the moves with a null window search around alpha. If the null window search
    * fails high, we do a full search on the move. If it fails low, we skip the
    * full search of the move.
+   *
+   * @details We also do Late Move Reduction (LMR) to reduce the number of
+   * nodes. LMR is a heuristic that reduces the depth of the search for moves
+   * that are not likely to be good moves. We currently sort the moves using
+   * MVV-LVV and History Heuristic. This means that the worst moves are likely
+   * to be at the end of the list. We reduce the depth of the search for moves
+   * that are 'late' in the list of moves.
+   *
+   * @param board_state BoardState object to search.
+   * @param move_index Index of the move to search.
+   * @param late_move_threshold Threshold to determine if a move is late.
+   * @param eval Evaluation score from search branch.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param depth Current depth of search.
+   * @param is_null_move_line Flag to indicate if the search line is from a null
+   * move.
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
+                      int &late_move_threshold,
                       int &eval,
                       int &alpha,
                       int &beta,

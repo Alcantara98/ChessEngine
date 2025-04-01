@@ -619,12 +619,13 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          std::vector<Move> &possible_moves,
                                          bool &is_null_move_line)
 {
+  int late_move_threshold = possible_moves.size() / 3;
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     board_state.apply_move(possible_moves[move_index]);
 
-    run_pvs_search(board_state, move_index, eval, alpha, beta, depth,
-                   is_null_move_line);
+    run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
+                   beta, depth, is_null_move_line);
 
     board_state.undo_move();
 
@@ -647,12 +648,26 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
 void SearchEngine::run_pvs_search(BoardState &board_state,
                                   int &move_index,
+                                  int &late_move_threshold,
                                   int &eval,
                                   int &alpha,
                                   int &beta,
                                   int &depth,
                                   bool &is_null_move_line)
 {
+  int new_search_depth = depth - 1;
+  if ((max_iterative_search_depth - depth) >= MIN_LATE_MOVE_DEPTH)
+  {
+    if (move_index > (late_move_threshold * 2))
+    {
+      new_search_depth -= LATE_MOVE_REDUCTION;
+    }
+    else if (move_index > late_move_threshold)
+    {
+      new_search_depth -= EXTREME_LATE_MOVE_REDUCTION;
+    }
+  }
+
   if (move_index == 0)
   {
     // Best move (PVS Node) will be at index 0. Do a full search.
@@ -665,7 +680,7 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
     // if there is an eval that is greater than alpha. If there is, we do a full
     // search.
     eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
-                                      depth - 1, is_null_move_line);
+                                      new_search_depth, is_null_move_line);
 
     // Check if eval is greater than alpha. If it is, do a full search.
     // If window is already null, don't do a redundant search. This means parent
