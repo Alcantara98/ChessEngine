@@ -342,6 +342,8 @@ private:
                       int &depth,
                       bool &is_null_move_line);
 
+  void run_pvs_scout_search();
+
   /**
    * @brief Min search procedure for each possible move.
    *

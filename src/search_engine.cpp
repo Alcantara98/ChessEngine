@@ -191,6 +191,7 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
   {
     best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
+    run_pvs_scout_search();
 
     std::vector<std::thread> search_threads;
     std::vector<std::promise<int>> promises(possible_moves.size());
@@ -277,6 +278,7 @@ void SearchEngine::run_iterative_deepening_search_pondering()
   {
     best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
+    run_pvs_scout_search();
 
     std::vector<std::thread> search_threads;
     std::vector<BoardState> thread_board_states(possible_moves.size(),
@@ -389,6 +391,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
 
     if (eval <= alpha && best_eval_of_search_iteration.load() > alpha)
     {
+      printf("Cut Search\n");
       break;
     }
 
@@ -673,6 +676,44 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
       eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                         is_null_move_line);
     }
+  }
+}
+
+void SearchEngine::run_pvs_scout_search()
+{
+  // Get TT entry.
+  int tt_eval;
+  int tt_flag;
+  int tt_search_depth;
+  int tt_best_move_index = -1;
+  uint64_t hash = game_board_state.get_current_state_hash();
+  if (!transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
+                                    tt_best_move_index))
+  {
+    return;
+  }
+
+  // Get possible moves.
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(game_board_state);
+
+  put_best_move_at_front(possible_moves, tt_best_move_index);
+
+  // Apply the best move.
+  game_board_state.apply_move(possible_moves[0]);
+
+  // Run scout search.
+  int alpha = last_move_eval() - (PAWN_VALUE / 4);
+  int beta = alpha + 1;
+  int eval = -negamax_alpha_beta_search(game_board_state, -beta, -alpha,
+                                        max_iterative_search_depth - 1, false);
+
+  game_board_state.undo_move();
+
+  // If eval is within the window or higher, set the best move eval to eval.
+  if (eval > alpha)
+  {
+    best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
   }
 }
 
