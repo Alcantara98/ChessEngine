@@ -117,8 +117,8 @@ const uint32_t CHECKSUM_SEED = 0x811C9DC5;
 const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
 
 // ASPIRATION WINDOW CONSTANTS
-const std::array<int, 3> ASPIRATION_WINDOWS = {
-    {(PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, INF}};
+const std::array<int, 4> ASPIRATION_WINDOWS = {
+    {1, (PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, INF}};
 
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {

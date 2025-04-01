@@ -19,14 +19,14 @@ jobs:
       - name: Run clang-format check
         run: |
           clang-format --version
-          clang-format -i src/*.cpp include/*.h
+          clang-format -i src/*.cpp src/*.h
           git diff --exit-code
 
       - name: Run clang-tidy check
         run: |
           cmake -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -B build
           clang-tidy --version
-          clang-tidy -p build src/*.cpp include/*.h
+          clang-tidy -p build src/*.cpp src/*.h
 
   Build:
     runs-on: windows-latest

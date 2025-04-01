@@ -101,6 +101,8 @@ void BoardState::setup_default_board()
   // Set Kings.
   chess_board[XE_FILE][Y1_RANK] = new Piece(PieceType::KING, PieceColor::WHITE);
   chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
+
+  add_current_state_to_visited_states();
 }
 
 void BoardState::reset_board()
@@ -133,7 +135,6 @@ void BoardState::reset_board()
 
   clear_pointers();
   setup_default_board();
-  add_current_state_to_visited_states();
 }
 
 void BoardState::print_board(PieceColor color)
@@ -481,7 +482,7 @@ auto BoardState::current_state_has_been_repeated_three_times() -> bool
 
 auto BoardState::current_state_has_been_visited() -> bool
 {
-  return visisted_states_hash_map[get_current_state_hash()] >= 1;
+  return visisted_states_hash_map[get_current_state_hash()] > 1;
 }
 
 void BoardState::add_current_state_to_visited_states()

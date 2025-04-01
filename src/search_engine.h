@@ -322,17 +322,39 @@ private:
                              bool &is_null_move_line);
 
   /**
+   * @brief Runs the Principal Variation Search (PVS) algorithm.
+   *
+   * @details In chess, the Principal Variation is the sequence of moves that
+   * the engine believes is the best sequence of moves for both players.
+   *
+   * @details The PVS algorithm is a variation of the negamax algorithm that
+   * reduces the number of nodes searched by first running a full search on the
+   * PVS node (best move) of the current board state. We then search the rest of
+   * the moves with a null window search around alpha. If the null window search
+   * fails high, we do a full search on the move. If it fails low, we skip the
+   * full search of the move.
+   */
+  void run_pvs_search(BoardState &board_state,
+                      int &move_index,
+                      int &eval,
+                      int &alpha,
+                      int &beta,
+                      int &depth,
+                      bool &is_null_move_line);
+
+  /**
    * @brief Min search procedure for each possible move.
    *
-   * @details The theory behind null move search is that if the current player
-   * can make a null move (skip their turn) and still have a good position (eval
-   * > beta), then the opponent's position is bad and we can cut off without
-   * searching any moves (If we actually make a move, their position will be
-   * even worse). In return, we decrease the maximum depth of the search by 1
-   * making the search faster.
+   * @details The theory behind null move search is that if the current
+   * player can make a null move (skip their turn) and still have a good
+   * position (eval > beta), then the opponent's position is bad and we can
+   * cut off without searching any moves (If we actually make a move, their
+   * position will be even worse). In return, we decrease the maximum depth
+   * of the search by 1 making the search faster.
    *
-   * @note We currently only allow one null move per search line. Too many null
-   * moves can make the search too shallow and return bull shit evaluations.
+   * @note We currently only allow one null move per search line. Too many
+   * null moves can make the search too shallow and return bull shit
+   * evaluations.
    *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.

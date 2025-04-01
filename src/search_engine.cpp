@@ -120,7 +120,6 @@ void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
 
 auto SearchEngine::search_and_execute_best_move() -> bool
 {
-  running_search_flag = true;
   std::vector<std::pair<Move, int>> move_scores;
   run_iterative_deepening_search_evaluation(move_scores);
   sort_moves(move_scores);
@@ -348,27 +347,38 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
   int eval = last_move_eval();
 
   // Try aspiration windows until a valid window is found.
-  for (int window_increment : ASPIRATION_WINDOWS)
+  for (int index = 0; index < ASPIRATION_WINDOWS.size(); ++index)
   {
     // If abs(eval) is greater than INF_MINUS_1000, there is a checkmate
     // sequence.
     // If eval is a checkmate line, just set alpha and beta to
     // infinity as all other windows would fail high or low.
-    if (std::abs(eval) > INF_MINUS_1000 || window_increment == INF)
+    if (std::abs(eval) > INF_MINUS_1000 || ASPIRATION_WINDOWS[index] == INF)
     {
       alpha = -INF;
       beta = INF;
+    }
+    else if (index == 0)
+    {
+      alpha = eval - ASPIRATION_WINDOWS[index];
+      beta = eval + ASPIRATION_WINDOWS[index];
     }
     else
     {
       if (eval >= beta)
       {
-        beta = eval + window_increment;
+        beta = eval + ASPIRATION_WINDOWS[index];
         alpha = eval - 1;
       }
       if (eval <= alpha)
       {
-        alpha = eval - window_increment;
+        alpha = eval - ASPIRATION_WINDOWS[index];
+      }
+
+      if (best_eval_of_search_iteration > alpha)
+      {
+        alpha = best_eval_of_search_iteration;
+        beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
       }
     }
 
@@ -382,7 +392,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       break;
     }
 
-    if (eval > best_eval_of_search_iteration)
+    if (eval > best_eval_of_search_iteration && eval > alpha)
     {
       best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
     }
@@ -397,6 +407,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       break;
     }
   }
+
   return eval;
 }
 
@@ -605,28 +616,62 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          std::vector<Move> &possible_moves,
                                          bool &is_null_move_line)
 {
-  for (auto move : possible_moves)
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
-    board_state.apply_move(move);
+    board_state.apply_move(possible_moves[move_index]);
 
-    // Swap and negate alpha and beta and negate the eval because of the negamax
-    // algorithm.
-    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      is_null_move_line);
-    if (eval > max_eval)
-    {
-      max_eval = eval;
-      best_move_index = move.list_index;
-    }
-    max_eval = std::max(eval, max_eval);
-    alpha = std::max(eval, alpha);
+    run_pvs_search(board_state, move_index, eval, alpha, beta, depth,
+                   is_null_move_line);
 
     board_state.undo_move();
 
+    if (eval > max_eval)
+    {
+      max_eval = eval;
+      best_move_index = possible_moves[move_index].list_index;
+    }
+
+    max_eval = std::max(eval, max_eval);
+    alpha = std::max(eval, alpha);
+
     if (alpha >= beta)
     {
-      udpate_history_table(move, depth);
+      udpate_history_table(possible_moves[move_index], depth);
       break;
+    }
+  }
+}
+
+void SearchEngine::run_pvs_search(BoardState &board_state,
+                                  int &move_index,
+                                  int &eval,
+                                  int &alpha,
+                                  int &beta,
+                                  int &depth,
+                                  bool &is_null_move_line)
+{
+  if (move_index == 0)
+  {
+    // Best move (PVS Node) will be at index 0. Do a full search.
+    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                      is_null_move_line);
+  }
+  else
+  {
+    // Do a null window search around alpha. We just want to know
+    // if there is an eval that is greater than alpha. If there is, we do a full
+    // search.
+    eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
+                                      depth - 1, is_null_move_line);
+
+    // Check if eval is greater than alpha. If it is, do a full search.
+    // If window is already null, don't do a redundant search. This means parent
+    // nodes are doing a null window search, and we just did a null window
+    // search above.
+    if (eval > alpha && beta - alpha > 1)
+    {
+      eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                        is_null_move_line);
     }
   }
 }
@@ -639,8 +684,9 @@ auto SearchEngine::do_null_move_search(BoardState &board_state,
 {
   board_state.apply_null_move();
 
-  // Swap and negate alpha and beta and negate the eval because of the negamax
-  // algorithm.
+  // We search with a null window around beta (beta to beta + 1). We just need
+  // to find out if there is an eval greater than beta. If there is, we don't
+  // need to search further.
   eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
                                     depth - NULL_MOVE_REDUCTION, true);
   board_state.undo_null_move();
@@ -900,7 +946,7 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
                                     const int &alpha) -> bool
 {
   // If the current_eval is so low that the score gained from capturing the
-  // piece in the move + a queen's value (900) will not bring it back up to
+  // piece in the move + 2 pawn values (100) will not bring it back up to
   // alpha, then it is most likely not worth searching the move.
   // Don't do it in the end game since it is more likely that bad moves are
   // the best a player could do.

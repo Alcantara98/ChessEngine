@@ -63,14 +63,9 @@ auto calculate_possible_moves(BoardState &board_state,
       }
     }
   }
-  sort_moves_mvv_lvv(possible_capture_moves);
-
-  if (capture_only)
-  {
-    return std::move(possible_capture_moves);
-  }
 
   // Assign list index to each move. This is used for identifying the best move.
+  // NOTE: Do this before sorting moves.
   int move_index = 0;
   for (; move_index < possible_capture_moves.size(); ++move_index)
   {
@@ -79,6 +74,13 @@ auto calculate_possible_moves(BoardState &board_state,
   for (; move_index < possible_normal_moves.size(); ++move_index)
   {
     possible_normal_moves[move_index].list_index = move_index;
+  }
+
+  sort_moves_mvv_lvv(possible_capture_moves);
+
+  if (capture_only)
+  {
+    return std::move(possible_capture_moves);
   }
 
   if (history_table != nullptr)
