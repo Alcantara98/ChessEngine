@@ -30,6 +30,7 @@ using history_table_type = std::array<
  * @return Vector of possible moves.
  */
 auto calculate_possible_moves(BoardState &board_state,
+                              bool mvv_lvv_sort = false,
                               history_table_type *history_table = nullptr,
                               bool capture_only = false) -> std::vector<Move>;
 

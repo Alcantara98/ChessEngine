@@ -183,7 +183,7 @@ private:
   /// @brief Runs and handles the pondering thread.
   ThreadHandler ponder_thread_handler = ThreadHandler(
       running_search_flag,
-      [this]() { this->run_iterative_deepening_search_pondering(); });
+      [this]() { this->run_iterative_deepening_search_evaluation(); });
 
   /// @brief History Heuristic Table.
   history_table_type history_table = {};
@@ -210,21 +210,27 @@ private:
    * table. This allows the next deeper search iteration to search a likely best
    * move first, causing more alpha beta pruning to occur.
    *
-   * @param move_scores Vector of moves and their scores. The evaluation of each
-   * move and the move will be stored in this vector by this function.
+   * @return Vector of pairs of moves and their scores.
    */
-  void run_iterative_deepening_search_evaluation(
-      std::vector<std::pair<Move, int>> &move_scores);
+  auto run_iterative_deepening_search_evaluation()
+      -> std::vector<std::pair<Move, int>>;
 
   /**
-   * @brief Does Iterative Deepening Search for each possible move during
-   * player's turn to fill out the transposition table. This will give the
-   * engine a head start in its search during its turn.
+   * @brief Prunes the root moves that are not in the top 50% of the search so
+   * far.
    *
-   * @details Will use iterative deepening search, but we do not care about the
-   * results. We just want the search to fill out the transposition table.
+   * @details This is done to reduce the search space and focus on the most
+   * promising moves. The moves are sorted based on their scores and the top 50%
+   * of the moves are kept for further searching. The rest of the moves are
+   * removed from the search.
+   *
+   * @param moves_to_search Map of moves to search.
+   * @param move_scores Vector of moves and their scores.
+   * @param current_depth Current depth of iterative search.
    */
-  void run_iterative_deepening_search_pondering();
+  static void prune_root_moves(std::map<int, bool> &moves_to_search,
+                               std::vector<std::pair<Move, int>> &move_scores,
+                               int &current_depth);
 
   /**
    * @brief Encapsulates the iterative deepening search for each move to apply
@@ -266,6 +272,9 @@ private:
    * @param depth Current depth of search.
    * @param is_null_move_line Flag to indicate if the search line is from a null
    * move.
+   * @param is_lmr_line Flag to indicate if the search line is from a late move
+   * reduction line.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
    *
    * @return Evaluation score from search branch.
    */
@@ -273,7 +282,9 @@ private:
                                  int alpha,
                                  int beta,
                                  int depth,
-                                 bool is_null_move_line) -> int;
+                                 bool is_null_move_line,
+                                 bool is_lmr_line,
+                                 bool is_pvs_line) -> int;
 
   /**
    * @brief Handles the leaf node of the search tree.
@@ -310,6 +321,9 @@ private:
    * @param possible_moves Vector of possible moves.
    * @param is_null_move_line Flag to indicate if the search line is from a null
    * move.
+   * @param is_lmr_line Flag to indicate if the search line is from a late move
+   * reduction line.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
    */
   void run_negamax_procedure(BoardState &board_state,
                              int &alpha,
@@ -319,7 +333,9 @@ private:
                              int &depth,
                              int &best_move_index,
                              std::vector<Move> &possible_moves,
-                             bool &is_null_move_line);
+                             bool &is_null_move_line,
+                             bool &is_lmr_line,
+                             bool &is_pvs_line);
 
   /**
    * @brief Runs the Principal Variation Search (PVS) algorithm.
@@ -333,14 +349,47 @@ private:
    * the moves with a null window search around alpha. If the null window search
    * fails high, we do a full search on the move. If it fails low, we skip the
    * full search of the move.
+   *
+   * @details We also do Late Move Reduction (LMR) to reduce the number of
+   * nodes. LMR is a heuristic that reduces the depth of the search for moves
+   * that are not likely to be good moves. We currently sort the moves using
+   * MVV-LVV and History Heuristic. This means that the worst moves are likely
+   * to be at the end of the list. We reduce the depth of the search for moves
+   * that are 'late' in the list of moves.
+   *
+   * @param board_state BoardState object to search.
+   * @param move_index Index of the move to search.
+   * @param late_move_threshold Threshold to determine if a move is late.
+   * @param eval Evaluation score from search branch.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param depth Current depth of search.
+   * @param is_null_move_line Flag to indicate if the search line is from a null
+   * move.
+   * @param is_lmr_line Flag to indicate if the search line is from a late move
+   * reduction line.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
+                      int &late_move_threshold,
                       int &eval,
                       int &alpha,
                       int &beta,
                       int &depth,
-                      bool &is_null_move_line);
+                      bool &is_null_move_line,
+                      bool &is_lmr_line,
+                      bool &is_pvs_line);
+
+  /**
+   * @brief Runs the PVS scout search algorithm.
+   *
+   * @details Search the best move first with a null window. If the eval is
+   * above alpha, set this as the best_eval_of_search_iteration. Null window
+   * should make the search quick, and if we get a high eval, we can do a lot of
+   * pruning in the aspiration window function.
+   */
+  void run_pvs_scout_search();
 
   /**
    * @brief Min search procedure for each possible move.
@@ -361,6 +410,8 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score to be updated.
+   * @param is_lmr_line Flag to indicate if the search line is from a late move
+   * reduction line.
    *
    * @return True if eval failed high.
    */
@@ -368,7 +419,8 @@ private:
                            int &alpha,
                            int &beta,
                            int &depth,
-                           int &eval) -> bool;
+                           int &eval,
+                           bool &is_lmr_line) -> bool;
 
   /**
    * @brief Handles necessary eval adjustments to prevent stalemates and loops.
@@ -390,6 +442,9 @@ private:
    * explicit checks for checkmate/stalemate during the negamax search would be
    * too costly, so the engine relies on detecting king capture first, and then
    * checks for checkmate/stalemate in this function.
+   *
+   * @param eval Evaluation score to be adjusted.
+   * @param board_state BoardState object to search.
    */
   static void handle_eval_adjustments(int &eval, BoardState &board_state);
 
@@ -427,20 +482,29 @@ private:
   /** @brief Quiescence search to lessen horizon effect.
    *
    * @details Our quiescence search will explore all possible capture moves of
-   * the given board state.
-   *
-   * @note We currently only run the quiescence search if the last move at a
-   * leaf node is a capture move.
+   * the given board state. This is to lessen the horizon effect where the
+   * engine may think it has a good position, but if explored further, it is
+   * actually in a bad position.
    *
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
    * @param board_state BoardState object to search.
    *
    * @return Evaluation score from quiescence search.
    */
   auto quiescence_search(int alpha, int beta, BoardState &board_state) -> int;
 
+  /**
+   * @brief Runs the quiescence search procedure.
+   *
+   * @param board_state BoardState object to search.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param best_eval Current best evaluation score.
+   * @param best_move_index Index of the best move.
+   * @param current_eval Current evaluation score.
+   * @param possible_moves Vector of possible moves.
+   */
   void run_quiescence_search_procedure(BoardState &board_state,
                                        int &alpha,
                                        int &beta,

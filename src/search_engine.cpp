@@ -120,8 +120,9 @@ void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
 
 auto SearchEngine::search_and_execute_best_move() -> bool
 {
-  std::vector<std::pair<Move, int>> move_scores;
-  run_iterative_deepening_search_evaluation(move_scores);
+  std::vector<std::pair<Move, int>> move_scores =
+      run_iterative_deepening_search_evaluation();
+
   sort_moves(move_scores);
 
   if (show_move_evaluations)
@@ -179,11 +180,24 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   return true;
 }
 
-void SearchEngine::run_iterative_deepening_search_evaluation(
-    std::vector<std::pair<Move, int>> &move_scores)
+auto SearchEngine::run_iterative_deepening_search_evaluation()
+    -> std::vector<std::pair<Move, int>>
 {
+  std::vector<std::pair<Move, int>> move_scores;
+
   std::vector<Move> possible_moves =
       move_generator::calculate_possible_moves(game_board_state);
+
+  // Create a map to store the moves to search. As the search progresses,
+  // moves that are not good will be removed from this map. This allows the
+  // search to focus on the most promising moves as the depth increases.
+  std::map<int, bool> moves_to_search;
+
+  // Add all possible moves to the moves_to_search map at the beginning.
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+  {
+    moves_to_search[move_index] = true;
+  }
 
   // Search until running_search_flag is false, or max_search_depth is reached.
   for (int iterative_depth = 1; iterative_depth <= max_search_depth;
@@ -191,17 +205,33 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
   {
     best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
     max_iterative_search_depth = iterative_depth;
+    run_pvs_scout_search();
 
     std::vector<std::thread> search_threads;
-    std::vector<std::promise<int>> promises(possible_moves.size());
+    std::vector<std::promise<int>> promises(moves_to_search.size());
     std::vector<std::future<int>> futures;
-    std::vector<BoardState> thread_board_states(possible_moves.size(),
+    std::vector<BoardState> thread_board_states(moves_to_search.size(),
                                                 BoardState(game_board_state));
 
     auto search_start_time = std::chrono::steady_clock::now();
+
+    // search_index is used to keep track of the number of search threads
+    // created. This is used as an index to access search_threads, promises,
+    // futures, and thread_board_states. This is because we will only start a
+    // search for moves that are in the moves_to_search map.
+    int search_index = 0;
+
     // Search each move in a separate thread.
     for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
     {
+      // Check if the index is in the moves_to_search map.
+      // If not, skip the move.
+      if (moves_to_search.find(possible_moves[move_index].list_index) ==
+          moves_to_search.end())
+      {
+        continue;
+      }
+
       // Recalculate possible moves for each thread.
       // NOTE: Move objects reference board pieces directly. Reusing moves
       // generated from the main game_board_state could lead to unintended
@@ -211,31 +241,36 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
       // moves for each thread’s board copy avoids these issues.
       std::vector<Move> thread_possible_moves =
           move_generator::calculate_possible_moves(
-              thread_board_states[move_index]);
+              thread_board_states[search_index]);
 
       // Apply move to the thread's board state.
-      thread_board_states[move_index].apply_move(
+      thread_board_states[search_index].apply_move(
           thread_possible_moves[move_index]);
-      futures.push_back(promises[move_index].get_future());
+      futures.push_back(promises[search_index].get_future());
 
       // Start thread and search.
       search_threads.emplace_back(
-          [this, &promises, move_index, iterative_depth, &thread_board_states]()
+          [this, &promises, search_index, iterative_depth,
+           &thread_board_states]()
           {
             int eval;
             if (use_aspiration_window)
             {
               eval = run_search_with_aspiration_window(
-                  thread_board_states[move_index], iterative_depth);
+                  thread_board_states[search_index], iterative_depth);
             }
             else
             {
-              eval = -negamax_alpha_beta_search(thread_board_states[move_index],
-                                                -INF, INF, iterative_depth - 1,
-                                                false);
+              eval = -negamax_alpha_beta_search(
+                  thread_board_states[search_index], -INF, INF,
+                  iterative_depth - 1, false, false, false);
             }
-            promises[move_index].set_value(eval);
+            promises[search_index].set_value(eval);
           });
+
+      // Increment search_index to keep track of the index of the move in the
+      // moves_to_search map.
+      ++search_index;
     }
 
     // Wait for all threads to finish.
@@ -248,14 +283,23 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
     {
       // Get results from threads.
       move_scores.clear();
-      for (int index = 0; index < possible_moves.size(); ++index)
+      int future_index = 0;
+      for (auto &possible_move : possible_moves)
       {
-        move_scores.emplace_back(possible_moves[index], futures[index].get());
+        if (moves_to_search.find(possible_move.list_index) !=
+            moves_to_search.end())
+        {
+          move_scores.emplace_back(possible_move, futures[future_index].get());
+          ++future_index;
+        }
       }
+
+      // Prune root moves.
+      prune_root_moves(moves_to_search, move_scores, iterative_depth);
     }
     else
     {
-      return;
+      return move_scores;
     }
 
     auto search_end_time = std::chrono::steady_clock::now();
@@ -264,78 +308,36 @@ void SearchEngine::run_iterative_deepening_search_evaluation(
   }
   // Decay the history table after each engine move.
   decay_history_table();
+
+  return move_scores;
 }
 
-void SearchEngine::run_iterative_deepening_search_pondering()
+void SearchEngine::prune_root_moves(
+    std::map<int, bool> &moves_to_search,
+    std::vector<std::pair<Move, int>> &move_scores,
+    int &current_depth)
 {
-  std::vector<Move> possible_moves =
-      move_generator::calculate_possible_moves(game_board_state);
-
-  // Search until running_search_flag is false, or max_search_depth is reached.
-  for (int iterative_depth = 1; iterative_depth <= MAX_SEARCH_DEPTH;
-       ++iterative_depth)
+  // Prune moves that are not in the top 50% of the search so far.
+  if (current_depth >= MIN_ROOT_MOVE_PRUNING_DEPTH &&
+      current_depth % ROOT_MOVE_PRUNING_INTERVAL == 0)
   {
-    best_eval_of_search_iteration.store(-INF, std::memory_order_relaxed);
-    max_iterative_search_depth = iterative_depth;
+    sort_moves(move_scores);
 
-    std::vector<std::thread> search_threads;
-    std::vector<BoardState> thread_board_states(possible_moves.size(),
-                                                BoardState(game_board_state));
+    // Get the number of moves to keep searching. This will be half of the
+    // number of moves in the move_scores vector.
+    int number_of_moves_to_keep_searching = moves_to_search.size() / 2;
 
-    auto search_start_time = std::chrono::steady_clock::now();
-    // Search each move in a separate thread.
-    for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+    if (number_of_moves_to_keep_searching < MIN_SEARCH_THREADS)
     {
-      // Recalculate possible moves for each thread.
-      // NOTE: Move objects reference board pieces directly. Reusing moves
-      // generated from the main game_board_state could lead to unintended
-      // modifications of the main game_board_state’s pieces. For example, a
-      // pawn’s 'piece_has_moved' flag might be unintentionally updated, and can
-      // no longer advance two squares in the actual game. Generating fresh
-      // moves for each thread’s board copy avoids these issues.
-      std::vector<Move> thread_possible_moves =
-          move_generator::calculate_possible_moves(
-              thread_board_states[move_index]);
-
-      // Apply move to the thread's board state.
-      thread_board_states[move_index].apply_move(
-          thread_possible_moves[move_index]);
-
-      // Start thread and search.
-      search_threads.emplace_back(
-          [this, move_index, iterative_depth, &thread_board_states]()
-          {
-            int eval;
-            if (use_aspiration_window)
-            {
-              eval = run_search_with_aspiration_window(
-                  thread_board_states[move_index], iterative_depth);
-            }
-            else
-            {
-              eval = -negamax_alpha_beta_search(thread_board_states[move_index],
-                                                -INF, INF, iterative_depth - 1,
-                                                false);
-            }
-          });
+      number_of_moves_to_keep_searching = MIN_SEARCH_THREADS;
     }
 
-    // Wait for all threads to finish.
-    for (auto &thread : search_threads)
-    {
-      thread.join();
-    }
+    moves_to_search.clear();
 
-    if (!running_search_flag)
+    for (int index = 0; index < number_of_moves_to_keep_searching; ++index)
     {
-      return;
+      moves_to_search[move_scores[index].first.list_index] = true;
     }
-    best_eval_of_search_iteration.store(-INF,
-                                        std::memory_order_relaxed); // Reset
-
-    auto search_end_time = std::chrono::steady_clock::now();
-    reset_and_print_performance_matrix(iterative_depth, search_start_time,
-                                       search_end_time);
   }
 }
 
@@ -385,7 +387,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // Swap and negate alpha and beta and negate the eval because of the negamax
     // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      false);
+                                      false, false, false);
 
     if (eval <= alpha && best_eval_of_search_iteration.load() > alpha)
     {
@@ -415,7 +417,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
                                              int alpha,
                                              int beta,
                                              int depth,
-                                             bool is_null_move_line) -> int
+                                             bool is_null_move_line,
+                                             bool is_lmr_line,
+                                             bool is_pvs_line) -> int
 {
   // Check if the engine wants to stop searching.
   if (!running_search_flag)
@@ -518,12 +522,13 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // We curently only allow one null move per search line, and only when
   // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will make
   // the search too shallow and return BS evals.
-  if (!is_null_move_line &&
+  if (!is_pvs_line && !is_null_move_line && !is_lmr_line &&
+      max_iterative_search_depth > MIN_NULL_MOVE_ITERATION_DEPTH &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game &&
       !board_state.king_is_checked(board_state.color_to_move))
   {
-    if (do_null_move_search(board_state, alpha, beta, depth, eval))
+    if (do_null_move_search(board_state, alpha, beta, depth, eval, is_lmr_line))
     {
       // If we played a null move (which is theoretically a losing move) and get
       // an eval still greater than beta, then there is no need to search
@@ -535,8 +540,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // PRINCIPAL VARIATION HEURISTIC
 
-  std::vector<Move> possible_moves =
-      move_generator::calculate_possible_moves(board_state, &history_table);
+  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
+      board_state, true, &history_table, false);
 
   put_best_move_at_front(possible_moves, tt_best_move_index);
 
@@ -546,7 +551,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // Search and evaluate each move.
   run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
-                        tt_best_move_index, possible_moves, is_null_move_line);
+                        tt_best_move_index, possible_moves, is_null_move_line,
+                        is_lmr_line, is_pvs_line);
 
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
@@ -614,14 +620,23 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          int &depth,
                                          int &best_move_index,
                                          std::vector<Move> &possible_moves,
-                                         bool &is_null_move_line)
+                                         bool &is_null_move_line,
+                                         bool &is_lmr_line,
+                                         bool &is_pvs_line)
 {
+  int late_move_threshold = possible_moves.size() / 3;
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
+    // Check if the engine wants to stop searching.
+    if (!running_search_flag)
+    {
+      return;
+    }
+
     board_state.apply_move(possible_moves[move_index]);
 
-    run_pvs_search(board_state, move_index, eval, alpha, beta, depth,
-                   is_null_move_line);
+    run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
+                   beta, depth, is_null_move_line, is_lmr_line, is_pvs_line);
 
     board_state.undo_move();
 
@@ -644,25 +659,57 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
 void SearchEngine::run_pvs_search(BoardState &board_state,
                                   int &move_index,
+                                  int &late_move_threshold,
                                   int &eval,
                                   int &alpha,
                                   int &beta,
                                   int &depth,
-                                  bool &is_null_move_line)
+                                  bool &is_null_move_line,
+                                  bool &is_lmr_line,
+                                  bool &is_pvs_line)
 {
+  // PVS SEARCH
+
   if (move_index == 0)
   {
     // Best move (PVS Node) will be at index 0. Do a full search.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      is_null_move_line);
+                                      is_null_move_line, is_lmr_line, true);
   }
   else
   {
+    // LATE MOVE REDUCTION HEURISTIC
+
+    int new_search_depth = depth - 1;
+    bool make_late_move_reduction_line = false;
+    if (max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
+        (max_iterative_search_depth - depth) >= MIN_LMR_DEPTH && !is_lmr_line &&
+        !is_null_move_line)
+    {
+      make_late_move_reduction_line = true;
+      if (move_index > LMR_THRESHOLD)
+      {
+        new_search_depth -=
+            LATE_MOVE_REDUCTION +
+            (max_iterative_search_depth / LMR_ADDITIONAL_DEPTH_DIVISOR);
+      }
+      else if (move_index > EXTREME_LMR_THRESHOLD)
+      {
+        new_search_depth -=
+            EXTREME_LATE_MOVE_REDUCTION +
+            (max_iterative_search_depth / LMR_ADDITIONAL_DEPTH_DIVISOR);
+      }
+    }
+
+    make_late_move_reduction_line =
+        (make_late_move_reduction_line || is_lmr_line);
+
     // Do a null window search around alpha. We just want to know
     // if there is an eval that is greater than alpha. If there is, we do a full
     // search.
     eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
-                                      depth - 1, is_null_move_line);
+                                      new_search_depth, is_null_move_line,
+                                      make_late_move_reduction_line, false);
 
     // Check if eval is greater than alpha. If it is, do a full search.
     // If window is already null, don't do a redundant search. This means parent
@@ -671,8 +718,50 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
     if (eval > alpha && beta - alpha > 1)
     {
       eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                        is_null_move_line);
+                                        is_null_move_line, is_lmr_line, false);
     }
+  }
+}
+
+void SearchEngine::run_pvs_scout_search()
+{
+  // Make a deep copy of the board state.
+  BoardState board_state = BoardState(game_board_state);
+
+  // Get TT entry.
+  int tt_eval;
+  int tt_flag;
+  int tt_search_depth;
+  int tt_best_move_index = -1;
+  uint64_t hash = board_state.get_current_state_hash();
+  if (!transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
+                                    tt_best_move_index))
+  {
+    return;
+  }
+
+  // Get possible moves.
+  std::vector<Move> possible_moves =
+      move_generator::calculate_possible_moves(board_state);
+
+  put_best_move_at_front(possible_moves, tt_best_move_index);
+
+  // Apply the best move.
+  board_state.apply_move(possible_moves[0]);
+
+  // Run scout search.
+  int alpha = last_move_eval() - (PAWN_VALUE / 4);
+  int beta = alpha + 1;
+  int eval = -negamax_alpha_beta_search(board_state, -beta, -alpha,
+                                        max_iterative_search_depth - 1, false,
+                                        false, true);
+
+  board_state.undo_move();
+
+  // If eval is within the window or higher, set the best move eval to eval.
+  if (eval > alpha)
+  {
+    best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
   }
 }
 
@@ -680,15 +769,20 @@ auto SearchEngine::do_null_move_search(BoardState &board_state,
                                        int &alpha,
                                        int &beta,
                                        int &depth,
-                                       int &eval) -> bool
+                                       int &eval,
+                                       bool &is_lmr_line) -> bool
 {
   board_state.apply_null_move();
 
   // We search with a null window around beta (beta to beta + 1). We just need
   // to find out if there is an eval greater than beta. If there is, we don't
   // need to search further.
-  eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
-                                    depth - NULL_MOVE_REDUCTION, true);
+
+  eval = -negamax_alpha_beta_search(
+      board_state, -beta, -(beta - 1),
+      depth - (NULL_MOVE_REDUCTION + (max_iterative_search_depth /
+                                      NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR)),
+      true, is_lmr_line, false);
   board_state.undo_null_move();
 
   return eval >= beta;
@@ -872,7 +966,7 @@ auto SearchEngine::quiescence_search(int alpha,
   // PRINCIPAL VARIATION HEURISTIC
 
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
-      board_state, &history_table, true);
+      board_state, true, &history_table, true);
 
   put_best_move_at_front(possible_moves, tt_best_move_index);
 

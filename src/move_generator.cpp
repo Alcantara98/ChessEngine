@@ -5,6 +5,7 @@ namespace engine::parts::move_generator
 //  PUBLIC FUNCTIONS
 
 auto calculate_possible_moves(BoardState &board_state,
+                              bool mvv_lvv_sort,
                               history_table_type *history_table,
                               bool capture_only) -> std::vector<Move>
 {
@@ -71,12 +72,17 @@ auto calculate_possible_moves(BoardState &board_state,
   {
     possible_capture_moves[move_index].list_index = move_index;
   }
-  for (; move_index < possible_normal_moves.size(); ++move_index)
+  for (int normal_move_index = 0;
+       normal_move_index < possible_normal_moves.size();
+       ++normal_move_index, ++move_index)
   {
-    possible_normal_moves[move_index].list_index = move_index;
+    possible_normal_moves[normal_move_index].list_index = move_index;
   }
 
-  sort_moves_mvv_lvv(possible_capture_moves);
+  if (mvv_lvv_sort)
+  {
+    sort_moves_mvv_lvv(possible_capture_moves);
+  }
 
   if (capture_only)
   {
