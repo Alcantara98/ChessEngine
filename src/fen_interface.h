@@ -80,14 +80,14 @@ auto initialize_board(BoardState &board_state,
  * @param board_state The board state to setup.
  * @param piece_color The color of the piece to place.
  * @param piece_type The type of the piece to place.
- * @param x_position The x position of the piece to place.
- * @param y_position The y position of the piece to place.
+ * @param x_file The x position of the piece to place.
+ * @param y_rank The y position of the piece to place.
  */
 static void create_pieces(BoardState &board_state,
                           const PieceColor &piece_color,
                           const PieceType &piece_type,
-                          const int &x_position,
-                          const int &y_position);
+                          const int &x_file,
+                          const int &y_rank);
 
 /**
  * @brief Validates the castling rights string.

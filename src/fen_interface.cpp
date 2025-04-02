@@ -60,9 +60,9 @@ auto initialize_board(BoardState &board_state,
   board_state.clear_chess_board();
 
   int board_configuration_index = 0;
-  for (int y_position = Y_MAX; y_position >= Y_MIN; --y_position)
+  for (int y_rank = Y_MAX; y_rank >= Y_MIN; --y_rank)
   {
-    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
+    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
     {
       // '/' is used to separate ranks. We just ignore it.
       char piece_char = board_configuration[board_configuration_index];
@@ -79,11 +79,11 @@ auto initialize_board(BoardState &board_state,
       {
         // Convert char to int
         int empty_squares = piece_char - '0';
-        if (x_position + empty_squares - 1 > X_MAX)
+        if (x_file + empty_squares - 1 > X_MAX)
         {
           return false;
         }
-        x_position += empty_squares - 1;
+        x_file += empty_squares - 1;
         ++board_configuration_index;
         continue;
       }
@@ -92,8 +92,8 @@ auto initialize_board(BoardState &board_state,
           (islower(piece_char) != 0) ? PieceColor::BLACK : PieceColor::WHITE;
       PieceType piece_type = CHAR_TO_PIECE_TYPE.at(std::tolower(piece_char));
 
-      create_pieces(board_state, piece_color, piece_type, x_position,
-                    y_position);
+      create_pieces(board_state, piece_color, piece_type, x_file,
+                    y_rank);
 
       ++board_configuration_index;
     }
@@ -106,8 +106,8 @@ auto initialize_board(BoardState &board_state,
 void create_pieces(BoardState &board_state,
                    const PieceColor &piece_color,
                    const PieceType &piece_type,
-                   const int &x_position,
-                   const int &y_position)
+                   const int &x_file,
+                   const int &y_rank)
 {
   switch (piece_type)
   {
@@ -131,14 +131,14 @@ void create_pieces(BoardState &board_state,
     if (piece_color == PieceColor::WHITE)
     {
       board_state.white_king_is_alive = true;
-      board_state.white_king_x_position = x_position;
-      board_state.white_king_y_position = y_position;
+      board_state.white_king_x_file = x_file;
+      board_state.white_king_y_rank = y_rank;
     }
     else
     {
       board_state.black_king_is_alive = true;
-      board_state.black_king_x_position = x_position;
-      board_state.black_king_y_position = y_position;
+      board_state.black_king_x_file = x_file;
+      board_state.black_king_y_rank = y_rank;
     }
     break;
 
@@ -151,17 +151,17 @@ void create_pieces(BoardState &board_state,
     bool has_moved = true;
     // If the pawn is at the starting position, it has not moved since it cannot
     // move backwards.
-    if ((piece_color == PieceColor::WHITE && y_position == Y2_RANK) ||
-        (piece_color == PieceColor::BLACK && y_position == Y7_RANK))
+    if ((piece_color == PieceColor::WHITE && y_rank == Y2_RANK) ||
+        (piece_color == PieceColor::BLACK && y_rank == Y7_RANK))
     {
       has_moved = false;
     }
-    board_state.chess_board[x_position][y_position] =
+    board_state.chess_board[x_file][y_rank] =
         new Piece(piece_type, piece_color, has_moved);
   }
   else
   {
-    board_state.chess_board[x_position][y_position] =
+    board_state.chess_board[x_file][y_rank] =
         new Piece(piece_type, piece_color, true);
   }
 }
@@ -212,8 +212,8 @@ auto validate_castling_rights(BoardState &board_state,
 auto validate_white_king_side_castle(BoardState &board_state) -> bool
 {
   // Check if the white king is on the correct square.
-  if (board_state.white_king_x_position != XE_FILE ||
-      board_state.white_king_y_position != Y1_RANK)
+  if (board_state.white_king_x_file != XE_FILE ||
+      board_state.white_king_y_rank != Y1_RANK)
   {
     return false;
   }
@@ -235,8 +235,8 @@ auto validate_white_king_side_castle(BoardState &board_state) -> bool
 auto validate_white_queen_side_castle(BoardState &board_state) -> bool
 {
   // Check if the white king is on the correct square.
-  if (board_state.white_king_x_position != XE_FILE ||
-      board_state.white_king_y_position != Y1_RANK)
+  if (board_state.white_king_x_file != XE_FILE ||
+      board_state.white_king_y_rank != Y1_RANK)
   {
     return false;
   }
@@ -258,8 +258,8 @@ auto validate_white_queen_side_castle(BoardState &board_state) -> bool
 auto validate_black_king_side_castle(BoardState &board_state) -> bool
 {
   // Check if the black king is on the correct square.
-  if (board_state.black_king_x_position != XE_FILE ||
-      board_state.black_king_y_position != Y8_RANK)
+  if (board_state.black_king_x_file != XE_FILE ||
+      board_state.black_king_y_rank != Y8_RANK)
   {
     return false;
   }
@@ -281,8 +281,8 @@ auto validate_black_king_side_castle(BoardState &board_state) -> bool
 auto validate_black_queen_side_castle(BoardState &board_state) -> bool
 {
   // Check if the black king is on the correct square.
-  if (board_state.black_king_x_position != XE_FILE ||
-      board_state.black_king_y_position != Y8_RANK)
+  if (board_state.black_king_x_file != XE_FILE ||
+      board_state.black_king_y_rank != Y8_RANK)
   {
     return false;
   }
@@ -323,10 +323,10 @@ auto validate_en_passant_target(BoardState &board_state,
   }
 
   // Get position of the pawn that can be captured en passant.
-  int pawn_x_position = en_passant_file - 'a';
-  int pawn_y_position = (en_passant_rank == Y3_RANK) ? Y4_RANK : Y5_RANK;
+  int pawn_x_file = en_passant_file - 'a';
+  int pawn_y_rank = (en_passant_rank == Y3_RANK) ? Y4_RANK : Y5_RANK;
 
-  Piece *pawn_piece = board_state.chess_board[pawn_x_position][pawn_y_position];
+  Piece *pawn_piece = board_state.chess_board[pawn_x_file][pawn_y_rank];
 
   // Check if the piece is a pawn.
   if (pawn_piece == nullptr || pawn_piece->piece_type != PieceType::PAWN)
@@ -339,8 +339,8 @@ auto validate_en_passant_target(BoardState &board_state,
       (pawn_piece->piece_color == PieceColor::WHITE) ? Y2_RANK : Y7_RANK;
 
   Move previous_pawn_move =
-      Move(pawn_x_position, original_rank, pawn_x_position, pawn_y_position,
-           pawn_piece, true, true, pawn_x_position, pawn_y_position);
+      Move(pawn_x_file, original_rank, pawn_x_file, pawn_y_rank,
+           pawn_piece, true, true, pawn_x_file, pawn_y_rank);
 
   board_state.previous_move_stack.push(previous_pawn_move);
 

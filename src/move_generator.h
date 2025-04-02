@@ -41,13 +41,13 @@ auto calculate_possible_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vectors.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the pawn.
+ * @param x_file, y_rank The coordinate of the pawn.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void generate_pawn_moves(BoardState &board_state,
-                                int x_position,
-                                int y_position,
+                                int x_file,
+                                int y_rank,
                                 std::vector<Move> &possible_normal_moves,
                                 std::vector<Move> &possible_capture_moves,
                                 bool capture_only = false);
@@ -59,7 +59,7 @@ static void generate_pawn_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param chess_board Reference of the current chess board.
- * @param x_position, y_position The coordinate of the pawn.
+ * @param x_file, y_rank The coordinate of the pawn.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  * @param pawn_piece The pawn piece.
@@ -68,8 +68,8 @@ static void generate_pawn_moves(BoardState &board_state,
  * @param promotion_rank The rank to promote the pawn.
  */
 static void generate_normal_pawn_moves(chess_board_type &chess_board,
-                                       int x_position,
-                                       int y_position,
+                                       int x_file,
+                                       int y_rank,
                                        std::vector<Move> &possible_normal_moves,
                                        Piece *pawn_piece,
                                        int pawn_direction,
@@ -83,7 +83,7 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param chess_board Reference of the current chess board.
- * @param x_position, y_position The coordinate of the pawn.
+ * @param x_file, y_rank The coordinate of the pawn.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  * @param pawn_piece The pawn piece.
@@ -93,8 +93,8 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
  */
 static void
 generate_pawn_capture_moves(chess_board_type &chess_board,
-                            int x_position,
-                            int y_position,
+                            int x_file,
+                            int y_rank,
                             std::vector<Move> &possible_capture_moves,
                             Piece *pawn_piece,
                             int pawn_direction,
@@ -108,7 +108,7 @@ generate_pawn_capture_moves(chess_board_type &chess_board,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param chess_board Reference of the current chess board.
- * @param x_position, y_position The coordinate of the pawn.
+ * @param x_file, y_rank The coordinate of the pawn.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  * @param pawn_piece The pawn piece.
@@ -118,8 +118,8 @@ generate_pawn_capture_moves(chess_board_type &chess_board,
  */
 static void generate_en_passant_pawn_capture_moves(
     chess_board_type &chess_board,
-    int x_position,
-    int y_position,
+    int x_file,
+    int y_rank,
     std::vector<Move> &possible_capture_moves,
     Piece *pawn_piece,
     int pawn_direction,
@@ -133,13 +133,13 @@ static void generate_en_passant_pawn_capture_moves(
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the king.
+ * @param x_file, y_rank The coordinate of the king.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void generate_king_moves(BoardState &board_state,
-                                int x_position,
-                                int y_position,
+                                int x_file,
+                                int y_rank,
                                 std::vector<Move> &possible_normal_moves,
                                 std::vector<Move> &possible_capture_moves,
                                 bool capture_only = false);
@@ -151,14 +151,14 @@ static void generate_king_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the queen.
+ * @param x_file, y_rank The coordinate of the queen.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void
 generate_castle_king_moves(BoardState &board_state,
-                           int x_position,
-                           int y_position,
+                           int x_file,
+                           int y_rank,
                            std::vector<Move> &possible_normal_moves);
 
 /**
@@ -166,7 +166,7 @@ generate_castle_king_moves(BoardState &board_state,
  *
  * @param board_state Reference of the current board state.
  * @param king_piece The king piece.
- * @param x_position, y_position The coordinate of the rook.
+ * @param x_file, y_rank The coordinate of the rook.
  * @param potential_rook_piece The potential rook piece.
  * @param castle_path Squares the king must pass through to castle.
  *
@@ -174,7 +174,7 @@ generate_castle_king_moves(BoardState &board_state,
  */
 static auto can_castle(BoardState &board_state,
                        Piece *king_piece,
-                       int y_position,
+                       int y_rank,
                        Piece *potential_rook_piece,
                        const std::vector<int> &castle_path) -> bool;
 
@@ -185,13 +185,13 @@ static auto can_castle(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the knight.
+ * @param x_file, y_rank The coordinate of the knight.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void generate_knight_moves(BoardState &board_state,
-                                  int x_position,
-                                  int y_position,
+                                  int x_file,
+                                  int y_rank,
                                   std::vector<Move> &possible_normal_moves,
                                   std::vector<Move> &possible_capture_moves,
                                   bool capture_only = false);
@@ -203,13 +203,13 @@ static void generate_knight_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the bishop.
+ * @param x_file, y_rank The coordinate of the bishop.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void generate_bishop_moves(BoardState &board_state,
-                                  int x_position,
-                                  int y_position,
+                                  int x_file,
+                                  int y_rank,
                                   std::vector<Move> &possible_normal_moves,
                                   std::vector<Move> &possible_capture_moves,
                                   bool capture_only = false);
@@ -221,13 +221,13 @@ static void generate_bishop_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the rook.
+ * @param x_file, y_rank The coordinate of the rook.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void generate_rook_moves(BoardState &board_state,
-                                int x_position,
-                                int y_position,
+                                int x_file,
+                                int y_rank,
                                 std::vector<Move> &possible_normal_moves,
                                 std::vector<Move> &possible_capture_moves,
                                 bool capture_only = false);
@@ -239,13 +239,13 @@ static void generate_rook_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the queen.
+ * @param x_file, y_rank The coordinate of the queen.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void generate_queen_moves(BoardState &board_state,
-                                 int x_position,
-                                 int y_position,
+                                 int x_file,
+                                 int y_rank,
                                  std::vector<Move> &possible_normal_moves,
                                  std::vector<Move> &possible_capture_moves,
                                  bool capture_only = false);
@@ -257,14 +257,14 @@ static void generate_queen_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vector.
  *
  * @param board_state Reference of the current board state.
- * @param x_position, y_position The coordinate of the bishop or bishop.
+ * @param x_file, y_rank The coordinate of the bishop or bishop.
  * @param x_direction, y_direction The direction to move.
  * @param possible_normal_moves Reference to the list of possible moves of
  * current board_state.
  */
 static void rook_bishop_move_helper(BoardState &board_state,
-                                    int x_position,
-                                    int y_position,
+                                    int x_file,
+                                    int y_rank,
                                     int x_direction,
                                     int y_direction,
                                     std::vector<Move> &possible_normal_moves,

@@ -13,33 +13,33 @@ auto evaluate_position(BoardState &board_state) -> int
   // actual eval.
   int eval_temp = 0;
 
-  for (int y_position = Y_MIN; y_position <= Y_MAX; ++y_position)
+  for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
   {
-    for (int x_position = X_MIN; x_position <= X_MAX; ++x_position)
+    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
     {
       eval_temp = 0;
-      Piece &piece = *board_state.chess_board[x_position][y_position];
+      Piece &piece = *board_state.chess_board[x_file][y_rank];
       PieceType &piece_type = piece.piece_type;
 
       switch (piece_type)
       {
       case PieceType::PAWN:
-        evaluate_pawn(x_position, y_position, piece, eval_temp, board_state);
+        evaluate_pawn(x_file, y_rank, piece, eval_temp, board_state);
         break;
       case PieceType::ROOK:
-        evaluate_rook(x_position, y_position, piece, eval_temp, board_state);
+        evaluate_rook(x_file, y_rank, piece, eval_temp, board_state);
         break;
       case PieceType::KNIGHT:
-        evaluate_knight(x_position, y_position, piece, eval_temp, board_state);
+        evaluate_knight(x_file, y_rank, piece, eval_temp, board_state);
         break;
       case PieceType::BISHOP:
-        evaluate_bishop(x_position, y_position, piece, eval_temp, board_state);
+        evaluate_bishop(x_file, y_rank, piece, eval_temp, board_state);
         break;
       case PieceType::QUEEN:
-        evaluate_queen(x_position, y_position, piece, eval_temp, board_state);
+        evaluate_queen(x_file, y_rank, piece, eval_temp, board_state);
         break;
       case PieceType::KING:
-        evaluate_king(x_position, y_position, piece, eval_temp, board_state);
+        evaluate_king(x_file, y_rank, piece, eval_temp, board_state);
         break;
       default:
         // Empty square.
@@ -73,8 +73,8 @@ auto evaluate_position(BoardState &board_state) -> int
 
 // PRIVATE FUNCTIONS
 
-void evaluate_pawn(int x_position,
-                   int y_position,
+void evaluate_pawn(int x_file,
+                   int y_rank,
                    Piece &pawn_piece,
                    int &eval,
                    BoardState &board_state)
@@ -83,18 +83,18 @@ void evaluate_pawn(int x_position,
   eval += PAWN_VALUE;
 
   // Position value - x coordinate.
-  eval += PAWN_POSITION_EVAL_MAP[x_position];
+  eval += PAWN_POSITION_EVAL_MAP[x_file];
 
   // If in the end game, give a pawn more value the closer they are to
   // getting promoted into a main piece.
   int rank_eval = 0;
   if (pawn_piece.piece_color == PieceColor::WHITE)
   {
-    rank_eval = y_position * MEDIUM_EVAL_VALUE;
+    rank_eval = y_rank * MEDIUM_EVAL_VALUE;
   }
   else
   {
-    rank_eval = (Y_MAX - y_position) * MEDIUM_EVAL_VALUE;
+    rank_eval = (Y_MAX - y_rank) * MEDIUM_EVAL_VALUE;
   }
   if (board_state.is_end_game)
   {
@@ -117,12 +117,12 @@ void evaluate_pawn(int x_position,
   for (int rank_count = 1; rank_count <= MAX_DOUBLE_PAWN_SQUARES_TO_CHECK;
        ++rank_count)
   {
-    if (y_position + (direction * rank_count) >= Y_MIN &&
-        y_position + (direction * rank_count) <= Y_MAX)
+    if (y_rank + (direction * rank_count) >= Y_MIN &&
+        y_rank + (direction * rank_count) <= Y_MAX)
     {
       Piece &piece =
           *board_state
-               .chess_board[x_position][y_position + (direction * rank_count)];
+               .chess_board[x_file][y_rank + (direction * rank_count)];
       if (piece.piece_type == PieceType::PAWN &&
           piece.piece_color == pawn_piece.piece_color)
       {
@@ -133,8 +133,8 @@ void evaluate_pawn(int x_position,
   }
 }
 
-void evaluate_knight(int x_position,
-                     int y_position,
+void evaluate_knight(int x_file,
+                     int y_rank,
                      Piece &knight_piece,
                      int &eval,
                      BoardState &board_state)
@@ -154,8 +154,8 @@ void evaluate_knight(int x_position,
   for (const auto &move : KNIGHT_MOVES)
   {
     // Increase evaluation based on the number of moves.
-    new_x = x_position + move[0];
-    new_y = y_position + move[1];
+    new_x = x_file + move[0];
+    new_y = y_rank + move[1];
 
     // Check if within bounds.
     if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
@@ -165,8 +165,8 @@ void evaluate_knight(int x_position,
   }
 }
 
-void evaluate_bishop(int x_position,
-                     int y_position,
+void evaluate_bishop(int x_file,
+                     int y_rank,
                      Piece &bishop_piece,
                      int &eval,
                      BoardState &board_state)
@@ -190,9 +190,9 @@ void evaluate_bishop(int x_position,
   {
     direction = NEGATIVE_DIRECTION;
   }
-  if (y_position - direction >= Y_MIN && y_position - direction <= Y_MAX)
+  if (y_rank - direction >= Y_MIN && y_rank - direction <= Y_MAX)
   {
-    if (board_state.chess_board[x_position][y_position - direction]
+    if (board_state.chess_board[x_file][y_rank - direction]
             ->piece_type == PieceType::PAWN)
     {
       eval -= LARGE_EVAL_VALUE;
@@ -205,8 +205,8 @@ void evaluate_bishop(int x_position,
   for (const auto &direction : BISHOP_DIRECTIONS)
   {
     // Increase evaluation based on the number of moves.
-    new_x = x_position + direction[0];
-    new_y = y_position + direction[1];
+    new_x = x_file + direction[0];
+    new_y = y_rank + direction[1];
 
     // Check if still within bounds.
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
@@ -224,8 +224,8 @@ void evaluate_bishop(int x_position,
   }
 }
 
-void evaluate_rook(int x_position,
-                   int y_position,
+void evaluate_rook(int x_file,
+                   int y_rank,
                    Piece &rook_piece,
                    int &eval,
                    BoardState &board_state)
@@ -241,8 +241,8 @@ void evaluate_rook(int x_position,
     for (const auto &direction : ROOK_DIRECTIONS)
     {
       // Increase evaluation based on the number of moves.
-      new_x = x_position + direction[0];
-      new_y = y_position + direction[1];
+      new_x = x_file + direction[0];
+      new_y = y_rank + direction[1];
 
       // Check if still within bounds.
       while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
@@ -263,8 +263,8 @@ void evaluate_rook(int x_position,
   }
 }
 
-void evaluate_queen(int x_position,
-                    int y_position,
+void evaluate_queen(int x_file,
+                    int y_rank,
                     Piece &queen_piece,
                     int &eval,
                     BoardState &board_state)
@@ -278,8 +278,8 @@ void evaluate_queen(int x_position,
   for (const auto &direction : QUEEN_DIRECTIONS)
   {
     // Increase evaluation based on the number of moves.
-    new_x = x_position + direction[0];
-    new_y = y_position + direction[1];
+    new_x = x_file + direction[0];
+    new_y = y_rank + direction[1];
 
     // Check if still within bounds.
     while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
@@ -297,8 +297,8 @@ void evaluate_queen(int x_position,
   }
 }
 
-void evaluate_king(int x_position,
-                   int y_position,
+void evaluate_king(int x_file,
+                   int y_rank,
                    Piece &king_piece,
                    int &eval,
                    BoardState &board_state)
@@ -322,16 +322,16 @@ void evaluate_king(int x_position,
   // Position value - x coordinate.
   if (!board_state.is_end_game)
   {
-    evaluate_king_safety(x_position, y_position, king_piece, eval, board_state);
+    evaluate_king_safety(x_file, y_rank, king_piece, eval, board_state);
 
     // Give points if the king is far away from the center of the board.
     // But not in the end game where it king needs to be active.
-    eval += KING_POSITION_EVAL_MAP[x_position];
+    eval += KING_POSITION_EVAL_MAP[x_file];
   }
 }
 
-void evaluate_king_safety(int x_position,
-                          int y_position,
+void evaluate_king_safety(int x_file,
+                          int y_rank,
                           Piece &king_piece,
                           int &eval,
                           BoardState &board_state)
@@ -342,8 +342,8 @@ void evaluate_king_safety(int x_position,
     // King has same directions as queen.
     for (const auto &direction : QUEEN_DIRECTIONS)
     {
-      new_x = x_position + direction[0];
-      new_y = y_position + direction[1];
+      new_x = x_file + direction[0];
+      new_y = y_rank + direction[1];
       while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
              new_y <= Y_MAX)
       {

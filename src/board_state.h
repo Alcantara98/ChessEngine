@@ -56,16 +56,16 @@ public:
   int number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
 
   /// @brief White King's file position.
-  int white_king_x_position = XE_FILE;
+  int white_king_x_file = XE_FILE;
 
   /// @brief White King's rank position.
-  int white_king_y_position = Y1_RANK;
+  int white_king_y_rank = Y1_RANK;
 
   /// @brief Black King's file position.
-  int black_king_x_position = XE_FILE;
+  int black_king_x_file = XE_FILE;
 
   /// @brief Black King's rank position.
-  int black_king_y_position = Y8_RANK;
+  int black_king_y_rank = Y8_RANK;
 
   /// @brief Flag to check if the white king has castled.
   bool white_has_castled = false;
@@ -142,14 +142,14 @@ public:
   /**
    * @brief Checks if the given square is attacked.
    *
-   * @param x_position The x coordinate of the square.
-   * @param y_position The y coordinate of the square.
+   * @param x_file The x coordinate of the square.
+   * @param y_rank The y coordinate of the square.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked(int x_position,
-                          int y_position,
+  auto square_is_attacked(int x_file,
+                          int y_rank,
                           PieceColor color_being_attacked) -> bool;
 
   /**
@@ -272,69 +272,69 @@ private:
   /**
    * @brief Helper function to check if a square is attacked by a pawn.
    *
-   * @param x_position The x coordinate of the pawn.
-   * @param y_position The y coordinate of the pawn.
+   * @param x_file The x coordinate of the pawn.
+   * @param y_rank The y coordinate of the pawn.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_pawn(int &x_position,
-                                  int &y_position,
+  auto square_is_attacked_by_pawn(int &x_file,
+                                  int &y_rank,
                                   PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a knight.
    *
-   * @param x_position The x coordinate of the knight.
-   * @param y_position The y coordinate of the knight.
+   * @param x_file The x coordinate of the knight.
+   * @param y_rank The y coordinate of the knight.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_knight(int &x_position,
-                                    int &y_position,
+  auto square_is_attacked_by_knight(int &x_file,
+                                    int &y_rank,
                                     PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a rook or queen.
    *
-   * @param x_position The x coordinate of the rook or queen.
-   * @param y_position The y coordinate of the rook or queen.
+   * @param x_file The x coordinate of the rook or queen.
+   * @param y_rank The y coordinate of the rook or queen.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
   auto
-  square_is_attacked_by_rook_or_queen(int &x_position,
-                                      int &y_position,
+  square_is_attacked_by_rook_or_queen(int &x_file,
+                                      int &y_rank,
                                       PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a bishop or
    * queen.
    *
-   * @param x_position The x coordinate of the bishop or queen.
-   * @param y_position The y coordinate of the bishop or queen.
+   * @param x_file The x coordinate of the bishop or queen.
+   * @param y_rank The y coordinate of the bishop or queen.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_bishop_or_queen(int &x_position,
-                                             int &y_position,
+  auto square_is_attacked_by_bishop_or_queen(int &x_file,
+                                             int &y_rank,
                                              PieceColor &color_being_attacked)
       -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a king.
    *
-   * @param x_position The x coordinate of the king.
-   * @param y_position The y coordinate of the king.
+   * @param x_file The x coordinate of the king.
+   * @param y_rank The y coordinate of the king.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_king(int &x_position,
-                                  int &y_position,
+  auto square_is_attacked_by_king(int &x_file,
+                                  int &y_rank,
                                   PieceColor &color_being_attacked) -> bool;
 
   /**
