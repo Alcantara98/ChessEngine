@@ -390,16 +390,13 @@ auto BoardState::square_is_attacked(int x_file,
                                     int y_rank,
                                     PieceColor color_being_attacked) -> bool
 {
-  return square_is_attacked_by_pawn(x_file, y_rank,
-                                    color_being_attacked) ||
-         square_is_attacked_by_knight(x_file, y_rank,
-                                      color_being_attacked) ||
+  return square_is_attacked_by_pawn(x_file, y_rank, color_being_attacked) ||
+         square_is_attacked_by_knight(x_file, y_rank, color_being_attacked) ||
          square_is_attacked_by_rook_or_queen(x_file, y_rank,
                                              color_being_attacked) ||
          square_is_attacked_by_bishop_or_queen(x_file, y_rank,
                                                color_being_attacked) ||
-         square_is_attacked_by_king(x_file, y_rank,
-                                    color_being_attacked);
+         square_is_attacked_by_king(x_file, y_rank, color_being_attacked);
 }
 
 auto BoardState::king_is_checked(PieceColor color_of_king) -> bool

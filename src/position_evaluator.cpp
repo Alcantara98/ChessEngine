@@ -121,8 +121,7 @@ void evaluate_pawn(int x_file,
         y_rank + (direction * rank_count) <= Y_MAX)
     {
       Piece &piece =
-          *board_state
-               .chess_board[x_file][y_rank + (direction * rank_count)];
+          *board_state.chess_board[x_file][y_rank + (direction * rank_count)];
       if (piece.piece_type == PieceType::PAWN &&
           piece.piece_color == pawn_piece.piece_color)
       {
@@ -192,8 +191,8 @@ void evaluate_bishop(int x_file,
   }
   if (y_rank - direction >= Y_MIN && y_rank - direction <= Y_MAX)
   {
-    if (board_state.chess_board[x_file][y_rank - direction]
-            ->piece_type == PieceType::PAWN)
+    if (board_state.chess_board[x_file][y_rank - direction]->piece_type ==
+        PieceType::PAWN)
     {
       eval -= LARGE_EVAL_VALUE;
     }

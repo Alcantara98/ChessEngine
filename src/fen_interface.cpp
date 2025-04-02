@@ -92,8 +92,7 @@ auto initialize_board(BoardState &board_state,
           (islower(piece_char) != 0) ? PieceColor::BLACK : PieceColor::WHITE;
       PieceType piece_type = CHAR_TO_PIECE_TYPE.at(std::tolower(piece_char));
 
-      create_pieces(board_state, piece_color, piece_type, x_file,
-                    y_rank);
+      create_pieces(board_state, piece_color, piece_type, x_file, y_rank);
 
       ++board_configuration_index;
     }
@@ -339,8 +338,8 @@ auto validate_en_passant_target(BoardState &board_state,
       (pawn_piece->piece_color == PieceColor::WHITE) ? Y2_RANK : Y7_RANK;
 
   Move previous_pawn_move =
-      Move(pawn_x_file, original_rank, pawn_x_file, pawn_y_rank,
-           pawn_piece, true, true, pawn_x_file, pawn_y_rank);
+      Move(pawn_x_file, original_rank, pawn_x_file, pawn_y_rank, pawn_piece,
+           true, true, pawn_x_file, pawn_y_rank);
 
   board_state.previous_move_stack.push(previous_pawn_move);
 

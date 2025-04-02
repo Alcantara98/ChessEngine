@@ -171,31 +171,28 @@ void generate_normal_pawn_moves(chess_board_type &chess_board,
         for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
                                 PieceType::KNIGHT, PieceType::ROOK})
         {
-          possible_normal_moves.emplace_back(x_file, y_rank, x_file,
-                                             new_y_rank, pawn_piece,
-                                             piece_type);
+          possible_normal_moves.emplace_back(x_file, y_rank, x_file, new_y_rank,
+                                             pawn_piece, piece_type);
         }
       }
       else
       {
         // Normal move.
-        possible_normal_moves.emplace_back(x_file, y_rank, x_file,
-                                           new_y_rank, pawn_piece,
-                                           first_move);
+        possible_normal_moves.emplace_back(x_file, y_rank, x_file, new_y_rank,
+                                           pawn_piece, first_move);
       }
     }
     // Two square move forward.
     // Check if both squares in front of the pawn are empty.
     int new_y_rank_two_squares = y_rank + (2 * pawn_direction);
     if (first_move &&
-        chess_board[x_file][new_y_rank]->piece_type ==
-            PieceType::EMPTY &&
+        chess_board[x_file][new_y_rank]->piece_type == PieceType::EMPTY &&
         chess_board[x_file][new_y_rank_two_squares]->piece_type ==
             PieceType::EMPTY)
     {
       possible_normal_moves.emplace_back(
-          x_file, y_rank, x_file, new_y_rank_two_squares,
-          pawn_piece, true, true, x_file, new_y_rank_two_squares);
+          x_file, y_rank, x_file, new_y_rank_two_squares, pawn_piece, true,
+          true, x_file, new_y_rank_two_squares);
     }
   }
 }
@@ -214,8 +211,8 @@ void generate_pawn_capture_moves(chess_board_type &chess_board,
   {
     int new_x_file = x_file + capture_direction;
     int new_y_rank = y_rank + pawn_direction;
-    if (new_x_file >= X_MIN && new_x_file <= X_MAX &&
-        new_y_rank >= Y_MIN && new_y_rank <= Y_MAX)
+    if (new_x_file >= X_MIN && new_x_file <= X_MAX && new_y_rank >= Y_MIN &&
+        new_y_rank <= Y_MAX)
     {
       Piece *captured_piece = chess_board[new_x_file][new_y_rank];
       if (captured_piece->piece_type != PieceType::EMPTY &&
@@ -227,17 +224,17 @@ void generate_pawn_capture_moves(chess_board_type &chess_board,
           for (auto piece_type : {PieceType::QUEEN, PieceType::BISHOP,
                                   PieceType::KNIGHT, PieceType::ROOK})
           {
-            possible_capture_moves.emplace_back(
-                x_file, y_rank, new_x_file, new_y_rank,
-                pawn_piece, captured_piece, piece_type);
+            possible_capture_moves.emplace_back(x_file, y_rank, new_x_file,
+                                                new_y_rank, pawn_piece,
+                                                captured_piece, piece_type);
           }
         }
         else
         {
           // Normal capture move.
-          possible_capture_moves.emplace_back(
-              x_file, y_rank, new_x_file, new_y_rank,
-              pawn_piece, captured_piece, first_move);
+          possible_capture_moves.emplace_back(x_file, y_rank, new_x_file,
+                                              new_y_rank, pawn_piece,
+                                              captured_piece, first_move);
         }
       }
     }
@@ -271,13 +268,12 @@ void generate_en_passant_pawn_capture_moves(
             previous_move.pawn_moved_two_squares_to_x == new_x_file &&
             previous_move.pawn_moved_two_squares_to_y == y_rank &&
             captured_piece->piece_color != pawn_piece->piece_color &&
-            chess_board[new_x_file][new_y_rank]->piece_type ==
-                PieceType::EMPTY)
+            chess_board[new_x_file][new_y_rank]->piece_type == PieceType::EMPTY)
         {
 
-          possible_capture_moves.emplace_back(
-              x_file, y_rank, new_x_file, new_y_rank,
-              pawn_piece, captured_piece, first_move, true);
+          possible_capture_moves.emplace_back(x_file, y_rank, new_x_file,
+                                              new_y_rank, pawn_piece,
+                                              captured_piece, first_move, true);
         }
       }
     }
@@ -332,17 +328,16 @@ void generate_castle_king_moves(BoardState &board_state,
   Piece *king_piece = chess_board[x_file][y_rank];
   bool first_move = !king_piece->piece_has_moved;
   // Check if the king is not in check and has not moved.
-  if (first_move && !board_state.square_is_attacked(x_file, y_rank,
-                                                    king_piece->piece_color))
+  if (first_move &&
+      !board_state.square_is_attacked(x_file, y_rank, king_piece->piece_color))
   {
     // Castle king side.
     Piece *potential_rook_piece = chess_board[X_MAX][y_rank];
     if (can_castle(board_state, king_piece, y_rank, potential_rook_piece,
                    {XF_FILE, XG_FILE}))
     {
-      possible_normal_moves.emplace_back(x_file, y_rank, x_file + 2,
-                                         y_rank, king_piece, first_move,
-                                         false);
+      possible_normal_moves.emplace_back(x_file, y_rank, x_file + 2, y_rank,
+                                         king_piece, first_move, false);
     }
 
     // Castle queen side.
@@ -350,9 +345,8 @@ void generate_castle_king_moves(BoardState &board_state,
     if (can_castle(board_state, king_piece, y_rank, potential_rook_piece,
                    {XB_FILE, XC_FILE, XD_FILE}))
     {
-      possible_normal_moves.emplace_back(x_file, y_rank, x_file - 2,
-                                         y_rank, king_piece, first_move,
-                                         false);
+      possible_normal_moves.emplace_back(x_file, y_rank, x_file - 2, y_rank,
+                                         king_piece, first_move, false);
     }
   }
 }
@@ -373,10 +367,8 @@ auto can_castle(BoardState &board_state,
   // attacked.
   for (int file : castle_path)
   {
-    if (board_state.chess_board[file][y_rank]->piece_type !=
-            PieceType::EMPTY ||
-        board_state.square_is_attacked(file, y_rank,
-                                       king_piece->piece_color))
+    if (board_state.chess_board[file][y_rank]->piece_type != PieceType::EMPTY ||
+        board_state.square_is_attacked(file, y_rank, king_piece->piece_color))
     {
       return false;
     }
@@ -417,9 +409,8 @@ void generate_knight_moves(BoardState &board_state,
     // Capture move.
     else if (target_piece->piece_color != knight_piece->piece_color)
     {
-      possible_capture_moves.emplace_back(x_file, y_rank, new_x, new_y,
-                                          knight_piece, target_piece,
-                                          first_move);
+      possible_capture_moves.emplace_back(
+          x_file, y_rank, new_x, new_y, knight_piece, target_piece, first_move);
     }
   }
 }
@@ -465,12 +456,10 @@ void generate_queen_moves(BoardState &board_state,
                           bool capture_only)
 {
   // Queen moves are a combination of rook and bishop moves.
-  generate_rook_moves(board_state, x_file, y_rank,
-                      possible_normal_moves, possible_capture_moves,
-                      capture_only);
-  generate_bishop_moves(board_state, x_file, y_rank,
-                        possible_normal_moves, possible_capture_moves,
-                        capture_only);
+  generate_rook_moves(board_state, x_file, y_rank, possible_normal_moves,
+                      possible_capture_moves, capture_only);
+  generate_bishop_moves(board_state, x_file, y_rank, possible_normal_moves,
+                        possible_capture_moves, capture_only);
 }
 
 // PRIVATE FUNCTIONS
@@ -505,9 +494,8 @@ void rook_bishop_move_helper(BoardState &board_state,
     // Capture move.
     else if (target_piece->piece_color != moving_piece->piece_color)
     {
-      possible_capture_moves.emplace_back(x_file, y_rank, new_x, new_y,
-                                          moving_piece, target_piece,
-                                          first_move);
+      possible_capture_moves.emplace_back(
+          x_file, y_rank, new_x, new_y, moving_piece, target_piece, first_move);
       break;
     }
     else
