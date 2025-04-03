@@ -22,7 +22,7 @@ void SearchEngine::stop_engine_turn() { search_thread_handler.stop_thread(); }
 void SearchEngine::start_engine_pondering()
 {
   engine_is_pondering = true;
-  ponder_thread_handler.start_thread(MAX_SEARCH_TIME);
+  ponder_thread_handler.start_thread(MAX_SEARCH_TIME_MS);
 }
 
 void SearchEngine::stop_engine_pondering()

@@ -68,9 +68,11 @@ public:
    * @param hash Hash of the board state.
    * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
-   * @param flag Flag of the value.
+   * @param flag Flag of the value (0 = exact, 1 = lower bound, 2 = upper
+   * bound).
    * @param best_move_index Index of the best move in the board state.
-   * @param is_quiescence Flag to check if the entry is a quiescence search.
+   * @param is_quiescence Flag to check if the entry is a quiescence search
+   * (default is false).
    */
   void store(uint64_t &hash,
              int search_depth,
@@ -83,12 +85,15 @@ public:
    * @brief Retrieve an entry from the transposition table.
    *
    * @param hash Hash of the board state.
-   * @param search_depth Depth searched for this position.
-   * @param eval_score Evaluation score of the board state.
-   * @param flag Flag of the value.
-   * @param best_move_index Index of the best move in the board state.
+   * @param search_depth Depth searched for this position (output parameter).
+   * @param eval_score Evaluation score of the board state (output parameter).
+   * @param flag Flag of the value (output parameter).
+   * @param best_move_index Index of the best move in the board state (output
+   * parameter).
+   * @param is_quiescence Flag to check if the entry is a quiescence search
+   * (default is false).
    *
-   * @return true if the entry was found, false otherwise.
+   * @return True if the entry was found, false otherwise.
    */
   auto retrieve(uint64_t &hash,
                 int &search_depth,
@@ -99,6 +104,9 @@ public:
 
   /**
    * @brief Clear the transposition table.
+   *
+   * @details Removes all entries from the transposition table and resets its
+   * state.
    */
   void clear();
 
@@ -111,6 +119,8 @@ private:
   /// @brief Transposition table represented as an array.
   TranspositionTableEntry *tt_table;
 
+  // FUNCTIONS
+
   /**
    * @brief Calculate the checksum of the entry.
    *
@@ -119,6 +129,7 @@ private:
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    * @param best_move_index Index of the best move in the board state.
+   * @param is_quiescence Flag to check if the entry is a quiescence search.
    *
    * @return Calculated checksum.
    */

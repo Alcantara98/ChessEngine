@@ -50,22 +50,22 @@ public:
   bool black_king_is_alive = true;
 
   /// @brief Number of queens on the board.
-  int queens_on_board = START_QUEENS_COUNT;
+  int queens_on_board = INITIAL_QUEENS_COUNT;
 
   /// @brief Number of main pieces left on the board (Rooks, Bishops, Knights).
-  int number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
+  int number_of_main_pieces_left = INITIAL_MAIN_PIECES_COUNT;
 
   /// @brief White King's file position.
-  int white_king_x_position = XE_FILE;
+  int white_king_x_file = XE_FILE;
 
   /// @brief White King's rank position.
-  int white_king_y_position = Y1_RANK;
+  int white_king_y_rank = Y1_RANK;
 
   /// @brief Black King's file position.
-  int black_king_x_position = XE_FILE;
+  int black_king_x_file = XE_FILE;
 
   /// @brief Black King's rank position.
-  int black_king_y_position = Y8_RANK;
+  int black_king_y_rank = Y8_RANK;
 
   /// @brief Flag to check if the white king has castled.
   bool white_has_castled = false;
@@ -102,35 +102,51 @@ public:
 
   /**
    * @brief Resets chess board to default starting piece positions.
+   *
+   * @details This function sets up the chess board with the default starting
+   * positions for all pieces and resets all related properties.
    */
   void setup_default_board();
 
   /**
-   * @brief Resets chess board to default starting piece positions.
+   * @brief Resets chess board to default starting state.
+   *
+   * @details This function clears the board and reinitializes it to the default
+   * state, including resetting all properties to their initial values.
    */
   void reset_board();
 
   /**
    * @brief Prints the board.
    *
-   * @param color The color at the bottom of the board.
+   * @param color The color at the bottom of the board (WHITE or BLACK).
    */
   void print_board(PieceColor color);
 
   /**
    * @brief Applies the given move to the board state.
    *
-   * @param move Move to apply on board_state.
+   * @param move Move to apply on the board state.
+   *
+   * @details Updates the board state after applying the move. Manages piece
+   * counts, and recalculates the Zobrist hash for the new state.
    */
   void apply_move(Move &move);
 
   /**
    * @brief Undoes the last move applied to the board state.
+   *
+   * @details Reverts the board state to the previous state before the last move
+   * was applied. Manages piece counts, and recalculates
+   * the Zobrist hash for the new state.
    */
   void undo_move();
 
   /**
    * @brief Applies a null move to the board state.
+   *
+   * @details A null move is where a player passes their turn without moving a
+   * piece. Used in the Null Move Heuristic.
    */
   void apply_null_move();
 
@@ -142,20 +158,20 @@ public:
   /**
    * @brief Checks if the given square is attacked.
    *
-   * @param x_position The x coordinate of the square.
-   * @param y_position The y coordinate of the square.
+   * @param x_file The x coordinate of the square (file).
+   * @param y_rank The y coordinate of the square (rank).
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked(int x_position,
-                          int y_position,
+  auto square_is_attacked(int x_file,
+                          int y_rank,
                           PieceColor color_being_attacked) -> bool;
 
   /**
    * @brief Checks if the king of the given color is in check.
    *
-   * @param color_of_king The color of the king to check.
+   * @param color_of_king The color of the king to check (WHITE or BLACK).
    *
    * @return True if the king is in check, false otherwise.
    */
@@ -173,23 +189,27 @@ public:
   /**
    * @brief Clears all pieces from the chess board.
    *
-   * @details Also resets properties to null values since there are no pieces on
-   * the board.
+   * @details Also resets properties to null values since there are no pieces
+   * on the board.
    */
   void clear_chess_board();
 
   /**
-   * @brief Gets the board state hash from visisted_states_hash_stack. The
-   * current board state hash will be calculated after a move is applied in
-   * apply_move and stored in the visisted_states_hash_stack and
-   * visisted_states_hash_map.
+   * @brief Gets the board state hash from visited_states_hash_stack.
+   *
+   * @details The current board state hash is calculated after a move is applied
+   * in apply_move and stored in visited_states_hash_stack and
+   * visited_states_hash_map.
+   *
+   * @return The Zobrist hash of the current board state.
    */
   auto get_current_state_hash() -> uint64_t;
 
   /**
-   * @brief Checks if the current state has been repeated three times. This is
-   * used to detect three fold repetition. Game is drawn if the same state is
-   * repeated three times.
+   * @brief Checks if the current state has been repeated three times.
+   *
+   * @details This is used to detect threefold repetition. The game is drawn if
+   * the same state is repeated three times.
    *
    * @return True if the current state has been repeated three times, false
    * otherwise.
@@ -198,29 +218,36 @@ public:
 
   /**
    * @brief Checks if the current state has been visited.
+   *
+   * @return True if the current state has been visited, false otherwise.
    */
   auto current_state_has_been_visited() -> bool;
 
   /**
-   * @brief Add hash to visited states map and stack.
+   * @brief Adds the current state hash to the visited states map and stack.
    *
-   * @note If the state has never been visited, it will be added to the map with
-   * a count of 1. If the state has been visited before, the count will be
+   * @details If the state has never been visited, it will be added to the map
+   * with a count of 1. If the state has been visited before, the count will be
    * incremented by 1.
    */
   void add_current_state_to_visited_states();
 
   /**
-   * @brief Remove hash from visited states map and stack.
+   * @brief Removes the current state hash from the visited states map and
+   * stack.
    *
-   * @note If the state has been visited before, the count will be decremented
-   * by 1. If the count is 0, the state will be removed from the map.
+   * @details If the state has been visited before, the count will be
+   * decremented by 1. If the count is 0, the state will be removed from the
+   * map.
    */
   void remove_current_state_from_visited_states();
 
   /**
    * @brief Checks if the game is in an end game state and updates the
    * is_end_game property.
+   *
+   * @details The end game state is determined based on the number of pieces
+   * left on the board and other conditions.
    */
   void is_end_game_check();
 
@@ -272,69 +299,65 @@ private:
   /**
    * @brief Helper function to check if a square is attacked by a pawn.
    *
-   * @param x_position The x coordinate of the pawn.
-   * @param y_position The y coordinate of the pawn.
+   * @param x_file The x coordinate of the pawn.
+   * @param y_rank The y coordinate of the pawn.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_pawn(int &x_position,
-                                  int &y_position,
+  auto square_is_attacked_by_pawn(int &x_file,
+                                  int &y_rank,
                                   PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a knight.
    *
-   * @param x_position The x coordinate of the knight.
-   * @param y_position The y coordinate of the knight.
+   * @param x_file The x coordinate of the knight.
+   * @param y_rank The y coordinate of the knight.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_knight(int &x_position,
-                                    int &y_position,
+  auto square_is_attacked_by_knight(int &x_file,
+                                    int &y_rank,
                                     PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a rook or queen.
    *
-   * @param x_position The x coordinate of the rook or queen.
-   * @param y_position The y coordinate of the rook or queen.
+   * @param x_file The x coordinate of the rook or queen.
+   * @param y_rank The y coordinate of the rook or queen.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto
-  square_is_attacked_by_rook_or_queen(int &x_position,
-                                      int &y_position,
-                                      PieceColor &color_being_attacked) -> bool;
+  auto square_is_attacked_by_rook_or_queen(
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a bishop or
    * queen.
    *
-   * @param x_position The x coordinate of the bishop or queen.
-   * @param y_position The y coordinate of the bishop or queen.
+   * @param x_file The x coordinate of the bishop or queen.
+   * @param y_rank The y coordinate of the bishop or queen.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_bishop_or_queen(int &x_position,
-                                             int &y_position,
-                                             PieceColor &color_being_attacked)
-      -> bool;
+  auto square_is_attacked_by_bishop_or_queen(
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a king.
    *
-   * @param x_position The x coordinate of the king.
-   * @param y_position The y coordinate of the king.
+   * @param x_file The x coordinate of the king.
+   * @param y_rank The y coordinate of the king.
    * @param color_being_attacked The color of the pieces being attacked.
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_king(int &x_position,
-                                  int &y_position,
+  auto square_is_attacked_by_king(int &x_file,
+                                  int &y_rank,
                                   PieceColor &color_being_attacked) -> bool;
 
   /**

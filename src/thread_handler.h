@@ -19,7 +19,8 @@ public:
   /**
    * @brief Constructor to create a thread handler.
    *
-   * @param running_flag Running flag, if set to false, the thread will stop.
+   * @param running_flag Reference to an atomic flag. If set to false, the
+   * thread will stop.
    * @param function Function to run in the thread.
    */
   ThreadHandler(std::atomic<bool> &running_flag,
@@ -28,6 +29,9 @@ public:
   // DESTRUCTOR
   /**
    * @brief Destructor to join the thread.
+   *
+   * @details Ensures that the worker thread is joined before the object is
+   * destroyed.
    */
   ~ThreadHandler();
 
@@ -35,12 +39,18 @@ public:
   /**
    * @brief Starts the thread.
    *
-   * @param thread_timeout Timeout for the thread.
+   * @param thread_timeout_ms Timeout for the thread in milliseconds.
+   *
+   * @details This function starts the worker thread and a timeout thread. The
+   * timeout thread will stop the worker thread after the specified timeout.
    */
-  void start_thread(int thread_timeout);
+  void start_thread(int thread_timeout_ms);
 
   /**
    * @brief Stops the thread.
+   *
+   * @details Sets the running flag to false and notifies the condition variable
+   * to stop the thread.
    */
   void stop_thread();
 
@@ -54,11 +64,13 @@ private:
   /// @brief Thread object to run the given function.
   std::thread worker_thread;
 
-  /// @brief For stopping the worker thread.
+  /// @brief Thread object to handle the timeout for the worker thread.
   std::thread timeout_thread;
 
-  /// @brief For stopping the thread.
+  /// @brief Condition variable for managing thread timeout.
   std::condition_variable search_timeout_cv;
+
+  /// @brief Mutex for synchronizing thread timeout operations.
   std::mutex search_timeout_mutex;
 
   /// @brief Function to run in the thread.
@@ -68,12 +80,12 @@ private:
   /**
    * @brief Initiates the search timeout.
    *
-   * @details The function will wait for the timeout to occur and then set the
-   * running flag to false.
+   * @details The function waits for the specified timeout duration and then
+   * sets the running flag to false, signaling the worker thread to stop.
    *
-   * @param thread_timeout Timeout for the thread.
+   * @param thread_timeout_ms Timeout for the thread in milliseconds.
    */
-  void initiate_search_timeout(int thread_timeout);
+  void initiate_search_timeout(int thread_timeout_ms);
 };
 } // namespace engine::parts
 #endif // THREAD_HANDLER_H
