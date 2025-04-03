@@ -13,7 +13,7 @@ namespace engine::parts::fen_interface
  *
  * @param board_state The board state to setup.
  * @param fen_configuration The custom board configuration in Forsyth-Edwards
- * Notation (FEN)
+ * Notation (FEN).
  *
  * @details The board configuration is represented using Forsyth-Edwards
  * Notation (FEN). The FEN string consists of six fields separated by spaces:
@@ -69,6 +69,8 @@ auto setup_custom_board(BoardState &board_state,
  *
  * @param board_state The board state to setup.
  * @param board_configuration The custom board in FEN.
+ *
+ * @return True if the board was successfully initialized, false otherwise.
  */
 auto initialize_board(BoardState &board_state,
                       std::string board_configuration) -> bool;
@@ -108,6 +110,8 @@ validate_castling_rights(BoardState &board_state,
  * @brief Validates the white king side castle.
  *
  * @param board_state The board state to check.
+ *
+ * @return True if the white king side castle is valid, false otherwise.
  */
 static auto validate_white_king_side_castle(BoardState &board_state) -> bool;
 
@@ -115,6 +119,8 @@ static auto validate_white_king_side_castle(BoardState &board_state) -> bool;
  * @brief Validates the white queen side castle.
  *
  * @param board_state The board state to check.
+ *
+ * @return True if the white queen side castle is valid, false otherwise.
  */
 static auto validate_white_queen_side_castle(BoardState &board_state) -> bool;
 
@@ -122,6 +128,8 @@ static auto validate_white_queen_side_castle(BoardState &board_state) -> bool;
  * @brief Validates the black king side castle.
  *
  * @param board_state The board state to check.
+ *
+ * @return True if the black king side castle is valid, false otherwise.
  */
 static auto validate_black_king_side_castle(BoardState &board_state) -> bool;
 
@@ -129,6 +137,8 @@ static auto validate_black_king_side_castle(BoardState &board_state) -> bool;
  * @brief Validates the black queen side castle.
  *
  * @param board_state The board state to check.
+ *
+ * @return True if the black queen side castle is valid, false otherwise.
  */
 static auto validate_black_queen_side_castle(BoardState &board_state) -> bool;
 

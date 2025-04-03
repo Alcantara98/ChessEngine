@@ -21,10 +21,11 @@ using history_table_type = std::array<
     NUM_OF_COLORS>;
 
 /**
- * @brief Calculates all possible moves of current board state.
+ * @brief Calculates all possible moves of the current board state.
  *
  * @param board_state BoardState object to calculate moves from.
- * @param history_table Pointer to the history table.
+ * @param mvv_lvv_sort If true, sorts capture moves using the MVV-LVA heuristic.
+ * @param history_table Pointer to the history table for sorting moves.
  * @param capture_only If true, only capture moves are calculated.
  *
  * @return Vector of possible moves.
@@ -41,9 +42,11 @@ auto calculate_possible_moves(BoardState &board_state,
  * possible_normal_moves/possible_capture_moves vectors.
  *
  * @param board_state Reference of the current board state.
- * @param x_file, y_rank The coordinate of the pawn.
- * @param possible_normal_moves Reference to the list of possible moves of
- * current board_state.
+ * @param x_file The x-coordinate (file) of the pawn.
+ * @param y_rank The y-coordinate (rank) of the pawn.
+ * @param possible_normal_moves Reference to the list of possible non-capture moves.
+ * @param possible_capture_moves Reference to the list of possible capture moves.
+ * @param capture_only If true, only capture moves are generated.
  */
 static void generate_pawn_moves(BoardState &board_state,
                                 int x_file,
@@ -55,17 +58,16 @@ static void generate_pawn_moves(BoardState &board_state,
 /**
  * @brief Generates one square forward and two squares forward moves for a pawn.
  *
- * @note Generated moves are pushed back into the
- * possible_normal_moves/possible_capture_moves vector.
+ * @note Generated moves are pushed back into the possible_normal_moves vector.
  *
  * @param chess_board Reference of the current chess board.
- * @param x_file, y_rank The coordinate of the pawn.
- * @param possible_normal_moves Reference to the list of possible moves of
- * current board_state.
+ * @param x_file The x-coordinate (file) of the pawn.
+ * @param y_rank The y-coordinate (rank) of the pawn.
+ * @param possible_normal_moves Reference to the list of possible non-capture moves.
  * @param pawn_piece The pawn piece.
- * @param pawn_direction The direction of the pawn.
+ * @param pawn_direction The direction of the pawn's movement.
  * @param first_move True if the pawn has not moved yet.
- * @param promotion_rank The rank to promote the pawn.
+ * @param promotion_rank The rank at which the pawn is promoted.
  */
 static void generate_normal_pawn_moves(chess_board_type &chess_board,
                                        int x_file,
@@ -79,17 +81,15 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
 /**
  * @brief Generates normal pawn capture moves.
  *
- * @note Generated moves are pushed back into the
- * possible_normal_moves/possible_capture_moves vector.
+ * @note Generated moves are pushed back into the possible_capture_moves vector.
  *
  * @param chess_board Reference of the current chess board.
- * @param x_file, y_rank The coordinate of the pawn.
- * @param possible_normal_moves Reference to the list of possible moves of
- * current board_state.
+ * @param x_file The x-coordinate (file) of the pawn.
+ * @param y_rank The y-coordinate (rank) of the pawn.
+ * @param possible_capture_moves Reference to the list of possible capture moves.
  * @param pawn_piece The pawn piece.
- * @param pawn_direction The direction of the pawn.
- * @param first_move True if the pawn has not moved yet.
- * @param promotion_rank The rank to promote the pawn.
+ * @param pawn_direction The direction of the pawn's movement.
+ * @param promotion_rank The rank at which the pawn is promoted.
  */
 static void
 generate_pawn_capture_moves(chess_board_type &chess_board,
@@ -104,16 +104,14 @@ generate_pawn_capture_moves(chess_board_type &chess_board,
 /**
  * @brief Generates en passant pawn capture moves.
  *
- * @note Generated moves are pushed back into the
- * possible_normal_moves/possible_capture_moves vector.
+ * @note Generated moves are pushed back into the possible_capture_moves vector.
  *
  * @param chess_board Reference of the current chess board.
- * @param x_file, y_rank The coordinate of the pawn.
- * @param possible_normal_moves Reference to the list of possible moves of
- * current board_state.
+ * @param x_file The x-coordinate (file) of the pawn.
+ * @param y_rank The y-coordinate (rank) of the pawn.
+ * @param possible_capture_moves Reference to the list of possible capture moves.
  * @param pawn_piece The pawn piece.
- * @param pawn_direction The direction of the pawn.
- * @param first_move True if the pawn has not moved yet.
+ * @param pawn_direction The direction of the pawn's movement.
  * @param previous_move The previous move applied on the board.
  */
 static void generate_en_passant_pawn_capture_moves(
@@ -166,11 +164,11 @@ generate_castle_king_moves(BoardState &board_state,
  *
  * @param board_state Reference of the current board state.
  * @param king_piece The king piece.
- * @param x_file, y_rank The coordinate of the rook.
+ * @param y_rank The y-coordinate (rank) of the king.
  * @param potential_rook_piece The potential rook piece.
  * @param castle_path Squares the king must pass through to castle.
  *
- * @return bool True if the rook can castle.
+ * @return True if the king can castle, false otherwise.
  */
 static auto can_castle(BoardState &board_state,
                        Piece *king_piece,
@@ -273,26 +271,23 @@ static void rook_bishop_move_helper(BoardState &board_state,
 
 /**
  * @brief Sorts the given capture moves based on the Most Valuable Victim -
- * Least Valuable Attacker Heuristic.
+ * Least Valuable Attacker (MVV-LVA) heuristic.
  *
- * @details The MVV-LVA heuristic is a simple heuristic that sorts moves based
- * on the value of the captured piece and the value of the attacking piece.
+ * @details The MVV-LVA heuristic sorts moves based on the value of the captured piece
+ * and the value of the attacking piece.
  *
- * @param possible_capture_moves Reference to the list of possible capture moves
- * of current board_state.
+ * @param possible_capture_moves Reference to the list of possible capture moves.
  */
 static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves);
 
 /**
  * @brief Sorts the given normal moves based on the History Heuristic.
  *
- * @details The history heuristic is a simple heuristic that sorts moves based
- * on the number of times a move has caused a beta cutoff.
+ * @details The history heuristic sorts moves based on the number of times a move
+ * has caused a beta cutoff.
  *
- * @param possible_normal_moves Reference to the list of possible non-capture
- * moves of current board_state.
+ * @param possible_normal_moves Reference to the list of possible non-capture moves.
  * @param history_table Reference to the history table.
- * @param board_state Reference of the current board state.
  */
 static void
 sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,

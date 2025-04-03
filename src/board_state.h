@@ -50,10 +50,10 @@ public:
   bool black_king_is_alive = true;
 
   /// @brief Number of queens on the board.
-  int queens_on_board = START_QUEENS_COUNT;
+  int queens_on_board = INITIAL_QUEENS_COUNT;
 
   /// @brief Number of main pieces left on the board (Rooks, Bishops, Knights).
-  int number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
+  int number_of_main_pieces_left = INITIAL_MAIN_PIECES_COUNT;
 
   /// @brief White King's file position.
   int white_king_x_file = XE_FILE;

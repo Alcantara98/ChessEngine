@@ -123,8 +123,8 @@ void BoardState::reset_board()
   color_to_move = PieceColor::WHITE;
   white_king_is_alive = true;
   black_king_is_alive = true;
-  queens_on_board = START_QUEENS_COUNT;
-  number_of_main_pieces_left = START_MAIN_PIECES_COUNT;
+  queens_on_board = INITIAL_QUEENS_COUNT;
+  number_of_main_pieces_left = INITIAL_MAIN_PIECES_COUNT;
   white_king_y_rank = Y1_RANK;
   white_king_x_file = XE_FILE;
   black_king_y_rank = Y8_RANK;

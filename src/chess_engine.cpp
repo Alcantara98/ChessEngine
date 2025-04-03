@@ -228,7 +228,7 @@ auto ChessEngine::update_search_engine_parameters(const std::string &user_input)
   {
     user_message = "Enter Search Time for Each Move in Milliseconds";
     int search_time =
-        get_valid_int_input(user_message, 1, parts::MAX_SEARCH_TIME);
+        get_valid_int_input(user_message, 1, parts::MAX_SEARCH_TIME_MS);
     search_engine.max_search_time_milliseconds = search_time;
   }
   else if (user_input == "update-window")

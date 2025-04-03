@@ -13,7 +13,9 @@ namespace engine
 /**
  * @brief Checks if input is available.
  *
- * @details This function is platform dependent.
+ * @details This function is platform dependent:
+ * - On Windows, it uses `_kbhit` from `<conio.h>`.
+ * - On Unix-like systems, it uses `select` from `<sys/select.h>`.
  *
  * @return True if input is available, false otherwise.
  */

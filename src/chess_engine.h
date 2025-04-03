@@ -67,7 +67,9 @@ private:
   /**
    * @brief Changes the current state.
    *
-   * @param new_state The new state to change to.
+   * @param new_state The new state to change to (function pointer to a state).
+   *
+   * @note States are defined as void functions with no parameters.
    */
   void change_state(void (ChessEngine::*new_state)());
 
@@ -87,40 +89,21 @@ private:
   void engine_vs_player_state();
 
   /**
-   * @brief Checks if the game is over.
+   * @brief Checks if the game is over and handles the end game scenario.
+   *
+   * @details This function checks for conditions such as checkmate, stalemate,
+   * or draw and updates the game state accordingly.
    */
   void check_and_handle_if_game_over();
 
   /**
    * @brief Setup the chess board.
    *
-   * @details will ask the user if they want to setup a custom board or use the
-   * default board.
+   * @details Asks the user if they want to set up a custom board or use the
+   * default board. If the user chooses a custom board, they will input a
+   * FEN string to set up the board.
    *
-   * @note If the user wants to setup a custom board, they will be asked to
-   * input a custom board configuration. This configuration is a string of 65
-   * characters representing the board state. The first 64 characters represent
-   * the board state from A1 to H8. The last character represents the color to
-   * move. The characters are as follows:
-   *
-   * - K - White King
-   * - Q - White Queen
-   * - R - White Rook
-   * - B - White Bishop
-   * - N - White Knight
-   * - P - White Pawn
-   * - k - Black King
-   * - q - Black Queen
-   * - r - Black Rook
-   * - b - Black Bishop
-   * - n - Black Knight
-   * - p - Black Pawn
-   * - - - Empty Square
-   * - w - White to move
-   * - b - Black to move
-   *
-   * The default chess board configuration would be given as:
-   * 'RNBQKBNRPPPPPPPP--------------------------------pppppppprnbqkbnrw'
+   * @note See setup_custom_board in fen_interface.h for more details.
    */
   void setup_chess_board();
 
@@ -132,7 +115,9 @@ private:
   /**
    * @brief Toggles engine heuristic parameters.
    *
-   * @param user_input User input.
+   * @param user_input User input string to indicate which parameter to update.
+   *
+   * @return True if the user input is a valid parameter, false otherwise.
    */
   auto update_search_engine_parameters(const std::string &user_input) -> bool;
 
@@ -149,18 +134,19 @@ private:
   /**
    * @brief Handles state changes based on user input.
    *
-   * @param user_input User input.
+   * @param user_input User input string.
    *
-   * @return True if the input is a state change command.
+   * @return True if the input is a valid state change command, false otherwise.
    */
   auto handle_state_change_commands(const std::string &user_input) -> bool;
 
   /**
-   * @brief Handles board manipulation commands.
+   * @brief Handles board manipulation commands such as undo or reset.
    *
-   * @param user_input User input.
+   * @param user_input User input string.
    *
-   * @return True if the input is a board manipulation command.
+   * @return True if the input is a valid board manipulation command, false
+   * otherwise.
    */
   auto handle_board_undo_reset_commands(const std::string &user_input) -> bool;
 
@@ -195,7 +181,10 @@ private:
                             const std::string &valid_chars) -> char;
 
   /**
-   * @brief Prints all the moves applied to the board.
+   * @brief Prints all the moves applied to the board in order.
+   *
+   * @details This function iterates through the move stack and prints each move
+   * in the order they were applied.
    */
   void print_applied_moves();
 

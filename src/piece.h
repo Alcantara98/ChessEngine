@@ -7,6 +7,15 @@ namespace engine::parts
 {
 /**
  * @brief Enum to represent chess piece type.
+ *
+ * @details This enum defines the types of chess pieces, including:
+ * - PAWN: Represents a pawn.
+ * - KNIGHT: Represents a knight.
+ * - BISHOP: Represents a bishop.
+ * - ROOK: Represents a rook.
+ * - QUEEN: Represents a queen.
+ * - KING: Represents a king.
+ * - EMPTY: Represents an empty square.
  */
 enum class PieceType : std::uint8_t
 {
@@ -21,6 +30,11 @@ enum class PieceType : std::uint8_t
 
 /**
  * @brief Enum to represent piece color.
+ *
+ * @details This enum defines the colors of chess pieces, including:
+ * - WHITE: Represents a white piece.
+ * - BLACK: Represents a black piece.
+ * - NONE: Represents no color (e.g., for an empty square).
  */
 enum class PieceColor : std::uint8_t
 {
@@ -50,10 +64,9 @@ struct Piece
   /**
    * @brief Constructor with default values.
    *
-   * @param piece_type Type of piece.
-   * @param piece_color Color of the piece.
-   * @param piece_has_moved Whether the piece has moved or not.
-   * forward.
+   * @param piece_type Type of piece (default is EMPTY).
+   * @param piece_color Color of the piece (default is NONE).
+   * @param piece_has_moved Whether the piece has moved or not (default is false).
    */
   Piece(PieceType piece_type = PieceType::EMPTY,
         PieceColor piece_color = PieceColor::NONE,

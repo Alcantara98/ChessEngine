@@ -10,7 +10,7 @@ namespace engine::parts::position_evaluator
 {
 
 /**
- * @brief Evaluates current position using chess heuristics.
+ * @brief Evaluates the current position using chess heuristics.
  *
  * @note Positive score is good for white, negative score is good for black, and
  * 0 means the position is equal.
@@ -22,11 +22,12 @@ namespace engine::parts::position_evaluator
 auto evaluate_position(BoardState &board_state) -> int;
 
 /**
- * @brief Evaluates pawn at given position.
+ * @brief Evaluates a pawn at the given position.
  *
- * @param x_file, y_rank Position of the pawn.
- * @param pawn_piece Pawn piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the pawn.
+ * @param y_rank The y-coordinate (rank) of the pawn.
+ * @param pawn_piece The pawn piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_pawn(int x_file,
@@ -36,11 +37,12 @@ static void evaluate_pawn(int x_file,
                           BoardState &board_state);
 
 /**
- * @brief Evaluates knight at given position.
+ * @brief Evaluates a knight at the given position.
  *
- * @param x_file, y_rank Position of the knight.
- * @param knight_piece Knight piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the knight.
+ * @param y_rank The y-coordinate (rank) of the knight.
+ * @param knight_piece The knight piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_knight(int x_file,
@@ -50,11 +52,12 @@ static void evaluate_knight(int x_file,
                             BoardState &board_state);
 
 /**
- * @brief Evaluates bishop at given position.
+ * @brief Evaluates a bishop at the given position.
  *
- * @param x_file, y_rank Position of the bishop.
- * @param bishop_piece Bishop piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the bishop.
+ * @param y_rank The y-coordinate (rank) of the bishop.
+ * @param bishop_piece The bishop piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_bishop(int x_file,
@@ -64,11 +67,12 @@ static void evaluate_bishop(int x_file,
                             BoardState &board_state);
 
 /**
- * @brief Evaluates rook at given position.
+ * @brief Evaluates a rook at the given position.
  *
- * @param x_file, y_rank Position of the rook.
- * @param rook_piece Rook piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the rook.
+ * @param y_rank The y-coordinate (rank) of the rook.
+ * @param rook_piece The rook piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_rook(int x_file,
@@ -78,11 +82,12 @@ static void evaluate_rook(int x_file,
                           BoardState &board_state);
 
 /**
- * @brief Evaluates queen at given position.
+ * @brief Evaluates a queen at the given position.
  *
- * @param x_file, y_rank Position of the queen.
- * @param queen_piece Queen piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the queen.
+ * @param y_rank The y-coordinate (rank) of the queen.
+ * @param queen_piece The queen piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_queen(int x_file,
@@ -92,11 +97,12 @@ static void evaluate_queen(int x_file,
                            BoardState &board_state);
 
 /**
- * @brief Evaluates king at given position.
+ * @brief Evaluates a king at the given position.
  *
- * @param x_file, y_rank Position of the king.
- * @param king_piece King piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the king.
+ * @param y_rank The y-coordinate (rank) of the king.
+ * @param king_piece The king piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_king(int x_file,
@@ -106,11 +112,12 @@ static void evaluate_king(int x_file,
                           BoardState &board_state);
 
 /**
- * @brief Evaluates king safety at given position.
+ * @brief Evaluates the safety of a king at the given position.
  *
- * @param x_file, y_rank Position of the king.
- * @param king_piece King piece object to evaluate.
- * @param eval Evaluation score to update.
+ * @param x_file The x-coordinate (file) of the king.
+ * @param y_rank The y-coordinate (rank) of the king.
+ * @param king_piece The king piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
  * @param board_state BoardState object to evaluate.
  */
 static void evaluate_king_safety(int x_file,
