@@ -33,22 +33,22 @@ public:
   // PROPERTIES
 
   /// @brief Determines which color to maximise for.
-  PieceColor engine_color = PieceColor::WHITE;
+  PieceColor engine_color = PieceColor::BLACK;
 
   /// @brief Max depth to search.
-  int max_search_depth;
+  int max_search_depth = MAX_SEARCH_DEPTH;
 
   /// @brief Max time to search in milliseconds.
-  int max_search_time_milliseconds;
+  int max_search_time_milliseconds = DEFAULT_SEARCH_TIME_MS;
 
   /// @brief Show performance matrix of the search.
-  bool show_performance = false;
+  bool show_performance = true;
 
   /// @brief Show performance matrix of pondering search.
   bool show_ponder_performance = false;
 
   /// @brief Show move evaluations.
-  bool show_move_evaluations = false;
+  bool show_move_evaluations = true;
 
   /// @brief Flag to run search with aspiration window.
   bool use_aspiration_window = true;
