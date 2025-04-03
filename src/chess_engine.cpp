@@ -25,7 +25,7 @@ void ChessEngine::state_machine()
 
 void ChessEngine::change_state(void (ChessEngine::*new_state)())
 {
-  player_color = parts::PieceColor::NONE;
+  player_color = parts::PieceColor::WHITE;
   if (new_state == &ChessEngine::main_menu_state)
   {
     current_state_name = parts::MAIN_MENU_STATE;
@@ -50,11 +50,15 @@ void ChessEngine::main_menu_state()
 {
   printf("\n~%s~\n", parts::MAIN_MENU_STATE.c_str());
   std::string user_input;
+  use_default_configs = false;
+
   while (!exit_state)
   {
     printf("%s", parts::HELP_MESSAGE.c_str());
-    std::string user_message = "Play Against Engine (y = Yes, n = No): ";
-    user_input = get_valid_char_input(user_message, "yn");
+    std::string user_message =
+        "(d = Default, p = Default with Pondering)\nPlay Against Engine (y = "
+        "Yes, n = No): ";
+    user_input = get_valid_char_input(user_message, "yndp");
 
     if (user_input == "y")
     {
@@ -63,6 +67,19 @@ void ChessEngine::main_menu_state()
     else if (user_input == "n")
     {
       change_state(&ChessEngine::player_vs_player_state);
+    }
+    else if (user_input == "d")
+    {
+      // Default configs for fast testing.
+      use_default_configs = true;
+      change_state(&ChessEngine::engine_vs_player_state);
+    }
+    else if (user_input == "p")
+    {
+      // Default configs for fast testing with pondering.
+      use_default_configs = true;
+      allow_pondering = true;
+      change_state(&ChessEngine::engine_vs_player_state);
     }
   }
 }
@@ -88,8 +105,13 @@ void ChessEngine::engine_vs_player_state()
   printf("\n~%s~\n\n -- Good Luck! --\n",
          parts::ENGINE_VS_PLAYER_STATE.c_str());
 
-  setup_chess_board();
-  set_up_engine();
+  if (!use_default_configs)
+  {
+    setup_chess_board();
+    set_up_engine();
+  }
+
+  set_up_player_engine_color();
 
   // Print initial board state.
   printf("Player Color: %s\n",
@@ -186,7 +208,10 @@ void ChessEngine::set_up_engine()
   (void)update_search_engine_parameters(update_timelimit);
   (void)update_search_engine_parameters(update_pondering);
   (void)update_search_engine_parameters(update_info);
+}
 
+void ChessEngine::set_up_player_engine_color()
+{
   std::string user_message = "Enter Player Color (w = White, b = Black)";
   const char user_color = get_valid_char_input(user_message, "wb");
 

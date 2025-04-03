@@ -45,7 +45,7 @@ private:
   parts::MoveInterface move_interface;
 
   /// @brief Player color.
-  parts::PieceColor player_color = parts::PieceColor::NONE;
+  parts::PieceColor player_color = parts::PieceColor::WHITE;
 
   /// @brief Flag to exit current state.
   bool exit_state = false;
@@ -61,6 +61,9 @@ private:
 
   /// @brief Current state name.
   std::string current_state_name = parts::MAIN_MENU_STATE;
+
+  /// @brief Use default configs for the engine.
+  bool use_default_configs = false;
 
   // FUNCTIONS
 
@@ -111,6 +114,11 @@ private:
    * @brief Setup engine parameters.
    */
   void set_up_engine();
+
+  /**
+   * @brief Setup player and engine colors.
+   */
+  void set_up_player_engine_color();
 
   /**
    * @brief Toggles engine heuristic parameters.
