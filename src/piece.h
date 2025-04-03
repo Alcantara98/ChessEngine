@@ -66,7 +66,8 @@ struct Piece
    *
    * @param piece_type Type of piece (default is EMPTY).
    * @param piece_color Color of the piece (default is NONE).
-   * @param piece_has_moved Whether the piece has moved or not (default is false).
+   * @param piece_has_moved Whether the piece has moved or not (default is
+   * false).
    */
   Piece(PieceType piece_type = PieceType::EMPTY,
         PieceColor piece_color = PieceColor::NONE,

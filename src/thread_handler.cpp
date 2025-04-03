@@ -53,8 +53,8 @@ void ThreadHandler::stop_thread()
 void ThreadHandler::initiate_search_timeout(const int thread_timeout_ms)
 {
   std::unique_lock<std::mutex> lock(search_timeout_mutex);
-  if (search_timeout_cv.wait_for(lock,
-                                 std::chrono::milliseconds(thread_timeout_ms)) ==
+  if (search_timeout_cv.wait_for(
+          lock, std::chrono::milliseconds(thread_timeout_ms)) ==
       std::cv_status::timeout)
   {
     running_flag = false;

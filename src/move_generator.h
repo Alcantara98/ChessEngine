@@ -44,8 +44,10 @@ auto calculate_possible_moves(BoardState &board_state,
  * @param board_state Reference of the current board state.
  * @param x_file The x-coordinate (file) of the pawn.
  * @param y_rank The y-coordinate (rank) of the pawn.
- * @param possible_normal_moves Reference to the list of possible non-capture moves.
- * @param possible_capture_moves Reference to the list of possible capture moves.
+ * @param possible_normal_moves Reference to the list of possible non-capture
+ * moves.
+ * @param possible_capture_moves Reference to the list of possible capture
+ * moves.
  * @param capture_only If true, only capture moves are generated.
  */
 static void generate_pawn_moves(BoardState &board_state,
@@ -63,7 +65,8 @@ static void generate_pawn_moves(BoardState &board_state,
  * @param chess_board Reference of the current chess board.
  * @param x_file The x-coordinate (file) of the pawn.
  * @param y_rank The y-coordinate (rank) of the pawn.
- * @param possible_normal_moves Reference to the list of possible non-capture moves.
+ * @param possible_normal_moves Reference to the list of possible non-capture
+ * moves.
  * @param pawn_piece The pawn piece.
  * @param pawn_direction The direction of the pawn's movement.
  * @param first_move True if the pawn has not moved yet.
@@ -86,7 +89,8 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
  * @param chess_board Reference of the current chess board.
  * @param x_file The x-coordinate (file) of the pawn.
  * @param y_rank The y-coordinate (rank) of the pawn.
- * @param possible_capture_moves Reference to the list of possible capture moves.
+ * @param possible_capture_moves Reference to the list of possible capture
+ * moves.
  * @param pawn_piece The pawn piece.
  * @param pawn_direction The direction of the pawn's movement.
  * @param promotion_rank The rank at which the pawn is promoted.
@@ -109,7 +113,8 @@ generate_pawn_capture_moves(chess_board_type &chess_board,
  * @param chess_board Reference of the current chess board.
  * @param x_file The x-coordinate (file) of the pawn.
  * @param y_rank The y-coordinate (rank) of the pawn.
- * @param possible_capture_moves Reference to the list of possible capture moves.
+ * @param possible_capture_moves Reference to the list of possible capture
+ * moves.
  * @param pawn_piece The pawn piece.
  * @param pawn_direction The direction of the pawn's movement.
  * @param previous_move The previous move applied on the board.
@@ -273,20 +278,22 @@ static void rook_bishop_move_helper(BoardState &board_state,
  * @brief Sorts the given capture moves based on the Most Valuable Victim -
  * Least Valuable Attacker (MVV-LVA) heuristic.
  *
- * @details The MVV-LVA heuristic sorts moves based on the value of the captured piece
- * and the value of the attacking piece.
+ * @details The MVV-LVA heuristic sorts moves based on the value of the captured
+ * piece and the value of the attacking piece.
  *
- * @param possible_capture_moves Reference to the list of possible capture moves.
+ * @param possible_capture_moves Reference to the list of possible capture
+ * moves.
  */
 static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves);
 
 /**
  * @brief Sorts the given normal moves based on the History Heuristic.
  *
- * @details The history heuristic sorts moves based on the number of times a move
- * has caused a beta cutoff.
+ * @details The history heuristic sorts moves based on the number of times a
+ * move has caused a beta cutoff.
  *
- * @param possible_normal_moves Reference to the list of possible non-capture moves.
+ * @param possible_normal_moves Reference to the list of possible non-capture
+ * moves.
  * @param history_table Reference to the history table.
  */
 static void

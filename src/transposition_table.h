@@ -68,9 +68,11 @@ public:
    * @param hash Hash of the board state.
    * @param search_depth Depth searched for this position.
    * @param eval_score Evaluation score of the board state.
-   * @param flag Flag of the value (0 = exact, 1 = lower bound, 2 = upper bound).
+   * @param flag Flag of the value (0 = exact, 1 = lower bound, 2 = upper
+   * bound).
    * @param best_move_index Index of the best move in the board state.
-   * @param is_quiescence Flag to check if the entry is a quiescence search (default is false).
+   * @param is_quiescence Flag to check if the entry is a quiescence search
+   * (default is false).
    */
   void store(uint64_t &hash,
              int search_depth,
@@ -86,8 +88,10 @@ public:
    * @param search_depth Depth searched for this position (output parameter).
    * @param eval_score Evaluation score of the board state (output parameter).
    * @param flag Flag of the value (output parameter).
-   * @param best_move_index Index of the best move in the board state (output parameter).
-   * @param is_quiescence Flag to check if the entry is a quiescence search (default is false).
+   * @param best_move_index Index of the best move in the board state (output
+   * parameter).
+   * @param is_quiescence Flag to check if the entry is a quiescence search
+   * (default is false).
    *
    * @return True if the entry was found, false otherwise.
    */
@@ -101,7 +105,8 @@ public:
   /**
    * @brief Clear the transposition table.
    *
-   * @details Removes all entries from the transposition table and resets its state.
+   * @details Removes all entries from the transposition table and resets its
+   * state.
    */
   void clear();
 

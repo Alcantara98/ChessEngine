@@ -50,7 +50,8 @@ struct Move
   /**
    * @brief Constructor with all parameters.
    *
-   * @param from_x, from_y Coordinates of moving_piece before applying this move.
+   * @param from_x, from_y Coordinates of moving_piece before applying this
+   * move.
    * @param to_x, to_y Coordinates of moving_piece after applying this move.
    * @param moving_piece The piece that is moving.
    * @param captured_piece The piece that is captured by moving_piece.
@@ -81,7 +82,8 @@ struct Move
   /**
    * @brief Constructor for normal moves without captures.
    *
-   * @param from_x, from_y Coordinates of moving_piece before applying this move.
+   * @param from_x, from_y Coordinates of moving_piece before applying this
+   * move.
    * @param to_x, to_y Coordinates of moving_piece after applying this move.
    * @param moving_piece The piece that is moving.
    * @param first_move_of_moving_piece True if this is the moving_piece's first
@@ -104,7 +106,8 @@ struct Move
   /**
    * @brief Constructor for captures.
    *
-   * @param from_x, from_y Coordinates of moving_piece before applying this move.
+   * @param from_x, from_y Coordinates of moving_piece before applying this
+   * move.
    * @param to_x, to_y Coordinates of moving_piece after applying this move.
    * @param moving_piece The piece that is moving.
    * @param captured_piece The piece that is captured by moving_piece.
@@ -125,7 +128,8 @@ struct Move
   /**
    * @brief Constructor for pawn promotion through normal moves.
    *
-   * @param from_x, from_y Coordinates of moving_piece before applying this move.
+   * @param from_x, from_y Coordinates of moving_piece before applying this
+   * move.
    * @param to_x, to_y Coordinates of moving_piece after applying this move.
    * @param moving_piece The piece that is moving.
    * @param promotion_piece_type If a pawn is promoted, it will be promoted to
@@ -141,7 +145,8 @@ struct Move
   /**
    * @brief Constructor for pawn promotion through captures.
    *
-   * @param from_x, from_y Coordinates of moving_piece before applying this move.
+   * @param from_x, from_y Coordinates of moving_piece before applying this
+   * move.
    * @param to_x, to_y Coordinates of moving_piece after applying this move.
    * @param moving_piece The piece that is moving.
    * @param captured_piece The piece that is captured by moving_piece.
