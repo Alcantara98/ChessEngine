@@ -294,7 +294,7 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves);
  *
  * @param possible_normal_moves Reference to the list of possible non-capture
  * moves.
- * @param history_table Reference to the history table.
+ * @param history_table History table to use for sorting moves.
  */
 static void
 sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,

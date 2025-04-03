@@ -13,8 +13,9 @@ auto calculate_possible_moves(BoardState &board_state,
   std::vector<Move> possible_capture_moves;
 
   // Reserve space for moves to reduce reallocations.
-  possible_normal_moves.reserve(100); // Adjust based on expected move count.
-  possible_capture_moves.reserve(50);
+  possible_normal_moves.reserve(
+      POSSIBLE_MOVE_RESERVE_SIZE); // Adjust based on expected move count.
+  possible_capture_moves.reserve(POSSIBLE_CAPTURE_MOVE_RESERVE_SIZE);
 
   for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
   {
