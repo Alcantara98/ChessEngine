@@ -538,9 +538,18 @@ private:
    * @brief Updates the history table.
    *
    * @param move Move to update history table with.
+   * @param eval Evaluation score of the move.
    * @param depth Current depth of search for weighting the move's score.
+   * @param move_index Index of the move in the history table.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    */
-  void udpate_history_table(const Move &move, int &depth);
+  void udpate_history_table(const Move &move,
+                            const int &eval,
+                            const int &depth,
+                            const int &move_index,
+                            const int &alpha,
+                            const int &beta);
 
   /**
    * @brief Decays the history table.

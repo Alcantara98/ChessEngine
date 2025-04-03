@@ -649,9 +649,11 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
 
+    udpate_history_table(possible_moves[move_index], eval, depth, move_index,
+                         alpha, beta);
+
     if (alpha >= beta)
     {
-      udpate_history_table(possible_moves[move_index], depth);
       break;
     }
   }
@@ -1052,9 +1054,48 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
-void SearchEngine::udpate_history_table(const Move &move, int &depth)
+void SearchEngine::udpate_history_table(const Move &move,
+                                        const int &eval,
+                                        const int &depth,
+                                        const int &move_index,
+                                        const int &alpha,
+                                        const int &beta)
 {
-  int move_value = depth * depth;
+  int move_value;
+
+  // Beta cutoff - really good move.
+  if (alpha >= beta)
+  {
+    // If PV node, we only increase by depth * 2 so we don't overfit and become
+    // too biased to certain moves.
+    if (move_index == 0)
+    {
+      move_value = depth * 2;
+    }
+    else
+    {
+      move_value = depth * depth;
+    }
+  }
+  // Move improved alpha - Good Move.
+  else if (eval > alpha)
+  {
+    // If PV node, we only increase by depth / 2 so we don't overfit and become
+    // too biased to certain moves.
+    if (move_index == 0)
+    {
+      move_value = depth / 2;
+    }
+    else
+    {
+      move_value = depth;
+    }
+  }
+  // Move did not improve alpha - bad move.
+  else
+  {
+    move_value = -depth;
+  }
 
   const int &color = static_cast<int>(move.moving_piece->piece_color);
   const int &piece_type = static_cast<int>(move.moving_piece->piece_type);
