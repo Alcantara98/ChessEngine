@@ -11,16 +11,19 @@ auto calculate_possible_moves(BoardState &board_state,
 {
   std::vector<Move> possible_normal_moves;
   std::vector<Move> possible_capture_moves;
+
+  // Reserve space for moves to reduce reallocations.
+  possible_normal_moves.reserve(100); // Adjust based on expected move count.
+  possible_capture_moves.reserve(50);
+
   for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
   {
     for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
     {
       Piece *current_piece = board_state.chess_board[x_file][y_rank];
-      PieceType &piece_type = current_piece->piece_type;
-
       if (current_piece->piece_color == board_state.color_to_move)
       {
-        switch (piece_type)
+        switch (current_piece->piece_type)
         {
         case PieceType::PAWN:
           generate_pawn_moves(board_state, x_file, y_rank,
@@ -68,15 +71,13 @@ auto calculate_possible_moves(BoardState &board_state,
   // Assign list index to each move. This is used for identifying the best move.
   // NOTE: Do this before sorting moves.
   int move_index = 0;
-  for (; move_index < possible_capture_moves.size(); ++move_index)
+  for (auto &move : possible_capture_moves)
   {
-    possible_capture_moves[move_index].list_index = move_index;
+    move.list_index = move_index++;
   }
-  for (int normal_move_index = 0;
-       normal_move_index < possible_normal_moves.size();
-       ++normal_move_index, ++move_index)
+  for (auto &move : possible_normal_moves)
   {
-    possible_normal_moves[normal_move_index].list_index = move_index;
+    move.list_index = move_index++;
   }
 
   if (mvv_lvv_sort)
@@ -95,9 +96,10 @@ auto calculate_possible_moves(BoardState &board_state,
   }
 
   // Put capture moves first starting from index 0.
-  possible_normal_moves.insert(possible_normal_moves.begin(),
-                               possible_capture_moves.begin(),
-                               possible_capture_moves.end());
+  possible_normal_moves.insert(
+      possible_normal_moves.begin(),
+      std::make_move_iterator(possible_capture_moves.begin()),
+      std::make_move_iterator(possible_capture_moves.end()));
 
   return std::move(possible_normal_moves);
 }
@@ -463,14 +465,14 @@ void generate_queen_moves(BoardState &board_state,
 }
 
 // PRIVATE FUNCTIONS
-void rook_bishop_move_helper(BoardState &board_state,
-                             int x_file,
-                             int y_rank,
-                             int x_direction,
-                             int y_direction,
-                             std::vector<Move> &possible_normal_moves,
-                             std::vector<Move> &possible_capture_moves,
-                             bool capture_only)
+inline void rook_bishop_move_helper(BoardState &board_state,
+                                    int x_file,
+                                    int y_rank,
+                                    int x_direction,
+                                    int y_direction,
+                                    std::vector<Move> &possible_normal_moves,
+                                    std::vector<Move> &possible_capture_moves,
+                                    bool capture_only)
 {
   chess_board_type &board = board_state.chess_board;
   Piece *moving_piece = board[x_file][y_rank];
@@ -508,7 +510,7 @@ void rook_bishop_move_helper(BoardState &board_state,
 static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
 {
   std::sort(possible_capture_moves.begin(), possible_capture_moves.end(),
-            [](const Move &move1, const Move &move2)
+            [](const Move &move1, const Move &move2) -> bool
             {
               return MVV_LVA_VALUES[static_cast<uint8_t>(
                          move1.captured_piece->piece_type)]
@@ -522,27 +524,18 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
 }
 
 void sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
-                                  history_table_type history_table)
+                                  const history_table_type history_table)
 {
-  std::sort(possible_normal_moves.begin(), possible_normal_moves.end(),
-            [history_table](const Move &move1, const Move &move2)
-            {
-              const int &color_1 =
-                  static_cast<int>(move1.moving_piece->piece_color);
-              const int &piece_type_1 =
-                  static_cast<int>(move1.moving_piece->piece_type);
-              const int &to_x_1 = move1.to_x;
-              const int &to_y_1 = move1.to_y;
-
-              const int &color_2 =
-                  static_cast<int>(move2.moving_piece->piece_color);
-              const int &piece_type_2 =
-                  static_cast<int>(move2.moving_piece->piece_type);
-              const int &to_x_2 = move2.to_x;
-              const int &to_y_2 = move2.to_y;
-
-              return (history_table)[color_1][piece_type_1][to_x_1][to_y_1] >
-                     (history_table)[color_2][piece_type_2][to_x_2][to_y_2];
-            });
+  std::sort(
+      possible_normal_moves.begin(), possible_normal_moves.end(),
+      [&history_table](const Move &move1, const Move &move2) -> bool
+      {
+        return history_table[static_cast<int>(move1.moving_piece->piece_color)]
+                            [static_cast<int>(move1.moving_piece->piece_type)]
+                            [move1.to_x][move1.to_y] >
+               history_table[static_cast<int>(move2.moving_piece->piece_color)]
+                            [static_cast<int>(move2.moving_piece->piece_type)]
+                            [move2.to_x][move2.to_y];
+      });
 }
 } // namespace engine::parts::move_generator
