@@ -4,6 +4,7 @@
 #include "board_state.h"
 #include "engine_constants.h"
 #include "move.h"
+#include "move_generator.h"
 
 namespace engine::parts::attack_check
 {
@@ -21,6 +22,30 @@ auto square_is_attacked(BoardState &board_state,
                         int x_file,
                         int y_rank,
                         PieceColor color_being_attacked) -> bool;
+
+/**
+ * @brief Checks if the current player is in checkmate.
+ *
+ * @note If the king is checked and all possible moves result in a checked
+ * king, it is a checkmate.
+ *
+ * @param board_state BoardState object to check.
+ *
+ * @return True if the current player is in checkmate, false otherwise.
+ */
+auto is_checkmate(BoardState &board_state) -> bool;
+
+/**
+ * @brief Checks if the current player is in stalemate.
+ *
+ * @note If the king is not checked and all possible moves result in a checked
+ * king, it is a stalemate.
+ *
+ * @param board_state BoardState object to check.
+ *
+ * @return True if the current player is in stalemate, false otherwise.
+ */
+auto is_stalemate(BoardState &board_state) -> bool;
 
 /**
  * @brief Checks if the king of the given color is in check.

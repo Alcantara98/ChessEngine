@@ -19,6 +19,59 @@ auto square_is_attacked(BoardState &board_state,
                                     color_being_attacked);
 }
 
+auto is_checkmate(BoardState &board_state) -> bool
+{
+  parts::PieceColor current_color = board_state.color_to_move;
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(board_state);
+
+  // King needs to be in check to be checkmate.
+  if (!attack_check::king_is_checked(board_state, current_color))
+  {
+    return false;
+  }
+
+  // Check if all possible moves result in a checked king.
+  for (parts::Move move : possible_moves)
+  {
+    board_state.apply_move(move);
+    if (!attack_check::king_is_checked(board_state, current_color))
+    {
+      board_state.undo_move();
+      return false;
+    }
+    board_state.undo_move();
+  }
+  return true;
+}
+
+auto is_stalemate(BoardState &board_state) -> bool
+{
+  parts::PieceColor current_color = board_state.color_to_move;
+  std::vector<parts::Move> possible_moves =
+      parts::move_generator::calculate_possible_moves(board_state);
+
+  // King cannot be in check to be a stalemate.
+  if (attack_check::king_is_checked(board_state, current_color))
+  {
+    return false;
+  }
+
+  // If king is not in check, and all possible moves result in a checked king,
+  // it is a stalemate.
+  for (parts::Move move : possible_moves)
+  {
+    board_state.apply_move(move);
+    if (!attack_check::king_is_checked(board_state, current_color))
+    {
+      board_state.undo_move();
+      return false;
+    }
+    board_state.undo_move();
+  }
+  return true;
+}
+
 auto king_is_checked(BoardState &board_state, PieceColor color_of_king) -> bool
 {
   if (color_of_king == PieceColor::WHITE)

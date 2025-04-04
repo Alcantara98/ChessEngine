@@ -145,12 +145,12 @@ void ChessEngine::check_and_handle_if_game_over()
     printf("\nThreefold Repetition, It's a draw!\n");
     game_over = true;
   }
-  if (!game_over && engine::parts::SearchEngine::is_stalemate(game_board_state))
+  if (!game_over && engine::parts::attack_check::is_stalemate(game_board_state))
   {
     printf("\nStalemate, It's a draw!\n");
     game_over = true;
   }
-  if (!game_over && engine::parts::SearchEngine::is_checkmate(game_board_state))
+  if (!game_over && engine::parts::attack_check::is_checkmate(game_board_state))
   {
     std::string winner =
         game_board_state.color_to_move == parts::PieceColor::WHITE ? "Black"
