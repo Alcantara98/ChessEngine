@@ -131,7 +131,7 @@ void evaluate_pawn(const int x_file,
   }
 
   // If pawn is in the middle of the board, give it a bonus.
-  if ((x_file == XD_FILE || x_file == XE_FILE) &&
+  if (!board_state.is_end_game && (x_file == XD_FILE || x_file == XE_FILE) &&
       (y_rank == Y4_RANK || y_rank == Y5_RANK))
   {
     eval += MEDIUM_EVAL_VALUE;
@@ -157,23 +157,20 @@ void evaluate_pawn_file_quality(int x_file,
   }
 
   bool is_passed_pawn = true;
-  for (int rank_count = 1; rank_count >= Y_MIN && rank_count <= Y_MAX;
-       ++rank_count)
+  for (int current_rank = y_rank + direction;
+       current_rank <= Y_MAX && current_rank >= Y_MIN; ++current_rank)
   {
-    Piece &piece =
-        *board_state.chess_board[x_file][y_rank + (direction * rank_count)];
-    if (y_rank + (direction * rank_count) >= Y_MIN &&
-        y_rank + (direction * rank_count) <= Y_MAX &&
-        piece.piece_type == PieceType::PAWN)
-    {
-      // Decrease evaluation if there is a pawn in front of the pawn. This
-      // will also cover doubled pawns.
-      eval -= EXTREMELY_SMALL_EVAL_VALUE;
+    Piece &piece = *board_state.chess_board[x_file][current_rank];
 
-      // If there is an enemy pawn in front of the pawn, it is not a passed
-      // pawn.
+    // Decrease evaluation if there is a pawn in front of the pawn. This
+    // will also cover doubled pawns.
+    if (piece.piece_type == PieceType::PAWN)
+    {
+      eval -= EXTREMELY_SMALL_EVAL_VALUE;
     }
 
+    // If there is an enemy pawn in front of the pawn, it is not a passed
+    // pawn.
     if (is_passed_pawn && piece.piece_color != pawn_piece.piece_color)
     {
       is_passed_pawn = false;
@@ -181,24 +178,27 @@ void evaluate_pawn_file_quality(int x_file,
 
     if (!is_passed_pawn)
     {
-      // If we know it is not a passed pawn, we no longer need to check.
+      // If we know it is not a passed pawn, we no longer need to check for side
+      // pawns.
       continue;
     }
 
     // Check side pawns. If there are any, it is not a passed pawn.
-    Piece &side_piece =
-        *board_state.chess_board[x_file + 1][y_rank + direction];
-    if (side_piece.piece_type == PieceType::PAWN &&
-        side_piece.piece_color != pawn_piece.piece_color && x_file + 1 >= X_MIN)
+    for (int side_count = -1; side_count <= 1; side_count += 2)
     {
-      is_passed_pawn = false;
-    }
+      // Check if the side pawn is in bounds.
+      if (x_file + side_count < X_MIN || x_file + side_count > X_MAX)
+      {
+        continue;
+      }
 
-    side_piece = *board_state.chess_board[x_file - 1][y_rank + direction];
-    if (side_piece.piece_type == PieceType::PAWN &&
-        side_piece.piece_color != pawn_piece.piece_color && x_file - 1 >= X_MIN)
-    {
-      is_passed_pawn = false;
+      Piece &side_piece =
+          *board_state.chess_board[x_file + side_count][current_rank];
+      if (side_piece.piece_type == PieceType::PAWN &&
+          side_piece.piece_color != pawn_piece.piece_color)
+      {
+        is_passed_pawn = false;
+      }
     }
   }
 
