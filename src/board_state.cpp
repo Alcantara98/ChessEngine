@@ -386,9 +386,8 @@ void BoardState::undo_null_move()
   remove_current_state_from_visited_states();
 }
 
-auto BoardState::square_is_attacked(int x_file,
-                                    int y_rank,
-                                    PieceColor color_being_attacked) -> bool
+auto BoardState::square_is_attacked(
+    int x_file, int y_rank, PieceColor color_being_attacked) const -> bool
 {
   return square_is_attacked_by_pawn(x_file, y_rank, color_being_attacked) ||
          square_is_attacked_by_knight(x_file, y_rank, color_being_attacked) ||
@@ -399,7 +398,7 @@ auto BoardState::square_is_attacked(int x_file,
          square_is_attacked_by_king(x_file, y_rank, color_being_attacked);
 }
 
-auto BoardState::king_is_checked(PieceColor color_of_king) -> bool
+auto BoardState::king_is_checked(PieceColor color_of_king) const -> bool
 {
   if (color_of_king == PieceColor::WHITE)
   {
@@ -595,7 +594,7 @@ auto BoardState::compute_zobrist_hash() const -> uint64_t
 }
 
 auto BoardState::square_is_attacked_by_pawn(
-    int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool
+    int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool
 {
   int pawn_direction = (color_being_attacked == PieceColor::WHITE)
                            ? POSITIVE_DIRECTION
@@ -628,7 +627,7 @@ auto BoardState::square_is_attacked_by_pawn(
 }
 
 auto BoardState::square_is_attacked_by_knight(
-    int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool
+    int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool
 {
   return std::any_of(
       KNIGHT_MOVES.begin(), KNIGHT_MOVES.end(),
@@ -644,7 +643,7 @@ auto BoardState::square_is_attacked_by_knight(
 }
 
 auto BoardState::square_is_attacked_by_rook_or_queen(
-    int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool
+    int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool
 {
   for (const auto &direction : ROOK_DIRECTIONS)
   {
@@ -672,7 +671,7 @@ auto BoardState::square_is_attacked_by_rook_or_queen(
 }
 
 auto BoardState::square_is_attacked_by_bishop_or_queen(
-    int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool
+    int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool
 {
   for (const auto &direction : BISHOP_DIRECTIONS)
   {
@@ -700,7 +699,7 @@ auto BoardState::square_is_attacked_by_bishop_or_queen(
 }
 
 auto BoardState::square_is_attacked_by_king(
-    int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool
+    int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool
 {
   // Check for king attacks.
   return std::any_of(

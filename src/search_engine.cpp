@@ -633,6 +633,13 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       return;
     }
 
+    if (move_index != 0 &&
+        futility_prune_move(board_state, possible_moves[move_index], alpha,
+                            depth))
+    {
+      continue;
+    }
+
     board_state.apply_move(possible_moves[move_index]);
 
     run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
@@ -1052,6 +1059,27 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
       (current_eval + (PAWN_VALUE * 2) +
        PIECE_VALUES[static_cast<uint8_t>(move.captured_piece->piece_type)]) <
           alpha);
+}
+
+auto SearchEngine::futility_prune_move(const BoardState &board_state,
+                                       const Move &move,
+                                       const int &alpha,
+                                       const int &depth) -> bool
+{
+  if (max_iterative_search_depth - depth < MIN_FUTILITY_PRUNING_DEPTH &&
+          max_iterative_search_depth < MIN_FUTILITY_PRUNING_ITERATION_DEPTH &&
+          board_state.is_end_game ||
+      move.captured_piece != nullptr ||
+      board_state.king_is_checked(board_state.color_to_move))
+  {
+    return false;
+  }
+
+  // Get static evaluation of the board state.
+  int eval = position_evaluator::evaluate_position_light_weight(board_state);
+
+  // PAWN_VALUE * depth is the cutoff margin.
+  return (eval + (PAWN_VALUE * depth) < alpha);
 }
 
 void SearchEngine::udpate_history_table(const Move &move,

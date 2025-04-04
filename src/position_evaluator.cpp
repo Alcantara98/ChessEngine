@@ -4,7 +4,7 @@ namespace engine::parts::position_evaluator
 {
 // PUBLIC FUNCTIONS
 
-auto evaluate_position(BoardState &board_state) -> int
+auto evaluate_position(const BoardState &board_state) -> int
 {
   int eval = 0;
   // We pass eval_temp to evaluators now instead of eval directly. This way, the
@@ -71,13 +71,80 @@ auto evaluate_position(BoardState &board_state) -> int
   return eval;
 }
 
+auto evaluate_position_light_weight(const BoardState &board_state) -> int
+{
+  int eval = 0;
+  // We pass eval_temp to evaluators now instead of eval directly. This way, the
+  // functions can evaluate white and black pieces the same way (positively). We
+  // can then check the piece color and add or subtract accordingly to the
+  // actual eval.
+  int eval_temp = 0;
+
+  for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
+  {
+    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
+    {
+      eval_temp = 0;
+      Piece &piece = *board_state.chess_board[x_file][y_rank];
+      PieceType &piece_type = piece.piece_type;
+
+      switch (piece_type)
+      {
+      case PieceType::PAWN:
+        eval_temp += PAWN_VALUE;
+        break;
+      case PieceType::ROOK:
+        eval_temp += ROOK_VALUE;
+        break;
+      case PieceType::KNIGHT:
+        eval_temp += KNIGHT_VALUE;
+        break;
+      case PieceType::BISHOP:
+        eval_temp += BISHOP_VALUE;
+        break;
+      case PieceType::QUEEN:
+        eval_temp += QUEEN_VALUE;
+        break;
+      case PieceType::KING:
+        eval_temp += KING_VALUE;
+        break;
+      default:
+        // Empty square.
+        break;
+      }
+
+      // If piece is black, subtract the evaluation.
+      if (piece_type != PieceType::EMPTY)
+      {
+        if (piece.piece_color == PieceColor::WHITE)
+        {
+          eval += eval_temp;
+        }
+        else
+        {
+          eval -= eval_temp;
+        }
+      }
+    }
+  }
+
+  // In raw evaluations, positive eval is good for white and negative eval is
+  // good for black. Since negamax nodes are always maximizing nodes, we need to
+  // negate the evalualtion for black.
+  if (board_state.color_to_move == PieceColor::BLACK)
+  {
+    return -eval;
+  }
+  return eval;
+}
+
 // PRIVATE FUNCTIONS
 
-void evaluate_pawn(int x_file,
-                   int y_rank,
-                   Piece &pawn_piece,
+void evaluate_pawn(const int x_file,
+                   const int y_rank,
+                   const Piece &pawn_piece,
                    int &eval,
-                   BoardState &board_state)
+                   const BoardState &board_state)
 {
   // Piece value.
   eval += PAWN_VALUE;
@@ -132,11 +199,11 @@ void evaluate_pawn(int x_file,
   }
 }
 
-void evaluate_knight(int x_file,
-                     int y_rank,
-                     Piece &knight_piece,
+void evaluate_knight(const int x_file,
+                     const int y_rank,
+                     const Piece &knight_piece,
                      int &eval,
-                     BoardState &board_state)
+                     const BoardState &board_state)
 {
   // Piece value.
   eval += KNIGHT_VALUE;
@@ -164,11 +231,11 @@ void evaluate_knight(int x_file,
   }
 }
 
-void evaluate_bishop(int x_file,
-                     int y_rank,
-                     Piece &bishop_piece,
+void evaluate_bishop(const int x_file,
+                     const int y_rank,
+                     const Piece &bishop_piece,
                      int &eval,
-                     BoardState &board_state)
+                     const BoardState &board_state)
 {
   // Piece value.
   eval += BISHOP_VALUE;
@@ -223,11 +290,11 @@ void evaluate_bishop(int x_file,
   }
 }
 
-void evaluate_rook(int x_file,
-                   int y_rank,
-                   Piece &rook_piece,
+void evaluate_rook(const int x_file,
+                   const int y_rank,
+                   const Piece &rook_piece,
                    int &eval,
-                   BoardState &board_state)
+                   const BoardState &board_state)
 {
   // Piece value.
   eval += ROOK_VALUE;
@@ -262,11 +329,11 @@ void evaluate_rook(int x_file,
   }
 }
 
-void evaluate_queen(int x_file,
-                    int y_rank,
-                    Piece &queen_piece,
+void evaluate_queen(const int x_file,
+                    const int y_rank,
+                    const Piece &queen_piece,
                     int &eval,
-                    BoardState &board_state)
+                    const BoardState &board_state)
 {
   // Piece value.
   eval += QUEEN_VALUE;
@@ -296,11 +363,11 @@ void evaluate_queen(int x_file,
   }
 }
 
-void evaluate_king(int x_file,
-                   int y_rank,
-                   Piece &king_piece,
+void evaluate_king(const int x_file,
+                   const int y_rank,
+                   const Piece &king_piece,
                    int &eval,
-                   BoardState &board_state)
+                   const BoardState &board_state)
 {
   // Piece value.
   eval += KING_VALUE;
@@ -329,11 +396,11 @@ void evaluate_king(int x_file,
   }
 }
 
-void evaluate_king_safety(int x_file,
-                          int y_rank,
-                          Piece &king_piece,
+void evaluate_king_safety(const int x_file,
+                          const int y_rank,
+                          const Piece &king_piece,
                           int &eval,
-                          BoardState &board_state)
+                          const BoardState &board_state)
 {
   {
     int new_x;

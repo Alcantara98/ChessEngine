@@ -535,6 +535,30 @@ private:
                                const int &alpha) -> bool;
 
   /**
+   * @brief Checks if the given move can be futility pruned.
+   *
+   * @details Futility pruning is a technique used to reduce the number of
+   * nodes searched in the minimax algorithm. It is based on the idea that if
+   * the evaluation of a move is so low that it is unlikely to be the best move,
+   * then we can prune it from the search tree.
+   *
+   * @note This is similar to Delta pruning. Futility pruning is used during the
+   * main search and for non-capture moves. Delta pruning is used during
+   * quiescence search and for capture moves.
+   *
+   * @param board_state BoardState object to search.
+   * @param move Move to check.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param depth Current depth of search.
+   *
+   * @return True if the move can be futility pruned, false otherwise.
+   */
+  auto futility_prune_move(const BoardState &board_state,
+                           const Move &move,
+                           const int &alpha,
+                           const int &depth) -> bool;
+
+  /**
    * @brief Updates the history table.
    *
    * @param move Move to update history table with.

@@ -19,7 +19,22 @@ namespace engine::parts::position_evaluator
  *
  * @return Score of the given position.
  */
-auto evaluate_position(BoardState &board_state) -> int;
+auto evaluate_position(const BoardState &board_state) -> int;
+
+/**
+ * @brief Evaluates the position using a lightweight heuristic.
+ *
+ * @note This is a simplified version of the full evaluation function,
+ * primarily used for quick checks or in situations where a full evaluation
+ * is not necessary.
+ *
+ * @note Only uses piece values and does not consider positional factors.
+ *
+ * @param board_state BoardState object to evaluate.
+ *
+ * @return Score of the given position.
+ */
+auto evaluate_position_light_weight(const BoardState &board_state) -> int;
 
 /**
  * @brief Evaluates a pawn at the given position.
@@ -32,9 +47,9 @@ auto evaluate_position(BoardState &board_state) -> int;
  */
 static void evaluate_pawn(int x_file,
                           int y_rank,
-                          Piece &pawn_piece,
+                          const Piece &pawn_piece,
                           int &eval,
-                          BoardState &board_state);
+                          const BoardState &board_state);
 
 /**
  * @brief Evaluates a knight at the given position.
@@ -47,9 +62,9 @@ static void evaluate_pawn(int x_file,
  */
 static void evaluate_knight(int x_file,
                             int y_rank,
-                            Piece &knight_piece,
+                            const Piece &knight_piece,
                             int &eval,
-                            BoardState &board_state);
+                            const BoardState &board_state);
 
 /**
  * @brief Evaluates a bishop at the given position.
@@ -62,9 +77,9 @@ static void evaluate_knight(int x_file,
  */
 static void evaluate_bishop(int x_file,
                             int y_rank,
-                            Piece &bishop_piece,
+                            const Piece &bishop_piece,
                             int &eval,
-                            BoardState &board_state);
+                            const BoardState &board_state);
 
 /**
  * @brief Evaluates a rook at the given position.
@@ -77,9 +92,9 @@ static void evaluate_bishop(int x_file,
  */
 static void evaluate_rook(int x_file,
                           int y_rank,
-                          Piece &rook_piece,
+                          const Piece &rook_piece,
                           int &eval,
-                          BoardState &board_state);
+                          const BoardState &board_state);
 
 /**
  * @brief Evaluates a queen at the given position.
@@ -92,9 +107,9 @@ static void evaluate_rook(int x_file,
  */
 static void evaluate_queen(int x_file,
                            int y_rank,
-                           Piece &queen_piece,
+                           const Piece &queen_piece,
                            int &eval,
-                           BoardState &board_state);
+                           const BoardState &board_state);
 
 /**
  * @brief Evaluates a king at the given position.
@@ -107,9 +122,9 @@ static void evaluate_queen(int x_file,
  */
 static void evaluate_king(int x_file,
                           int y_rank,
-                          Piece &king_piece,
+                          const Piece &king_piece,
                           int &eval,
-                          BoardState &board_state);
+                          const BoardState &board_state);
 
 /**
  * @brief Evaluates the safety of a king at the given position.
@@ -122,9 +137,9 @@ static void evaluate_king(int x_file,
  */
 static void evaluate_king_safety(int x_file,
                                  int y_rank,
-                                 Piece &king_piece,
+                                 const Piece &king_piece,
                                  int &eval,
-                                 BoardState &board_state);
+                                 const BoardState &board_state);
 } // namespace engine::parts::position_evaluator
 
-#endif
+#endif // POSITION_EVALUATOR_H

@@ -164,9 +164,8 @@ public:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked(int x_file,
-                          int y_rank,
-                          PieceColor color_being_attacked) -> bool;
+  [[nodiscard]] auto square_is_attacked(
+      int x_file, int y_rank, PieceColor color_being_attacked) const -> bool;
 
   /**
    * @brief Checks if the king of the given color is in check.
@@ -175,7 +174,7 @@ public:
    *
    * @return True if the king is in check, false otherwise.
    */
-  auto king_is_checked(PieceColor color_of_king) -> bool;
+  [[nodiscard]] auto king_is_checked(PieceColor color_of_king) const -> bool;
 
   /**
    * @brief Checks if the given move leaves the king in check.
@@ -305,9 +304,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_pawn(int &x_file,
-                                  int &y_rank,
-                                  PieceColor &color_being_attacked) -> bool;
+  auto square_is_attacked_by_pawn(
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a knight.
@@ -318,9 +316,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_knight(int &x_file,
-                                    int &y_rank,
-                                    PieceColor &color_being_attacked) -> bool;
+  auto square_is_attacked_by_knight(
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a rook or queen.
@@ -332,7 +329,7 @@ private:
    * @return True if the square is attacked, false otherwise.
    */
   auto square_is_attacked_by_rook_or_queen(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool;
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a bishop or
@@ -345,7 +342,7 @@ private:
    * @return True if the square is attacked, false otherwise.
    */
   auto square_is_attacked_by_bishop_or_queen(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool;
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
 
   /**
    * @brief Helper function to check if a square is attacked by a king.
@@ -356,9 +353,8 @@ private:
    *
    * @return True if the square is attacked, false otherwise.
    */
-  auto square_is_attacked_by_king(int &x_file,
-                                  int &y_rank,
-                                  PieceColor &color_being_attacked) -> bool;
+  auto square_is_attacked_by_king(
+      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
 
   /**
    * @brief Manages the piece counts after a move.
