@@ -1008,7 +1008,10 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
                                        const int &alpha,
                                        const int &depth) -> bool
 {
-  if (max_iterative_search_depth - depth < MIN_FUTILITY_PRUNING_DEPTH ||
+  // Don't do this during end game since it will prune pawn pushes which seem to
+  // not do much, but are very critical in the end game.
+  if (board_state.is_end_game ||
+      max_iterative_search_depth - depth < MIN_FUTILITY_PRUNING_DEPTH ||
       max_iterative_search_depth < MIN_FUTILITY_PRUNING_ITERATION_DEPTH ||
       move.captured_piece != nullptr ||
       move.promotion_piece_type != PieceType::EMPTY ||
