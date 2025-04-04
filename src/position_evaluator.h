@@ -22,21 +22,6 @@ namespace engine::parts::position_evaluator
 auto evaluate_position(const BoardState &board_state) -> int;
 
 /**
- * @brief Evaluates the position using a lightweight heuristic.
- *
- * @note This is a simplified version of the full evaluation function,
- * primarily used for quick checks or in situations where a full evaluation
- * is not necessary.
- *
- * @note Only uses piece values and does not consider positional factors.
- *
- * @param board_state BoardState object to evaluate.
- *
- * @return Score of the given position.
- */
-auto evaluate_position_light_weight(const BoardState &board_state) -> int;
-
-/**
  * @brief Evaluates a pawn at the given position.
  *
  * @param x_file The x-coordinate (file) of the pawn.
@@ -50,6 +35,24 @@ static void evaluate_pawn(int x_file,
                           const Piece &pawn_piece,
                           int &eval,
                           const BoardState &board_state);
+
+/**
+ * @brief Evaluates the quality of a pawn's file.
+ *
+ * @details This function evaluates if the is a double pawn or if the pawn is a
+ * passed pawn.
+ *
+ * @param x_file The x-coordinate (file) of the pawn.
+ * @param y_rank The y-coordinate (rank) of the pawn.
+ * @param pawn_piece The pawn piece object to evaluate.
+ * @param eval Reference to the evaluation score to update.
+ * @param board_state BoardState object to evaluate.
+ */
+static void evaluate_pawn_file_quality(int x_file,
+                                       int y_rank,
+                                       const Piece &pawn_piece,
+                                       int &eval,
+                                       const BoardState &board_state);
 
 /**
  * @brief Evaluates a knight at the given position.

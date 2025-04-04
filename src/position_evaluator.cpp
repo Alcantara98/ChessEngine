@@ -13,6 +13,12 @@ auto evaluate_position(const BoardState &board_state) -> int
   // actual eval.
   int eval_temp = 0;
 
+  // We give points if a player has a bishop pair. Bishop pair is extremely
+  // important in the end game as they can cover both color squares from a
+  // distance, and can protect pawns effectively.
+  int black_bishop_count = 0;
+  int white_bishop_count = 0;
+
   for (Piece *piece_pointer : board_state.piece_list)
   {
     // Captured pieces have x_file == -1 and y_rank == -1.
@@ -40,6 +46,14 @@ auto evaluate_position(const BoardState &board_state) -> int
       evaluate_knight(x_file, y_rank, piece, eval_temp, board_state);
       break;
     case PieceType::BISHOP:
+      if (piece.piece_color == PieceColor::WHITE)
+      {
+        ++white_bishop_count;
+      }
+      else
+      {
+        ++black_bishop_count;
+      }
       evaluate_bishop(x_file, y_rank, piece, eval_temp, board_state);
       break;
     case PieceType::QUEEN:
@@ -58,78 +72,19 @@ auto evaluate_position(const BoardState &board_state) -> int
     {
       if (piece.piece_color == PieceColor::WHITE)
       {
+        if (white_bishop_count >= BISHOP_PAIR_COUNT)
+        {
+          eval += MEDIUM_EVAL_VALUE;
+        }
         eval += eval_temp;
       }
       else
       {
+        if (black_bishop_count >= BISHOP_PAIR_COUNT)
+        {
+          eval -= MEDIUM_EVAL_VALUE;
+        }
         eval -= eval_temp;
-      }
-    }
-  }
-
-  // In raw evaluations, positive eval is good for white and negative eval is
-  // good for black. Since negamax nodes are always maximizing nodes, we need to
-  // negate the evalualtion for black.
-  if (board_state.color_to_move == PieceColor::BLACK)
-  {
-    return -eval;
-  }
-  return eval;
-}
-
-auto evaluate_position_light_weight(const BoardState &board_state) -> int
-{
-  int eval = 0;
-  // We pass eval_temp to evaluators now instead of eval directly. This way, the
-  // functions can evaluate white and black pieces the same way (positively). We
-  // can then check the piece color and add or subtract accordingly to the
-  // actual eval.
-  int eval_temp = 0;
-
-  for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
-  {
-    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
-    {
-      eval_temp = 0;
-      Piece &piece = *board_state.chess_board[x_file][y_rank];
-      PieceType &piece_type = piece.piece_type;
-
-      switch (piece_type)
-      {
-      case PieceType::PAWN:
-        eval_temp += PAWN_VALUE;
-        break;
-      case PieceType::ROOK:
-        eval_temp += ROOK_VALUE;
-        break;
-      case PieceType::KNIGHT:
-        eval_temp += KNIGHT_VALUE;
-        break;
-      case PieceType::BISHOP:
-        eval_temp += BISHOP_VALUE;
-        break;
-      case PieceType::QUEEN:
-        eval_temp += QUEEN_VALUE;
-        break;
-      case PieceType::KING:
-        eval_temp += KING_VALUE;
-        break;
-      default:
-        // Empty square.
-        break;
-      }
-
-      // If piece is black, subtract the evaluation.
-      if (piece_type != PieceType::EMPTY)
-      {
-        if (piece.piece_color == PieceColor::WHITE)
-        {
-          eval += eval_temp;
-        }
-        else
-        {
-          eval -= eval_temp;
-        }
       }
     }
   }
@@ -161,22 +116,36 @@ void evaluate_pawn(const int x_file,
   // If in the end game, give a pawn more value the closer they are to
   // getting promoted into a main piece.
   int rank_eval = 0;
-  if (pawn_piece.piece_color == PieceColor::WHITE)
-  {
-    rank_eval = y_rank * MEDIUM_EVAL_VALUE;
-  }
-  else
-  {
-    rank_eval = (Y_MAX - y_rank) * MEDIUM_EVAL_VALUE;
-  }
   if (board_state.is_end_game)
   {
+    if (pawn_piece.piece_color == PieceColor::WHITE)
+    {
+      rank_eval = y_rank * VERY_SMALL_EVAL_VALUE;
+    }
+    else
+    {
+      rank_eval = (Y_MAX - y_rank) * VERY_SMALL_EVAL_VALUE;
+    }
+
     eval += rank_eval;
   }
 
-  // We do not want double pawns.
-  // Check if there is pawn in the first two squares in front of the pawn.
-  // If there is, decrease evaluation.
+  // If pawn is in the middle of the board, give it a bonus.
+  if ((x_file == XD_FILE || x_file == XE_FILE) &&
+      (y_rank == Y4_RANK || y_rank == Y5_RANK))
+  {
+    eval += MEDIUM_EVAL_VALUE;
+  }
+
+  evaluate_pawn_file_quality(x_file, y_rank, pawn_piece, eval, board_state);
+}
+
+void evaluate_pawn_file_quality(int x_file,
+                                int y_rank,
+                                const Piece &pawn_piece,
+                                int &eval,
+                                const BoardState &board_state)
+{
   int direction;
   if (pawn_piece.piece_color == PieceColor::WHITE)
   {
@@ -186,22 +155,56 @@ void evaluate_pawn(const int x_file,
   {
     direction = NEGATIVE_DIRECTION;
   }
-  // Check one square in front of the pawn.
-  for (int rank_count = 1; rank_count <= MAX_DOUBLE_PAWN_SQUARES_TO_CHECK;
+
+  bool is_passed_pawn = true;
+  for (int rank_count = 1; rank_count >= Y_MIN && rank_count <= Y_MAX;
        ++rank_count)
   {
+    Piece &piece =
+        *board_state.chess_board[x_file][y_rank + (direction * rank_count)];
     if (y_rank + (direction * rank_count) >= Y_MIN &&
-        y_rank + (direction * rank_count) <= Y_MAX)
+        y_rank + (direction * rank_count) <= Y_MAX &&
+        piece.piece_type == PieceType::PAWN)
     {
-      Piece &piece =
-          *board_state.chess_board[x_file][y_rank + (direction * rank_count)];
-      if (piece.piece_type == PieceType::PAWN &&
-          piece.piece_color == pawn_piece.piece_color)
-      {
-        // Decrease evaluation if there is a pawn in front of the pawn.
-        eval -= MEDIUM_EVAL_VALUE;
-      }
+      // Decrease evaluation if there is a pawn in front of the pawn. This
+      // will also cover doubled pawns.
+      eval -= EXTREMELY_SMALL_EVAL_VALUE;
+
+      // If there is an enemy pawn in front of the pawn, it is not a passed
+      // pawn.
     }
+
+    if (is_passed_pawn && piece.piece_color != pawn_piece.piece_color)
+    {
+      is_passed_pawn = false;
+    }
+
+    if (!is_passed_pawn)
+    {
+      // If we know it is not a passed pawn, we no longer need to check.
+      continue;
+    }
+
+    // Check side pawns. If there are any, it is not a passed pawn.
+    Piece &side_piece =
+        *board_state.chess_board[x_file + 1][y_rank + direction];
+    if (side_piece.piece_type == PieceType::PAWN &&
+        side_piece.piece_color != pawn_piece.piece_color && x_file + 1 >= X_MIN)
+    {
+      is_passed_pawn = false;
+    }
+
+    side_piece = *board_state.chess_board[x_file - 1][y_rank + direction];
+    if (side_piece.piece_type == PieceType::PAWN &&
+        side_piece.piece_color != pawn_piece.piece_color && x_file - 1 >= X_MIN)
+    {
+      is_passed_pawn = false;
+    }
+  }
+
+  if (is_passed_pawn)
+  {
+    eval += MEDIUM_EVAL_VALUE;
   }
 }
 
@@ -220,20 +223,29 @@ void evaluate_knight(const int x_file,
     eval -= LARGE_EVAL_VALUE;
   }
 
-  // The more moves a knight has, the better.
-  int new_x;
-  int new_y;
-  for (const auto &move : KNIGHT_MOVES)
-  {
-    // Increase evaluation based on the number of moves.
-    new_x = x_file + move[0];
-    new_y = y_rank + move[1];
+  eval += KNIGHT_POSITION_EVAL_MAP[y_rank];
+  eval += KNIGHT_POSITION_EVAL_MAP[x_file];
 
-    // Check if within bounds.
-    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
-    {
-      eval += VERY_SMALL_EVAL_VALUE;
-    }
+  // The closer a knight is to the enemy king, the better.
+  // We check the knight's distance to the enemy king.
+  int enemy_king_x;
+  int enemy_king_y;
+  if (knight_piece.piece_color == PieceColor::WHITE)
+  {
+    enemy_king_x = board_state.black_king_x_file;
+    enemy_king_y = board_state.black_king_y_rank;
+  }
+  else
+  {
+    enemy_king_x = board_state.white_king_x_file;
+    enemy_king_y = board_state.white_king_y_rank;
+  }
+
+  // Check if the knight is within 4 squares of the enemy king. If it is, give
+  // it a bonus.
+  if (abs(x_file - enemy_king_x) <= 4 && abs(y_rank - enemy_king_y) <= 4)
+  {
+    eval += MEDIUM_EVAL_VALUE;
   }
 }
 
@@ -288,7 +300,7 @@ void evaluate_bishop(const int x_file,
         break;
       }
 
-      eval += VERY_SMALL_EVAL_VALUE;
+      eval += EXTREMELY_SMALL_EVAL_VALUE;
 
       new_x += direction[0];
       new_y += direction[1];
@@ -326,7 +338,7 @@ void evaluate_rook(const int x_file,
           break;
         }
 
-        eval += VERY_SMALL_EVAL_VALUE;
+        eval += EXTREMELY_SMALL_EVAL_VALUE;
 
         new_x += direction[0];
         new_y += direction[1];
@@ -361,7 +373,7 @@ void evaluate_queen(const int x_file,
         break;
       }
 
-      eval += VERY_SMALL_EVAL_VALUE;
+      eval += EXTREMELY_SMALL_EVAL_VALUE;
 
       new_x += direction[0];
       new_y += direction[1];

@@ -640,15 +640,11 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
       make_late_move_reduction_line = true;
       if (move_index > LMR_THRESHOLD)
       {
-        new_search_depth -=
-            LATE_MOVE_REDUCTION +
-            (max_iterative_search_depth / LMR_ADDITIONAL_DEPTH_DIVISOR);
+        new_search_depth -= LATE_MOVE_REDUCTION;
       }
       else if (move_index > EXTREME_LMR_THRESHOLD)
       {
-        new_search_depth -=
-            EXTREME_LATE_MOVE_REDUCTION +
-            (max_iterative_search_depth / LMR_ADDITIONAL_DEPTH_DIVISOR);
+        new_search_depth -= depth / LMR_EXTREME_REDUCTION_DEPTH_DIVISOR;
       }
     }
 
@@ -1021,7 +1017,7 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
   }
 
   // Get static evaluation of the board state.
-  int eval = position_evaluator::evaluate_position_light_weight(board_state);
+  int eval = position_evaluator::evaluate_position(board_state);
 
   // PAWN_VALUE * depth is the cutoff margin.
   return (eval + (PAWN_VALUE * depth) < alpha);
