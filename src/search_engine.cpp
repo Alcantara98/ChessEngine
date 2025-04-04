@@ -68,7 +68,7 @@ auto SearchEngine::is_checkmate(BoardState &board_state) -> bool
       parts::move_generator::calculate_possible_moves(board_state);
 
   // King needs to be in check to be checkmate.
-  if (!board_state.king_is_checked(current_color))
+  if (!attack_check::king_is_checked(board_state, current_color))
   {
     return false;
   }
@@ -77,7 +77,7 @@ auto SearchEngine::is_checkmate(BoardState &board_state) -> bool
   for (parts::Move move : possible_moves)
   {
     board_state.apply_move(move);
-    if (!board_state.king_is_checked(current_color))
+    if (!attack_check::king_is_checked(board_state, current_color))
     {
       board_state.undo_move();
       return false;
@@ -94,7 +94,7 @@ auto SearchEngine::is_stalemate(BoardState &board_state) -> bool
       parts::move_generator::calculate_possible_moves(board_state);
 
   // King cannot be in check to be a stalemate.
-  if (board_state.king_is_checked(current_color))
+  if (attack_check::king_is_checked(board_state, current_color))
   {
     return false;
   }
@@ -104,7 +104,7 @@ auto SearchEngine::is_stalemate(BoardState &board_state) -> bool
   for (parts::Move move : possible_moves)
   {
     board_state.apply_move(move);
-    if (!board_state.king_is_checked(current_color))
+    if (!attack_check::king_is_checked(board_state, current_color))
     {
       board_state.undo_move();
       return false;
@@ -141,7 +141,8 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   std::vector<std::pair<Move, int>> move_scores_filtered;
   for (auto move_score : move_scores)
   {
-    if (!game_board_state.move_leaves_king_in_check(move_score.first))
+    if (!attack_check::move_leaves_king_in_check(game_board_state,
+                                                 move_score.first))
     {
       move_scores_filtered.push_back(move_score);
     }
@@ -514,7 +515,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
-    return evaluate_leaf_node(alpha, beta, board_state);
+    return evaluate_leaf_node(board_state, alpha, beta);
   }
 
   // NULL MOVE PRUNING HEURISTIC
@@ -526,7 +527,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       max_iterative_search_depth > MIN_NULL_MOVE_ITERATION_DEPTH &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game &&
-      !board_state.king_is_checked(board_state.color_to_move))
+      !attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
     if (do_null_move_search(board_state, alpha, beta, depth, eval, is_lmr_line))
     {
@@ -575,9 +576,9 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   return max_eval;
 }
 
-auto SearchEngine::evaluate_leaf_node(int alpha,
-                                      int beta,
-                                      BoardState &board_state) -> int
+auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
+                                      int alpha,
+                                      int beta) -> int
 {
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
@@ -588,8 +589,8 @@ auto SearchEngine::evaluate_leaf_node(int alpha,
       board_state.previous_move_stack.top().captured_piece != nullptr ||
       board_state.previous_move_stack.top().promotion_piece_type !=
           PieceType::EMPTY ||
-      board_state.king_is_checked(PieceColor::BLACK) ||
-      board_state.king_is_checked(PieceColor::WHITE))
+      attack_check::king_is_checked(board_state, PieceColor::BLACK) ||
+      attack_check::king_is_checked(board_state, PieceColor::WHITE))
   {
     return quiescence_search(alpha, beta, board_state);
   }
@@ -1055,7 +1056,7 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
-auto SearchEngine::futility_prune_move(const BoardState &board_state,
+auto SearchEngine::futility_prune_move(BoardState &board_state,
                                        const Move &move,
                                        const int &alpha,
                                        const int &depth) -> bool
@@ -1064,7 +1065,7 @@ auto SearchEngine::futility_prune_move(const BoardState &board_state,
       max_iterative_search_depth < MIN_FUTILITY_PRUNING_ITERATION_DEPTH ||
       move.captured_piece != nullptr ||
       move.promotion_piece_type != PieceType::EMPTY ||
-      board_state.king_is_checked(board_state.color_to_move))
+      attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
     return false;
   }

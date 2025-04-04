@@ -331,8 +331,8 @@ void generate_castle_king_moves(BoardState &board_state,
   Piece *king_piece = chess_board[x_file][y_rank];
   bool first_move = !king_piece->piece_has_moved;
   // Check if the king is not in check and has not moved.
-  if (first_move &&
-      !board_state.square_is_attacked(x_file, y_rank, king_piece->piece_color))
+  if (first_move && !attack_check::square_is_attacked(
+                        board_state, x_file, y_rank, king_piece->piece_color))
   {
     // Castle king side.
     Piece *potential_rook_piece = chess_board[X_MAX][y_rank];
@@ -371,7 +371,8 @@ auto can_castle(BoardState &board_state,
   for (int file : castle_path)
   {
     if (board_state.chess_board[file][y_rank]->piece_type != PieceType::EMPTY ||
-        board_state.square_is_attacked(file, y_rank, king_piece->piece_color))
+        attack_check::square_is_attacked(board_state, file, y_rank,
+                                         king_piece->piece_color))
     {
       return false;
     }

@@ -156,36 +156,6 @@ public:
   void undo_null_move();
 
   /**
-   * @brief Checks if the given square is attacked.
-   *
-   * @param x_file The x coordinate of the square (file).
-   * @param y_rank The y coordinate of the square (rank).
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  [[nodiscard]] auto square_is_attacked(
-      int x_file, int y_rank, PieceColor color_being_attacked) const -> bool;
-
-  /**
-   * @brief Checks if the king of the given color is in check.
-   *
-   * @param color_of_king The color of the king to check (WHITE or BLACK).
-   *
-   * @return True if the king is in check, false otherwise.
-   */
-  [[nodiscard]] auto king_is_checked(PieceColor color_of_king) const -> bool;
-
-  /**
-   * @brief Checks if the given move leaves the king in check.
-   *
-   * @param move The move to check.
-   *
-   * @return True if the move leaves the king in check, false otherwise.
-   */
-  auto move_leaves_king_in_check(Move &move) -> bool;
-
-  /**
    * @brief Clears all pieces from the chess board.
    *
    * @details Also resets properties to null values since there are no pieces
@@ -294,67 +264,6 @@ private:
    * @return The Zobrist hash value.
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> uint64_t;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a pawn.
-   *
-   * @param x_file The x coordinate of the pawn.
-   * @param y_rank The y coordinate of the pawn.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_pawn(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a knight.
-   *
-   * @param x_file The x coordinate of the knight.
-   * @param y_rank The y coordinate of the knight.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_knight(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a rook or queen.
-   *
-   * @param x_file The x coordinate of the rook or queen.
-   * @param y_rank The y coordinate of the rook or queen.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_rook_or_queen(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a bishop or
-   * queen.
-   *
-   * @param x_file The x coordinate of the bishop or queen.
-   * @param y_rank The y coordinate of the bishop or queen.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_bishop_or_queen(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a king.
-   *
-   * @param x_file The x coordinate of the king.
-   * @param y_rank The y coordinate of the king.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_king(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) const -> bool;
 
   /**
    * @brief Manages the piece counts after a move.

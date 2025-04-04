@@ -1,6 +1,7 @@
 #ifndef MOVE_GENERATOR_H
 #define MOVE_GENERATOR_H
 
+#include "attack_check.h"
 #include "board_state.h"
 #include "move.h"
 #include "piece.h"
@@ -24,7 +25,8 @@ using history_table_type = std::array<
  * @brief Calculates all possible moves of the current board state.
  *
  * @param board_state BoardState object to calculate moves from.
- * @param mvv_lvv_sort If true, sorts capture moves using the MVV-LVA heuristic.
+ * @param mvv_lvv_sort If true, sorts capture moves using the MVV-LVA
+ * heuristic.
  * @param history_table Pointer to the history table for sorting moves.
  * @param capture_only If true, only capture moves are calculated.
  *
@@ -58,9 +60,11 @@ static void generate_pawn_moves(BoardState &board_state,
                                 bool capture_only = false);
 
 /**
- * @brief Generates one square forward and two squares forward moves for a pawn.
+ * @brief Generates one square forward and two squares forward moves for a
+ * pawn.
  *
- * @note Generated moves are pushed back into the possible_normal_moves vector.
+ * @note Generated moves are pushed back into the possible_normal_moves
+ * vector.
  *
  * @param chess_board Reference of the current chess board.
  * @param x_file The x-coordinate (file) of the pawn.
@@ -84,7 +88,8 @@ static void generate_normal_pawn_moves(chess_board_type &chess_board,
 /**
  * @brief Generates normal pawn capture moves.
  *
- * @note Generated moves are pushed back into the possible_capture_moves vector.
+ * @note Generated moves are pushed back into the possible_capture_moves
+ * vector.
  *
  * @param chess_board Reference of the current chess board.
  * @param x_file The x-coordinate (file) of the pawn.
@@ -108,7 +113,8 @@ generate_pawn_capture_moves(chess_board_type &chess_board,
 /**
  * @brief Generates en passant pawn capture moves.
  *
- * @note Generated moves are pushed back into the possible_capture_moves vector.
+ * @note Generated moves are pushed back into the possible_capture_moves
+ * vector.
  *
  * @param chess_board Reference of the current chess board.
  * @param x_file The x-coordinate (file) of the pawn.
@@ -278,8 +284,8 @@ static void rook_bishop_move_helper(BoardState &board_state,
  * @brief Sorts the given capture moves based on the Most Valuable Victim -
  * Least Valuable Attacker (MVV-LVA) heuristic.
  *
- * @details The MVV-LVA heuristic sorts moves based on the value of the captured
- * piece and the value of the attacking piece.
+ * @details The MVV-LVA heuristic sorts moves based on the value of the
+ * captured piece and the value of the attacking piece.
  *
  * @param possible_capture_moves Reference to the list of possible capture
  * moves.

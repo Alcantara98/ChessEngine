@@ -1,6 +1,7 @@
 #ifndef SEARCH_ENGINE_H
 #define SEARCH_ENGINE_H
 
+#include "attack_check.h"
 #include "board_state.h"
 #include "move_generator.h"
 #include "move_interface.h"
@@ -293,13 +294,13 @@ private:
    * where the search tree ends and the evaluation of the board state is
    * performed.
    *
+   * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
-   * @param board_state BoardState object to search.
    *
    * @return Evaluation score of the leaf node.
    */
-  auto evaluate_leaf_node(int alpha, int beta, BoardState &board_state) -> int;
+  auto evaluate_leaf_node(BoardState &board_state, int alpha, int beta) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -553,7 +554,7 @@ private:
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  auto futility_prune_move(const BoardState &board_state,
+  auto futility_prune_move(BoardState &board_state,
                            const Move &move,
                            const int &alpha,
                            const int &depth) -> bool;
