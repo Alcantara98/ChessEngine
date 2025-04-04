@@ -13,50 +13,56 @@ auto evaluate_position(const BoardState &board_state) -> int
   // actual eval.
   int eval_temp = 0;
 
-  for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
+  for (Piece *piece_pointer : board_state.piece_list)
   {
-    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
+    // Captured pieces have x_file == -1 and y_rank == -1.
+    // We skip them.
+    if (piece_pointer->x_file == -1)
     {
-      eval_temp = 0;
-      Piece &piece = *board_state.chess_board[x_file][y_rank];
-      PieceType &piece_type = piece.piece_type;
+      continue;
+    }
 
-      switch (piece_type)
+    eval_temp = 0;
+    Piece &piece = *piece_pointer;
+    PieceType &piece_type = piece.piece_type;
+    int &x_file = piece.x_file;
+    int &y_rank = piece.y_rank;
+
+    switch (piece_type)
+    {
+    case PieceType::PAWN:
+      evaluate_pawn(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::ROOK:
+      evaluate_rook(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::KNIGHT:
+      evaluate_knight(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::BISHOP:
+      evaluate_bishop(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::QUEEN:
+      evaluate_queen(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::KING:
+      evaluate_king(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    default:
+      // Empty square.
+      break;
+    }
+
+    // If piece is black, subtract the evaluation.
+    if (piece_type != PieceType::EMPTY)
+    {
+      if (piece.piece_color == PieceColor::WHITE)
       {
-      case PieceType::PAWN:
-        evaluate_pawn(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::ROOK:
-        evaluate_rook(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::KNIGHT:
-        evaluate_knight(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::BISHOP:
-        evaluate_bishop(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::QUEEN:
-        evaluate_queen(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::KING:
-        evaluate_king(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      default:
-        // Empty square.
-        break;
+        eval += eval_temp;
       }
-
-      // If piece is black, subtract the evaluation.
-      if (piece_type != PieceType::EMPTY)
+      else
       {
-        if (piece.piece_color == PieceColor::WHITE)
-        {
-          eval += eval_temp;
-        }
-        else
-        {
-          eval -= eval_temp;
-        }
+        eval -= eval_temp;
       }
     }
   }

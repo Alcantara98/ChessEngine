@@ -41,6 +41,9 @@ public:
   /// @brief Represents which color is to move.
   PieceColor color_to_move = PieceColor::WHITE;
 
+  /// @brief A vector to store all pieces on the board.
+  std::vector<Piece *> piece_list;
+
   // EVALUATION HELPER PROPERTIES
 
   /// @brief Flag to check if the white king is on the board.
@@ -220,6 +223,11 @@ public:
    */
   void is_end_game_check();
 
+  /**
+   * @brief Updates the pieces list with all pieces on the board.
+   */
+  void update_pieces_list();
+
 private:
   // PROPERTIES
 
@@ -232,8 +240,9 @@ private:
   /// @brief Zobrist key for the side to move.
   uint64_t zobrist_side_to_move;
 
-  /// @brief All empty squares point to the same Piece instance.
-  Piece empty_piece;
+  /// @brief All empty squares point to this Empty Piece instance.
+  Piece empty_piece =
+      Piece(-1, -1, PieceType ::EMPTY, PieceColor::WHITE, false);
 
   /// @brief Map to keep track of visited states. This is used to detect three
   /// fold repetition. Game is drawn if the same state is repeated three times.

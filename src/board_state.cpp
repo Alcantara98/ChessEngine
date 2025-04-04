@@ -46,6 +46,8 @@ BoardState::BoardState(const BoardState &other)
       }
     }
   }
+  // Update pointers in piece_list to point to the new pieces.
+  update_pieces_list();
 }
 
 BoardState::~BoardState() { clear_pointers(); }
@@ -66,42 +68,49 @@ void BoardState::setup_default_board()
   for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
   {
     chess_board[x_file][Y2_RANK] =
-        new Piece(PieceType::PAWN, PieceColor::WHITE);
+        new Piece(x_file, Y2_RANK, PieceType::PAWN, PieceColor::WHITE);
     chess_board[x_file][Y7_RANK] =
-        new Piece(PieceType::PAWN, PieceColor::BLACK);
+        new Piece(x_file, Y7_RANK, PieceType::PAWN, PieceColor::BLACK);
   }
   // Set Rooks.
-  chess_board[XA_FILE][Y1_RANK] = new Piece(PieceType::ROOK, PieceColor::WHITE);
-  chess_board[XH_FILE][Y1_RANK] = new Piece(PieceType::ROOK, PieceColor::WHITE);
-  chess_board[XA_FILE][Y8_RANK] = new Piece(PieceType::ROOK, PieceColor::BLACK);
-  chess_board[XH_FILE][Y8_RANK] = new Piece(PieceType::ROOK, PieceColor::BLACK);
+  chess_board[XA_FILE][Y1_RANK] =
+      new Piece(XA_FILE, Y1_RANK, PieceType::ROOK, PieceColor::WHITE);
+  chess_board[XH_FILE][Y1_RANK] =
+      new Piece(XH_FILE, Y1_RANK, PieceType::ROOK, PieceColor::WHITE);
+  chess_board[XA_FILE][Y8_RANK] =
+      new Piece(XA_FILE, Y8_RANK, PieceType::ROOK, PieceColor::BLACK);
+  chess_board[XH_FILE][Y8_RANK] =
+      new Piece(XH_FILE, Y8_RANK, PieceType::ROOK, PieceColor::BLACK);
   // Set Knights.
   chess_board[XB_FILE][Y1_RANK] =
-      new Piece(PieceType::KNIGHT, PieceColor::WHITE);
+      new Piece(XB_FILE, Y1_RANK, PieceType::KNIGHT, PieceColor::WHITE);
   chess_board[XG_FILE][Y1_RANK] =
-      new Piece(PieceType::KNIGHT, PieceColor::WHITE);
+      new Piece(XG_FILE, Y1_RANK, PieceType::KNIGHT, PieceColor::WHITE);
   chess_board[XB_FILE][Y8_RANK] =
-      new Piece(PieceType::KNIGHT, PieceColor::BLACK);
+      new Piece(XB_FILE, Y8_RANK, PieceType::KNIGHT, PieceColor::BLACK);
   chess_board[XG_FILE][Y8_RANK] =
-      new Piece(PieceType::KNIGHT, PieceColor::BLACK);
+      new Piece(XG_FILE, Y8_RANK, PieceType::KNIGHT, PieceColor::BLACK);
   // Set Bishops.
   chess_board[XC_FILE][Y1_RANK] =
-      new Piece(PieceType::BISHOP, PieceColor::WHITE);
+      new Piece(XC_FILE, Y1_RANK, PieceType::BISHOP, PieceColor::WHITE);
   chess_board[XF_FILE][Y1_RANK] =
-      new Piece(PieceType::BISHOP, PieceColor::WHITE);
+      new Piece(XF_FILE, Y1_RANK, PieceType::BISHOP, PieceColor::WHITE);
   chess_board[XC_FILE][Y8_RANK] =
-      new Piece(PieceType::BISHOP, PieceColor::BLACK);
+      new Piece(XC_FILE, Y8_RANK, PieceType::BISHOP, PieceColor::BLACK);
   chess_board[XF_FILE][Y8_RANK] =
-      new Piece(PieceType::BISHOP, PieceColor::BLACK);
+      new Piece(XF_FILE, Y8_RANK, PieceType::BISHOP, PieceColor::BLACK);
   // Set Queens.
   chess_board[XD_FILE][Y1_RANK] =
-      new Piece(PieceType::QUEEN, PieceColor::WHITE);
+      new Piece(XD_FILE, Y1_RANK, PieceType::QUEEN, PieceColor::WHITE);
   chess_board[XD_FILE][Y8_RANK] =
-      new Piece(PieceType::QUEEN, PieceColor::BLACK);
+      new Piece(XD_FILE, Y8_RANK, PieceType::QUEEN, PieceColor::BLACK);
   // Set Kings.
-  chess_board[XE_FILE][Y1_RANK] = new Piece(PieceType::KING, PieceColor::WHITE);
-  chess_board[XE_FILE][Y8_RANK] = new Piece(PieceType::KING, PieceColor::BLACK);
+  chess_board[XE_FILE][Y1_RANK] =
+      new Piece(XE_FILE, Y1_RANK, PieceType::KING, PieceColor::WHITE);
+  chess_board[XE_FILE][Y8_RANK] =
+      new Piece(XE_FILE, Y8_RANK, PieceType::KING, PieceColor::BLACK);
 
+  update_pieces_list();
   add_current_state_to_visited_states();
 }
 
@@ -188,6 +197,8 @@ void BoardState::apply_move(Move &move)
     int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
                              : move.to_y + 1;
+
+    // Clear old square (point to empty_piece).
     chess_board[move.to_x][captured_y_pos] = &empty_piece;
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
@@ -238,6 +249,20 @@ void BoardState::apply_move(Move &move)
     }
   }
 
+  if (move.captured_piece != nullptr)
+  {
+    // Update position of captured piece. If piece is captured, set position to
+    // -1, -1. This will mean the piece is captured and not on the board.
+    move.captured_piece->x_file = -1;
+    move.captured_piece->y_rank = -1;
+  }
+
+  if (move.captured_piece != nullptr && !move.capture_is_en_passant)
+  {
+    // If capturing, clear old square (point to empty_piece).
+    chess_board[move.to_x][move.to_y] = &empty_piece;
+  }
+
   // Move moving piece to new square.
   std::swap(chess_board[move.from_x][move.from_y],
             chess_board[move.to_x][move.to_y]);
@@ -248,17 +273,14 @@ void BoardState::apply_move(Move &move)
     chess_board[move.to_x][move.to_y]->piece_type = move.promotion_piece_type;
   }
 
-  if (move.captured_piece != nullptr && !move.capture_is_en_passant)
-  {
-    // If capturing, original square will not be empty after swap.
-    // Clear old square (point to empty_piece).
-    chess_board[move.from_x][move.from_y] = &empty_piece;
-  }
-
   if (move.first_move_of_moving_piece)
   {
     move.moving_piece->piece_has_moved = true;
   }
+
+  // Update position of moving piece.
+  move.moving_piece->x_file = move.to_x;
+  move.moving_piece->y_rank = move.to_y;
 
   // Update move color, it is now the other player's turn.
   color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
@@ -284,6 +306,11 @@ void BoardState::undo_move()
     int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
                              ? move.to_y - 1
                              : move.to_y + 1;
+
+    // Update position of captured piece.
+    move.captured_piece->x_file = move.to_x;
+    move.captured_piece->y_rank = captured_y_pos;
+
     // Add captured pawn.
     chess_board[move.to_x][captured_y_pos] = move.captured_piece;
   }
@@ -341,15 +368,19 @@ void BoardState::undo_move()
     chess_board[move.to_x][move.to_y]->piece_type = PieceType::PAWN;
   }
 
-  if (move.captured_piece != nullptr && !move.capture_is_en_passant)
-  {
-    // If a piece was captured, add the piece back.
-    chess_board[move.from_x][move.from_y] = move.captured_piece;
-  }
-
   // Move piece back to original square.
   std::swap(chess_board[move.from_x][move.from_y],
             chess_board[move.to_x][move.to_y]);
+
+  if (move.captured_piece != nullptr && !move.capture_is_en_passant)
+  {
+    // Update position of captured piece.
+    move.captured_piece->x_file = move.to_x;
+    move.captured_piece->y_rank = move.to_y;
+
+    // If a piece was captured, add the piece back.
+    chess_board[move.to_x][move.to_y] = move.captured_piece;
+  }
 
   if (move.first_move_of_moving_piece)
   {
@@ -496,6 +527,22 @@ void BoardState::is_end_game_check()
   else
   {
     is_end_game = number_of_main_pieces_left <= END_GAME_CONDITION_NO_QUEENS;
+  }
+}
+
+void BoardState::update_pieces_list()
+{
+  piece_list.clear();
+  for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
+  {
+    for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
+    {
+      Piece *piece = chess_board[x_file][y_rank];
+      if (piece->piece_type != PieceType::EMPTY)
+      {
+        piece_list.push_back(piece);
+      }
+    }
   }
 }
 
