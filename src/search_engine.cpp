@@ -337,11 +337,6 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false, false, false);
 
-    if (eval <= alpha && best_eval_of_search_iteration.load() > alpha)
-    {
-      break;
-    }
-
     if (eval > best_eval_of_search_iteration && eval > alpha)
     {
       best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
