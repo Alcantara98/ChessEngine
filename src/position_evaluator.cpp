@@ -223,8 +223,11 @@ void evaluate_knight(const int x_file,
     eval -= LARGE_EVAL_VALUE;
   }
 
-  eval += KNIGHT_POSITION_EVAL_MAP[y_rank];
-  eval += KNIGHT_POSITION_EVAL_MAP[x_file];
+  if (!board_state.is_end_game)
+  {
+    eval += KNIGHT_POSITION_EVAL_MAP[y_rank];
+    eval += KNIGHT_POSITION_EVAL_MAP[x_file];
+  }
 
   // The closer a knight is to the enemy king, the better.
   // We check the knight's distance to the enemy king.
