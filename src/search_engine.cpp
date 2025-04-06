@@ -305,24 +305,27 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // infinity as all other windows would fail high or low.
     if (std::abs(eval) > INF_MINUS_1000 || ASPIRATION_WINDOWS[index] == INF)
     {
-      alpha = -INF;
+      alpha = best_eval_of_search_iteration;
       beta = INF;
-    }
-    else if (index == 0)
-    {
-      alpha = eval - ASPIRATION_WINDOWS[index];
-      beta = eval + ASPIRATION_WINDOWS[index];
     }
     else
     {
-      if (eval >= beta)
-      {
-        beta = eval + ASPIRATION_WINDOWS[index];
-        alpha = eval - 1;
-      }
-      if (eval <= alpha)
+      if (index == 0)
       {
         alpha = eval - ASPIRATION_WINDOWS[index];
+        beta = eval + ASPIRATION_WINDOWS[index];
+      }
+      else
+      {
+        if (eval >= beta)
+        {
+          beta = eval + ASPIRATION_WINDOWS[index];
+          alpha = eval - 1;
+        }
+        if (eval <= alpha)
+        {
+          alpha = eval - ASPIRATION_WINDOWS[index];
+        }
       }
 
       if (best_eval_of_search_iteration > alpha)
@@ -336,6 +339,11 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false, false, false);
+
+    if (eval + PAWN_VALUE < alpha && best_eval_of_search_iteration > alpha)
+    {
+      break;
+    }
 
     if (eval > best_eval_of_search_iteration && eval > alpha)
     {

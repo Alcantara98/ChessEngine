@@ -139,7 +139,7 @@ const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 4> ASPIRATION_WINDOWS = {
-    {1, (PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, INF}};
+    {PAWN_VALUE / 2, PAWN_VALUE * 2, INF}};
 
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {{0, 4, 8, 10, 10, 8, 4, 0}};

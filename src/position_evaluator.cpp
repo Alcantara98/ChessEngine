@@ -265,6 +265,27 @@ void evaluate_bishop(const int x_file,
     eval -= LARGE_EVAL_VALUE;
   }
 
+  // We don't generally want bishops on the back rank. We want them to be
+  // developed. So we give a penalty if they are on the back rank. But not in
+  // the end game.
+  if (!board_state.is_end_game)
+  {
+    if (bishop_piece.piece_color == PieceColor::WHITE)
+    {
+      if (y_rank == Y1_RANK)
+      {
+        eval -= LARGE_EVAL_VALUE;
+      }
+    }
+    else
+    {
+      if (y_rank == Y8_RANK)
+      {
+        eval -= LARGE_EVAL_VALUE;
+      }
+    }
+  }
+
   // If bishop is blocking a pawn, decrease evaluation.
   // When I play, I don't like it when my bishops block my pawns.
   // This is a personal preference and is experimental.
