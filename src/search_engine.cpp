@@ -340,7 +340,8 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false, false, false);
 
-    if (eval + PAWN_VALUE < alpha && best_eval_of_search_iteration > alpha)
+    if (eval + (PAWN_VALUE / 2) < alpha &&
+        best_eval_of_search_iteration >= alpha)
     {
       break;
     }
