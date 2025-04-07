@@ -223,10 +223,22 @@ void evaluate_knight(const int x_file,
     eval -= LARGE_EVAL_VALUE;
   }
 
-  if (!board_state.is_end_game)
+  // Check how many attacks the knight has. The more attacks, the better.
+  for (const auto &direction : KNIGHT_MOVES)
   {
-    eval += KNIGHT_POSITION_EVAL_MAP[y_rank];
-    eval += KNIGHT_POSITION_EVAL_MAP[x_file];
+    int new_x = x_file + direction[0];
+    int new_y = y_rank + direction[1];
+
+    // Check if still within bounds.
+    if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
+    {
+      eval += KNIGHT_POSITION_EVAL_MAP[new_y];
+      eval += KNIGHT_POSITION_EVAL_MAP[new_x];
+    }
+    else
+    {
+      eval -= SMALL_EVAL_VALUE;
+    }
   }
 
   // The closer a knight is to the enemy king, the better.

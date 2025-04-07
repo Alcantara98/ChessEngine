@@ -65,9 +65,9 @@ const int DEFAULT_SEARCH_TIME_MS = 2000;
 const int MAX_SEARCH_TIME_MS = 600000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;
-const int MIN_ROOT_MOVE_PRUNING_DEPTH = 6;
+const int MIN_ROOT_MOVE_PRUNING_DEPTH = 8;
 const int ROOT_MOVE_PRUNING_INTERVAL = 2;
-const int MIN_SEARCH_THREADS = 10;
+const int MIN_SEARCH_THREADS = 12;
 const int POSSIBLE_MOVE_RESERVE_SIZE = 100;
 const int POSSIBLE_CAPTURE_MOVE_RESERVE_SIZE = 50;
 
@@ -144,7 +144,7 @@ const std::array<int, 4> ASPIRATION_WINDOWS = {
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {{0, 4, 8, 10, 10, 8, 4, 0}};
 const std::array<int, 8> KNIGHT_POSITION_EVAL_MAP = {
-    {-10, 15, 15, 20, 20, 15, 15, -10}};
+    {3, 5, 10, 15, 15, 10, 5, 3}};
 
 const std::array<int, 8> KING_POSITION_EVAL_MAP = {{5, 20, 0, 0, 0, 0, 20, 5}};
 
