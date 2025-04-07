@@ -308,31 +308,28 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
       alpha = best_eval_of_search_iteration;
       beta = INF;
     }
+    else if (index == 0)
+    {
+      alpha = eval - ASPIRATION_WINDOWS[index];
+      beta = eval + ASPIRATION_WINDOWS[index];
+    }
     else
     {
-      if (index == 0)
+      if (eval >= beta)
+      {
+        beta = eval + ASPIRATION_WINDOWS[index];
+        alpha = eval - 1;
+      }
+      if (eval <= alpha)
       {
         alpha = eval - ASPIRATION_WINDOWS[index];
-        beta = eval + ASPIRATION_WINDOWS[index];
       }
-      else
-      {
-        if (eval >= beta)
-        {
-          beta = eval + ASPIRATION_WINDOWS[index];
-          alpha = eval - 1;
-        }
-        if (eval <= alpha)
-        {
-          alpha = eval - ASPIRATION_WINDOWS[index];
-        }
-      }
+    }
 
-      if (best_eval_of_search_iteration > alpha)
-      {
-        alpha = best_eval_of_search_iteration;
-        beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
-      }
+    if (best_eval_of_search_iteration > alpha && beta != INF)
+    {
+      alpha = best_eval_of_search_iteration;
+      beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
     }
 
     // Swap and negate alpha and beta and negate the eval because of the negamax
