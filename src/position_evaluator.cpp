@@ -118,7 +118,7 @@ void evaluate_pawn(const int x_file,
   int pawn_rank_score = EXTREMELY_SMALL_EVAL_VALUE;
   if (board_state.is_end_game)
   {
-    pawn_rank_score = VERY_LARGE_EVAL_VALUE;
+    pawn_rank_score = VERY_SMALL_EVAL_VALUE;
   }
 
   int rank_eval = 0;
