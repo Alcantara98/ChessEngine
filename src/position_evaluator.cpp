@@ -115,20 +115,22 @@ void evaluate_pawn(const int x_file,
 
   // If in the end game, give a pawn more value the closer they are to
   // getting promoted into a main piece.
-  int rank_eval = 0;
+  int pawn_rank_score = EXTREMELY_SMALL_EVAL_VALUE;
   if (board_state.is_end_game)
   {
-    if (pawn_piece.piece_color == PieceColor::WHITE)
-    {
-      rank_eval = y_rank * VERY_SMALL_EVAL_VALUE;
-    }
-    else
-    {
-      rank_eval = (Y_MAX - y_rank) * VERY_SMALL_EVAL_VALUE;
-    }
-
-    eval += rank_eval;
+    pawn_rank_score = VERY_LARGE_EVAL_VALUE;
   }
+
+  int rank_eval = 0;
+  if (pawn_piece.piece_color == PieceColor::WHITE)
+  {
+    rank_eval = y_rank * pawn_rank_score;
+  }
+  else
+  {
+    rank_eval = (Y_MAX - y_rank) * pawn_rank_score;
+  }
+  eval += rank_eval;
 
   // If pawn is in the middle of the board, give it a bonus.
   if (!board_state.is_end_game && (x_file == XD_FILE || x_file == XE_FILE) &&
@@ -256,9 +258,9 @@ void evaluate_knight(const int x_file,
     enemy_king_y = board_state.white_king_y_rank;
   }
 
-  // Check if the knight is within 4 squares of the enemy king. If it is, give
+  // Check if the knight is within 3 squares of the enemy king. If it is, give
   // it a bonus.
-  if (abs(x_file - enemy_king_x) <= 4 && abs(y_rank - enemy_king_y) <= 4)
+  if (abs(x_file - enemy_king_x) <= 3 && abs(y_rank - enemy_king_y) <= 3)
   {
     eval += MEDIUM_EVAL_VALUE;
   }
@@ -414,6 +416,27 @@ void evaluate_queen(const int x_file,
       new_x += direction[0];
       new_y += direction[1];
     }
+  }
+  // The closer a queen is to the enemy king, the better.
+  // We check the queen's distance to the enemy king.
+  int enemy_king_x;
+  int enemy_king_y;
+  if (queen_piece.piece_color == PieceColor::WHITE)
+  {
+    enemy_king_x = board_state.black_king_x_file;
+    enemy_king_y = board_state.black_king_y_rank;
+  }
+  else
+  {
+    enemy_king_x = board_state.white_king_x_file;
+    enemy_king_y = board_state.white_king_y_rank;
+  }
+
+  // Check if the queen is within 3 squares of the enemy king. If it is, give
+  // it a bonus.
+  if (abs(x_file - enemy_king_x) <= 3 && abs(y_rank - enemy_king_y) <= 3)
+  {
+    eval += MEDIUM_EVAL_VALUE;
   }
 }
 
