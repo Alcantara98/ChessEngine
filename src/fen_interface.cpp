@@ -98,6 +98,7 @@ auto initialize_board(BoardState &board_state,
     }
   }
   board_state.is_end_game_check();
+  board_state.update_pieces_list();
 
   return true;
 }
@@ -156,12 +157,12 @@ void create_pieces(BoardState &board_state,
       has_moved = false;
     }
     board_state.chess_board[x_file][y_rank] =
-        new Piece(piece_type, piece_color, has_moved);
+        new Piece(x_file, y_rank, piece_type, piece_color, has_moved);
   }
   else
   {
     board_state.chess_board[x_file][y_rank] =
-        new Piece(piece_type, piece_color, true);
+        new Piece(x_file, y_rank, piece_type, piece_color, true);
   }
 }
 

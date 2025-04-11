@@ -17,55 +17,58 @@ auto calculate_possible_moves(BoardState &board_state,
       POSSIBLE_MOVE_RESERVE_SIZE); // Adjust based on expected move count.
   possible_capture_moves.reserve(POSSIBLE_CAPTURE_MOVE_RESERVE_SIZE);
 
-  for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
+  for (Piece *current_piece : board_state.piece_list)
   {
-    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
+    // Skip empty squares.
+    if (current_piece->x_file == -1 || current_piece->y_rank == -1 ||
+        current_piece->piece_color != board_state.color_to_move)
     {
-      Piece *current_piece = board_state.chess_board[x_file][y_rank];
-      if (current_piece->piece_color == board_state.color_to_move)
+      continue;
+    }
+
+    int x_file = current_piece->x_file;
+    int y_rank = current_piece->y_rank;
+
+    if (board_state.chess_board[x_file][y_rank] != current_piece)
+    {
+      printf("Piece pointer mismatch at (%d, %d)\n", x_file, y_rank);
+      continue;
+    }
+
+    switch (current_piece->piece_type)
+    {
+    case PieceType::PAWN:
+      generate_pawn_moves(board_state, x_file, y_rank, possible_normal_moves,
+                          possible_capture_moves, capture_only);
+      break;
+    case PieceType::ROOK:
+      generate_rook_moves(board_state, x_file, y_rank, possible_normal_moves,
+                          possible_capture_moves, capture_only);
+      break;
+    case PieceType::KNIGHT:
+      generate_knight_moves(board_state, x_file, y_rank, possible_normal_moves,
+                            possible_capture_moves, capture_only);
+      break;
+    case PieceType::BISHOP:
+      generate_bishop_moves(board_state, x_file, y_rank, possible_normal_moves,
+                            possible_capture_moves, capture_only);
+      break;
+    case PieceType::QUEEN:
+      generate_queen_moves(board_state, x_file, y_rank, possible_normal_moves,
+                           possible_capture_moves, capture_only);
+      break;
+    case PieceType::KING:
+      generate_king_moves(board_state, x_file, y_rank, possible_normal_moves,
+                          possible_capture_moves, capture_only);
+      if (!capture_only)
       {
-        switch (current_piece->piece_type)
-        {
-        case PieceType::PAWN:
-          generate_pawn_moves(board_state, x_file, y_rank,
-                              possible_normal_moves, possible_capture_moves,
-                              capture_only);
-          break;
-        case PieceType::ROOK:
-          generate_rook_moves(board_state, x_file, y_rank,
-                              possible_normal_moves, possible_capture_moves,
-                              capture_only);
-          break;
-        case PieceType::KNIGHT:
-          generate_knight_moves(board_state, x_file, y_rank,
-                                possible_normal_moves, possible_capture_moves,
-                                capture_only);
-          break;
-        case PieceType::BISHOP:
-          generate_bishop_moves(board_state, x_file, y_rank,
-                                possible_normal_moves, possible_capture_moves,
-                                capture_only);
-          break;
-        case PieceType::QUEEN:
-          generate_queen_moves(board_state, x_file, y_rank,
-                               possible_normal_moves, possible_capture_moves,
-                               capture_only);
-          break;
-        case PieceType::KING:
-          generate_king_moves(board_state, x_file, y_rank,
-                              possible_normal_moves, possible_capture_moves,
-                              capture_only);
-          if (!capture_only)
-          {
-            generate_castle_king_moves(board_state, x_file, y_rank,
-                                       possible_normal_moves);
-          }
-          break;
-        default:
-          // Empty square.
-          break;
-        }
+        generate_castle_king_moves(board_state, x_file, y_rank,
+                                   possible_normal_moves);
       }
+      break;
+    default:
+      // Empty square.
+      break;
     }
   }
 
@@ -331,8 +334,8 @@ void generate_castle_king_moves(BoardState &board_state,
   Piece *king_piece = chess_board[x_file][y_rank];
   bool first_move = !king_piece->piece_has_moved;
   // Check if the king is not in check and has not moved.
-  if (first_move &&
-      !board_state.square_is_attacked(x_file, y_rank, king_piece->piece_color))
+  if (first_move && !attack_check::square_is_attacked(
+                        board_state, x_file, y_rank, king_piece->piece_color))
   {
     // Castle king side.
     Piece *potential_rook_piece = chess_board[X_MAX][y_rank];
@@ -371,7 +374,8 @@ auto can_castle(BoardState &board_state,
   for (int file : castle_path)
   {
     if (board_state.chess_board[file][y_rank]->piece_type != PieceType::EMPTY ||
-        board_state.square_is_attacked(file, y_rank, king_piece->piece_color))
+        attack_check::square_is_attacked(board_state, file, y_rank,
+                                         king_piece->piece_color))
     {
       return false;
     }

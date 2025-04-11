@@ -4,7 +4,7 @@ namespace engine::parts::position_evaluator
 {
 // PUBLIC FUNCTIONS
 
-auto evaluate_position(BoardState &board_state) -> int
+auto evaluate_position(const BoardState &board_state) -> int
 {
   int eval = 0;
   // We pass eval_temp to evaluators now instead of eval directly. This way, the
@@ -13,50 +13,78 @@ auto evaluate_position(BoardState &board_state) -> int
   // actual eval.
   int eval_temp = 0;
 
-  for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
+  // We give points if a player has a bishop pair. Bishop pair is extremely
+  // important in the end game as they can cover both color squares from a
+  // distance, and can protect pawns effectively.
+  int black_bishop_count = 0;
+  int white_bishop_count = 0;
+
+  for (Piece *piece_pointer : board_state.piece_list)
   {
-    for (int x_file = X_MIN; x_file <= X_MAX; ++x_file)
+    // Captured pieces have x_file == -1 and y_rank == -1.
+    // We skip them.
+    if (piece_pointer->x_file == -1)
     {
-      eval_temp = 0;
-      Piece &piece = *board_state.chess_board[x_file][y_rank];
-      PieceType &piece_type = piece.piece_type;
+      continue;
+    }
 
-      switch (piece_type)
+    eval_temp = 0;
+    Piece &piece = *piece_pointer;
+    PieceType &piece_type = piece.piece_type;
+    int &x_file = piece.x_file;
+    int &y_rank = piece.y_rank;
+
+    switch (piece_type)
+    {
+    case PieceType::PAWN:
+      evaluate_pawn(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::ROOK:
+      evaluate_rook(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::KNIGHT:
+      evaluate_knight(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::BISHOP:
+      if (piece.piece_color == PieceColor::WHITE)
       {
-      case PieceType::PAWN:
-        evaluate_pawn(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::ROOK:
-        evaluate_rook(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::KNIGHT:
-        evaluate_knight(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::BISHOP:
-        evaluate_bishop(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::QUEEN:
-        evaluate_queen(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      case PieceType::KING:
-        evaluate_king(x_file, y_rank, piece, eval_temp, board_state);
-        break;
-      default:
-        // Empty square.
-        break;
+        ++white_bishop_count;
       }
-
-      // If piece is black, subtract the evaluation.
-      if (piece_type != PieceType::EMPTY)
+      else
       {
-        if (piece.piece_color == PieceColor::WHITE)
+        ++black_bishop_count;
+      }
+      evaluate_bishop(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::QUEEN:
+      evaluate_queen(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    case PieceType::KING:
+      evaluate_king(x_file, y_rank, piece, eval_temp, board_state);
+      break;
+    default:
+      // Empty square.
+      break;
+    }
+
+    // If piece is black, subtract the evaluation.
+    if (piece_type != PieceType::EMPTY)
+    {
+      if (piece.piece_color == PieceColor::WHITE)
+      {
+        if (white_bishop_count >= BISHOP_PAIR_COUNT)
         {
-          eval += eval_temp;
+          eval += MEDIUM_EVAL_VALUE;
         }
-        else
+        eval += eval_temp;
+      }
+      else
+      {
+        if (black_bishop_count >= BISHOP_PAIR_COUNT)
         {
-          eval -= eval_temp;
+          eval -= MEDIUM_EVAL_VALUE;
         }
+        eval -= eval_temp;
       }
     }
   }
@@ -73,11 +101,11 @@ auto evaluate_position(BoardState &board_state) -> int
 
 // PRIVATE FUNCTIONS
 
-void evaluate_pawn(int x_file,
-                   int y_rank,
-                   Piece &pawn_piece,
+void evaluate_pawn(const int x_file,
+                   const int y_rank,
+                   const Piece &pawn_piece,
                    int &eval,
-                   BoardState &board_state)
+                   const BoardState &board_state)
 {
   // Piece value.
   eval += PAWN_VALUE;
@@ -87,23 +115,39 @@ void evaluate_pawn(int x_file,
 
   // If in the end game, give a pawn more value the closer they are to
   // getting promoted into a main piece.
+  int pawn_rank_score = EXTREMELY_SMALL_EVAL_VALUE;
+  if (board_state.is_end_game)
+  {
+    pawn_rank_score = VERY_SMALL_EVAL_VALUE;
+  }
+
   int rank_eval = 0;
   if (pawn_piece.piece_color == PieceColor::WHITE)
   {
-    rank_eval = y_rank * MEDIUM_EVAL_VALUE;
+    rank_eval = y_rank * pawn_rank_score;
   }
   else
   {
-    rank_eval = (Y_MAX - y_rank) * MEDIUM_EVAL_VALUE;
+    rank_eval = (Y_MAX - y_rank) * pawn_rank_score;
   }
-  if (board_state.is_end_game)
+  eval += rank_eval;
+
+  // If pawn is in the middle of the board, give it a bonus.
+  if (!board_state.is_end_game && (x_file == XD_FILE || x_file == XE_FILE) &&
+      (y_rank == Y4_RANK || y_rank == Y5_RANK))
   {
-    eval += rank_eval;
+    eval += MEDIUM_EVAL_VALUE;
   }
 
-  // We do not want double pawns.
-  // Check if there is pawn in the first two squares in front of the pawn.
-  // If there is, decrease evaluation.
+  evaluate_pawn_file_quality(x_file, y_rank, pawn_piece, eval, board_state);
+}
+
+void evaluate_pawn_file_quality(int x_file,
+                                int y_rank,
+                                const Piece &pawn_piece,
+                                int &eval,
+                                const BoardState &board_state)
+{
   int direction;
   if (pawn_piece.piece_color == PieceColor::WHITE)
   {
@@ -113,30 +157,64 @@ void evaluate_pawn(int x_file,
   {
     direction = NEGATIVE_DIRECTION;
   }
-  // Check one square in front of the pawn.
-  for (int rank_count = 1; rank_count <= MAX_DOUBLE_PAWN_SQUARES_TO_CHECK;
-       ++rank_count)
+
+  bool is_passed_pawn = true;
+  for (int current_rank = y_rank + direction;
+       current_rank <= Y_MAX && current_rank >= Y_MIN; ++current_rank)
   {
-    if (y_rank + (direction * rank_count) >= Y_MIN &&
-        y_rank + (direction * rank_count) <= Y_MAX)
+    Piece &piece = *board_state.chess_board[x_file][current_rank];
+
+    // Decrease evaluation if there is a pawn in front of the pawn. This
+    // will also cover doubled pawns.
+    if (piece.piece_type == PieceType::PAWN)
     {
-      Piece &piece =
-          *board_state.chess_board[x_file][y_rank + (direction * rank_count)];
-      if (piece.piece_type == PieceType::PAWN &&
-          piece.piece_color == pawn_piece.piece_color)
+      eval -= EXTREMELY_SMALL_EVAL_VALUE;
+    }
+
+    // If there is an enemy pawn in front of the pawn, it is not a passed
+    // pawn.
+    if (is_passed_pawn && piece.piece_color != pawn_piece.piece_color)
+    {
+      is_passed_pawn = false;
+    }
+
+    if (!is_passed_pawn)
+    {
+      // If we know it is not a passed pawn, we no longer need to check for side
+      // pawns.
+      continue;
+    }
+
+    // Check side pawns. If there are any, it is not a passed pawn.
+    for (int side_count = -1; side_count <= 1; side_count += 2)
+    {
+      // Check if the side pawn is in bounds.
+      if (x_file + side_count < X_MIN || x_file + side_count > X_MAX)
       {
-        // Decrease evaluation if there is a pawn in front of the pawn.
-        eval -= MEDIUM_EVAL_VALUE;
+        continue;
+      }
+
+      Piece &side_piece =
+          *board_state.chess_board[x_file + side_count][current_rank];
+      if (side_piece.piece_type == PieceType::PAWN &&
+          side_piece.piece_color != pawn_piece.piece_color)
+      {
+        is_passed_pawn = false;
       }
     }
   }
+
+  if (is_passed_pawn)
+  {
+    eval += MEDIUM_EVAL_VALUE;
+  }
 }
 
-void evaluate_knight(int x_file,
-                     int y_rank,
-                     Piece &knight_piece,
+void evaluate_knight(const int x_file,
+                     const int y_rank,
+                     const Piece &knight_piece,
                      int &eval,
-                     BoardState &board_state)
+                     const BoardState &board_state)
 {
   // Piece value.
   eval += KNIGHT_VALUE;
@@ -144,37 +222,82 @@ void evaluate_knight(int x_file,
   // Less value if knight has moved. Development is important.
   if (!knight_piece.piece_has_moved)
   {
-    eval -= LARGE_EVAL_VALUE;
+    eval -= MEDIUM_EVAL_VALUE;
   }
 
-  // The more moves a knight has, the better.
-  int new_x;
-  int new_y;
-  for (const auto &move : KNIGHT_MOVES)
+  // Check how many attacks the knight has. The more attacks, the better.
+  for (const auto &direction : KNIGHT_MOVES)
   {
-    // Increase evaluation based on the number of moves.
-    new_x = x_file + move[0];
-    new_y = y_rank + move[1];
+    int new_x = x_file + direction[0];
+    int new_y = y_rank + direction[1];
 
-    // Check if within bounds.
+    // Check if still within bounds.
     if (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN && new_y <= Y_MAX)
     {
-      eval += VERY_SMALL_EVAL_VALUE;
+      eval += KNIGHT_POSITION_EVAL_MAP[new_y];
+      eval += KNIGHT_POSITION_EVAL_MAP[new_x];
     }
+    else
+    {
+      eval -= SMALL_EVAL_VALUE;
+    }
+  }
+
+  // The closer a knight is to the enemy king, the better.
+  // We check the knight's distance to the enemy king.
+  int enemy_king_x;
+  int enemy_king_y;
+  if (knight_piece.piece_color == PieceColor::WHITE)
+  {
+    enemy_king_x = board_state.black_king_x_file;
+    enemy_king_y = board_state.black_king_y_rank;
+  }
+  else
+  {
+    enemy_king_x = board_state.white_king_x_file;
+    enemy_king_y = board_state.white_king_y_rank;
+  }
+
+  // Check if the knight is within 3 squares of the enemy king. If it is, give
+  // it a bonus.
+  if (abs(x_file - enemy_king_x) <= 3 && abs(y_rank - enemy_king_y) <= 3)
+  {
+    eval += MEDIUM_EVAL_VALUE;
   }
 }
 
-void evaluate_bishop(int x_file,
-                     int y_rank,
-                     Piece &bishop_piece,
+void evaluate_bishop(const int x_file,
+                     const int y_rank,
+                     const Piece &bishop_piece,
                      int &eval,
-                     BoardState &board_state)
+                     const BoardState &board_state)
 {
   // Piece value.
   eval += BISHOP_VALUE;
   if (!bishop_piece.piece_has_moved)
   {
-    eval -= LARGE_EVAL_VALUE;
+    eval -= MEDIUM_EVAL_VALUE;
+  }
+
+  // We don't generally want bishops on the back rank. We want them to be
+  // developed. So we give a penalty if they are on the back rank. But not in
+  // the end game.
+  if (!board_state.is_end_game)
+  {
+    if (bishop_piece.piece_color == PieceColor::WHITE)
+    {
+      if (y_rank == Y1_RANK)
+      {
+        eval -= LARGE_EVAL_VALUE;
+      }
+    }
+    else
+    {
+      if (y_rank == Y8_RANK)
+      {
+        eval -= LARGE_EVAL_VALUE;
+      }
+    }
   }
 
   // If bishop is blocking a pawn, decrease evaluation.
@@ -215,7 +338,7 @@ void evaluate_bishop(int x_file,
         break;
       }
 
-      eval += VERY_SMALL_EVAL_VALUE;
+      eval += EXTREMELY_SMALL_EVAL_VALUE;
 
       new_x += direction[0];
       new_y += direction[1];
@@ -223,11 +346,11 @@ void evaluate_bishop(int x_file,
   }
 }
 
-void evaluate_rook(int x_file,
-                   int y_rank,
-                   Piece &rook_piece,
+void evaluate_rook(const int x_file,
+                   const int y_rank,
+                   const Piece &rook_piece,
                    int &eval,
-                   BoardState &board_state)
+                   const BoardState &board_state)
 {
   // Piece value.
   eval += ROOK_VALUE;
@@ -253,7 +376,7 @@ void evaluate_rook(int x_file,
           break;
         }
 
-        eval += VERY_SMALL_EVAL_VALUE;
+        eval += EXTREMELY_SMALL_EVAL_VALUE;
 
         new_x += direction[0];
         new_y += direction[1];
@@ -262,11 +385,11 @@ void evaluate_rook(int x_file,
   }
 }
 
-void evaluate_queen(int x_file,
-                    int y_rank,
-                    Piece &queen_piece,
+void evaluate_queen(const int x_file,
+                    const int y_rank,
+                    const Piece &queen_piece,
                     int &eval,
-                    BoardState &board_state)
+                    const BoardState &board_state)
 {
   // Piece value.
   eval += QUEEN_VALUE;
@@ -288,19 +411,40 @@ void evaluate_queen(int x_file,
         break;
       }
 
-      eval += VERY_SMALL_EVAL_VALUE;
+      eval += EXTREMELY_SMALL_EVAL_VALUE;
 
       new_x += direction[0];
       new_y += direction[1];
     }
   }
+  // The closer a queen is to the enemy king, the better.
+  // We check the queen's distance to the enemy king.
+  int enemy_king_x;
+  int enemy_king_y;
+  if (queen_piece.piece_color == PieceColor::WHITE)
+  {
+    enemy_king_x = board_state.black_king_x_file;
+    enemy_king_y = board_state.black_king_y_rank;
+  }
+  else
+  {
+    enemy_king_x = board_state.white_king_x_file;
+    enemy_king_y = board_state.white_king_y_rank;
+  }
+
+  // Check if the queen is within 3 squares of the enemy king. If it is, give
+  // it a bonus.
+  if (abs(x_file - enemy_king_x) <= 3 && abs(y_rank - enemy_king_y) <= 3)
+  {
+    eval += MEDIUM_EVAL_VALUE;
+  }
 }
 
-void evaluate_king(int x_file,
-                   int y_rank,
-                   Piece &king_piece,
+void evaluate_king(const int x_file,
+                   const int y_rank,
+                   const Piece &king_piece,
                    int &eval,
-                   BoardState &board_state)
+                   const BoardState &board_state)
 {
   // Piece value.
   eval += KING_VALUE;
@@ -314,7 +458,7 @@ void evaluate_king(int x_file,
         (king_piece.piece_color == PieceColor::BLACK &&
          board_state.black_has_castled))
     {
-      eval += LARGE_EVAL_VALUE;
+      eval += MEDIUM_EVAL_VALUE;
     }
   }
 
@@ -329,11 +473,11 @@ void evaluate_king(int x_file,
   }
 }
 
-void evaluate_king_safety(int x_file,
-                          int y_rank,
-                          Piece &king_piece,
+void evaluate_king_safety(const int x_file,
+                          const int y_rank,
+                          const Piece &king_piece,
                           int &eval,
-                          BoardState &board_state)
+                          const BoardState &board_state)
 {
   {
     int new_x;

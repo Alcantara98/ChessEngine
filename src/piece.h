@@ -59,6 +59,12 @@ struct Piece
   /// @brief Whether the piece has moved.
   bool piece_has_moved;
 
+  /// @brief The x coordinate of the piece on the chess board.
+  int x_file;
+
+  /// @brief The y coordinate of the piece on the chess board.
+  int y_rank;
+
   // CONSTRUCTORS
 
   /**
@@ -69,7 +75,9 @@ struct Piece
    * @param piece_has_moved Whether the piece has moved or not (default is
    * false).
    */
-  Piece(PieceType piece_type = PieceType::EMPTY,
+  Piece(int x_file,
+        int y_rank,
+        PieceType piece_type = PieceType::EMPTY,
         PieceColor piece_color = PieceColor::NONE,
         bool piece_has_moved = false);
 };

@@ -33,6 +33,8 @@
 
 # Folders
 build
+out
+.vs
 .vscode
 
 # Development scripts

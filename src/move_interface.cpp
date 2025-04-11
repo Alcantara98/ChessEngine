@@ -230,7 +230,7 @@ auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
   }
 
   // Check if move puts king in check.
-  if (game_board_state.move_leaves_king_in_check(move))
+  if (attack_check::move_leaves_king_in_check(game_board_state, move))
   {
     printf("Invalid Move - King is checked\n");
     return false;

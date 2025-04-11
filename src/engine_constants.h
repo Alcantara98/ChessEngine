@@ -65,16 +65,16 @@ const int DEFAULT_SEARCH_TIME_MS = 2000;
 const int MAX_SEARCH_TIME_MS = 600000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;
-const int MIN_ROOT_MOVE_PRUNING_DEPTH = 6;
+const int MIN_ROOT_MOVE_PRUNING_DEPTH = 8;
 const int ROOT_MOVE_PRUNING_INTERVAL = 2;
-const int MIN_SEARCH_THREADS = 8;
+const int MIN_SEARCH_THREADS = 12;
 const int POSSIBLE_MOVE_RESERVE_SIZE = 100;
 const int POSSIBLE_CAPTURE_MOVE_RESERVE_SIZE = 50;
 
 // PIECE VALUES
 const int PAWN_VALUE = 100;
 const int KNIGHT_VALUE = 320;
-const int BISHOP_VALUE = 330;
+const int BISHOP_VALUE = 340;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
 const int KING_VALUE = 20000;
@@ -90,6 +90,7 @@ const int MEDIUM_EVAL_VALUE = 20;
 const int LARGE_EVAL_VALUE = 40;
 const int VERY_LARGE_EVAL_VALUE = 80;
 const int MAX_DOUBLE_PAWN_SQUARES_TO_CHECK = 3;
+const int BISHOP_PAIR_COUNT = 2;
 
 // NULL MOVE CONSTANTS
 const int NULL_MOVE_REDUCTION = 2;
@@ -98,13 +99,16 @@ const int MIN_NULL_MOVE_ITERATION_DEPTH = 6;
 const int NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR = 6;
 
 // LATE MOVE REDUCTION CONSTANTS
-const int LATE_MOVE_REDUCTION = 2;
-const int EXTREME_LATE_MOVE_REDUCTION = 3;
 const int MIN_LMR_DEPTH = 3;
 const int MIN_LMR_ITERATION_DEPTH = 6;
 const int LMR_THRESHOLD = 3;
-const int EXTREME_LMR_THRESHOLD = 10;
-const int LMR_ADDITIONAL_DEPTH_DIVISOR = 6;
+const int EXTREME_LMR_THRESHOLD = 8;
+const int LATE_MOVE_REDUCTION = 1;
+const int LMR_EXTREME_REDUCTION_DEPTH_DIVISOR = 3;
+
+// FUTILITY PRUNING CONSTANTS
+const int FUTILITY_PRUNING_FRONTIER_NODES_THRESHOLD = 3;
+const int MIN_FUTILITY_PRUNING_ITERATION_DEPTH = 6;
 
 // GAME STATE CONSTANTS
 const int INITIAL_MAIN_PIECES_COUNT = 12;
@@ -135,11 +139,11 @@ const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 4> ASPIRATION_WINDOWS = {
-    {1, (PAWN_VALUE / 2) + 1, (PAWN_VALUE * 2) + 1, INF}};
+    {PAWN_VALUE / 2, PAWN_VALUE * 2, INF}};
 
 // POSITION EVALUATION MAP FOR PIECES
-const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {
-    {5, 10, 20, 30, 30, 20, 10, 5}};
+const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {{0, 4, 8, 10, 10, 8, 4, 0}};
+const std::array<int, 8> KNIGHT_POSITION_EVAL_MAP = {{1, 3, 4, 5, 5, 4, 3, 1}};
 
 const std::array<int, 8> KING_POSITION_EVAL_MAP = {{5, 20, 0, 0, 0, 0, 20, 5}};
 

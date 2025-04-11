@@ -1,6 +1,7 @@
 #ifndef SEARCH_ENGINE_H
 #define SEARCH_ENGINE_H
 
+#include "attack_check.h"
 #include "board_state.h"
 #include "move_generator.h"
 #include "move_interface.h"
@@ -109,30 +110,6 @@ public:
    * @brief Checks if the engine is currently searching.
    */
   auto engine_is_searching() -> bool;
-
-  /**
-   * @brief Checks if the current player is in checkmate.
-   *
-   * @note If the king is checked and all possible moves result in a checked
-   * king, it is a checkmate.
-   *
-   * @param board_state BoardState object to check.
-   *
-   * @return True if the current player is in checkmate, false otherwise.
-   */
-  static auto is_checkmate(BoardState &board_state) -> bool;
-
-  /**
-   * @brief Checks if the current player is in stalemate.
-   *
-   * @note If the king is not checked and all possible moves result in a checked
-   * king, it is a stalemate.
-   *
-   * @param board_state BoardState object to check.
-   *
-   * @return True if the current player is in stalemate, false otherwise.
-   */
-  static auto is_stalemate(BoardState &board_state) -> bool;
 
   /**
    * @brief Clears the transposition table.
@@ -293,13 +270,13 @@ private:
    * where the search tree ends and the evaluation of the board state is
    * performed.
    *
+   * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
-   * @param board_state BoardState object to search.
    *
    * @return Evaluation score of the leaf node.
    */
-  auto evaluate_leaf_node(int alpha, int beta, BoardState &board_state) -> int;
+  auto evaluate_leaf_node(BoardState &board_state, int alpha, int beta) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -535,12 +512,45 @@ private:
                                const int &alpha) -> bool;
 
   /**
+   * @brief Checks if the given move can be futility pruned.
+   *
+   * @details Futility pruning is a technique used to reduce the number of
+   * nodes searched in the minimax algorithm. It is based on the idea that if
+   * the evaluation of a move is so low that it is unlikely to be the best move,
+   * then we can prune it from the search tree.
+   *
+   * @note This is similar to Delta pruning. Futility pruning is used during the
+   * main search and for non-capture moves. Delta pruning is used during
+   * quiescence search and for capture moves.
+   *
+   * @param board_state BoardState object to search.
+   * @param move Move to check.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param depth Current depth of search.
+   *
+   * @return True if the move can be futility pruned, false otherwise.
+   */
+  auto futility_prune_move(BoardState &board_state,
+                           const Move &move,
+                           const int &alpha,
+                           const int &depth) -> bool;
+
+  /**
    * @brief Updates the history table.
    *
    * @param move Move to update history table with.
+   * @param eval Evaluation score of the move.
    * @param depth Current depth of search for weighting the move's score.
+   * @param move_index Index of the move in the history table.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    */
-  void udpate_history_table(const Move &move, int &depth);
+  void udpate_history_table(const Move &move,
+                            const int &eval,
+                            const int &depth,
+                            const int &move_index,
+                            const int &alpha,
+                            const int &beta);
 
   /**
    * @brief Decays the history table.

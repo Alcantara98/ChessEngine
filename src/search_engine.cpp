@@ -61,59 +61,6 @@ auto SearchEngine::engine_is_searching() -> bool
   return running_search_flag && !engine_is_pondering;
 }
 
-auto SearchEngine::is_checkmate(BoardState &board_state) -> bool
-{
-  parts::PieceColor current_color = board_state.color_to_move;
-  std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(board_state);
-
-  // King needs to be in check to be checkmate.
-  if (!board_state.king_is_checked(current_color))
-  {
-    return false;
-  }
-
-  // Check if all possible moves result in a checked king.
-  for (parts::Move move : possible_moves)
-  {
-    board_state.apply_move(move);
-    if (!board_state.king_is_checked(current_color))
-    {
-      board_state.undo_move();
-      return false;
-    }
-    board_state.undo_move();
-  }
-  return true;
-}
-
-auto SearchEngine::is_stalemate(BoardState &board_state) -> bool
-{
-  parts::PieceColor current_color = board_state.color_to_move;
-  std::vector<parts::Move> possible_moves =
-      parts::move_generator::calculate_possible_moves(board_state);
-
-  // King cannot be in check to be a stalemate.
-  if (board_state.king_is_checked(current_color))
-  {
-    return false;
-  }
-
-  // If king is not in check, and all possible moves result in a checked king,
-  // it is a stalemate.
-  for (parts::Move move : possible_moves)
-  {
-    board_state.apply_move(move);
-    if (!board_state.king_is_checked(current_color))
-    {
-      board_state.undo_move();
-      return false;
-    }
-    board_state.undo_move();
-  }
-  return true;
-}
-
 void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
 
 // PRIVATE FUNCTIONS
@@ -141,7 +88,8 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   std::vector<std::pair<Move, int>> move_scores_filtered;
   for (auto move_score : move_scores)
   {
-    if (!game_board_state.move_leaves_king_in_check(move_score.first))
+    if (!attack_check::move_leaves_king_in_check(game_board_state,
+                                                 move_score.first))
     {
       move_scores_filtered.push_back(move_score);
     }
@@ -357,7 +305,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // infinity as all other windows would fail high or low.
     if (std::abs(eval) > INF_MINUS_1000 || ASPIRATION_WINDOWS[index] == INF)
     {
-      alpha = -INF;
+      alpha = best_eval_of_search_iteration;
       beta = INF;
     }
     else if (index == 0)
@@ -377,7 +325,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
         alpha = eval - ASPIRATION_WINDOWS[index];
       }
 
-      if (best_eval_of_search_iteration > alpha)
+      if (best_eval_of_search_iteration > alpha && beta != INF)
       {
         alpha = best_eval_of_search_iteration;
         beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
@@ -388,11 +336,6 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
                                       false, false, false);
-
-    if (eval <= alpha && best_eval_of_search_iteration.load() > alpha)
-    {
-      break;
-    }
 
     if (eval > best_eval_of_search_iteration && eval > alpha)
     {
@@ -514,7 +457,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
-    return evaluate_leaf_node(alpha, beta, board_state);
+    return evaluate_leaf_node(board_state, alpha, beta);
   }
 
   // NULL MOVE PRUNING HEURISTIC
@@ -526,7 +469,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       max_iterative_search_depth > MIN_NULL_MOVE_ITERATION_DEPTH &&
       (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
       !board_state.is_end_game &&
-      !board_state.king_is_checked(board_state.color_to_move))
+      !attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
     if (do_null_move_search(board_state, alpha, beta, depth, eval, is_lmr_line))
     {
@@ -575,33 +518,24 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   return max_eval;
 }
 
-auto SearchEngine::evaluate_leaf_node(int alpha,
-                                      int beta,
-                                      BoardState &board_state) -> int
+auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
+                                      int alpha,
+                                      int beta) -> int
 {
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  int eval = position_evaluator::evaluate_position(board_state);
-
-  // FUTILITY PRUNING
-  // Futitliy pruning is a heuristic that stops searching a branch if the
-  // evaluation of the leaf node is so bad that it is not worth searching
-  // further.
-  // If current eval + the value of a pawn is less than alpha, we
-  // return the eval.
-  // Do not apply futility pruning if the game is in the end game, the previous
-  // move was a capture move, and if the king is in check. Only apply
-  // futility pruning in quiet positions.
-  if (!board_state.is_end_game &&
-      board_state.previous_move_stack.top().captured_piece == nullptr &&
-      (eval + PAWN_VALUE) < alpha &&
-      !board_state.king_is_checked(PieceColor::BLACK) &&
-      !board_state.king_is_checked(PieceColor::WHITE))
+  if (board_state.is_end_game ||
+      board_state.previous_move_stack.top().captured_piece != nullptr ||
+      board_state.previous_move_stack.top().promotion_piece_type !=
+          PieceType::EMPTY ||
+      attack_check::king_is_checked(board_state, PieceColor::BLACK) ||
+      attack_check::king_is_checked(board_state, PieceColor::WHITE))
   {
-    return eval;
+    return quiescence_search(alpha, beta, board_state);
   }
-  return quiescence_search(alpha, beta, board_state);
+
+  return position_evaluator::evaluate_position(board_state);
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -633,6 +567,13 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       return;
     }
 
+    if (move_index != 0 &&
+        futility_prune_move(board_state, possible_moves[move_index], alpha,
+                            depth))
+    {
+      continue;
+    }
+
     board_state.apply_move(possible_moves[move_index]);
 
     run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
@@ -649,9 +590,11 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     max_eval = std::max(eval, max_eval);
     alpha = std::max(eval, alpha);
 
+    udpate_history_table(possible_moves[move_index], eval, depth, move_index,
+                         alpha, beta);
+
     if (alpha >= beta)
     {
-      udpate_history_table(possible_moves[move_index], depth);
       break;
     }
   }
@@ -684,20 +627,18 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
     bool make_late_move_reduction_line = false;
     if (max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
         (max_iterative_search_depth - depth) >= MIN_LMR_DEPTH && !is_lmr_line &&
-        !is_null_move_line)
+        !is_null_move_line &&
+        board_state.previous_move_stack.top().promotion_piece_type ==
+            PieceType::EMPTY)
     {
       make_late_move_reduction_line = true;
       if (move_index > LMR_THRESHOLD)
       {
-        new_search_depth -=
-            LATE_MOVE_REDUCTION +
-            (max_iterative_search_depth / LMR_ADDITIONAL_DEPTH_DIVISOR);
+        new_search_depth -= LATE_MOVE_REDUCTION;
       }
       else if (move_index > EXTREME_LMR_THRESHOLD)
       {
-        new_search_depth -=
-            EXTREME_LATE_MOVE_REDUCTION +
-            (max_iterative_search_depth / LMR_ADDITIONAL_DEPTH_DIVISOR);
+        new_search_depth -= depth / LMR_EXTREME_REDUCTION_DEPTH_DIVISOR;
       }
     }
 
@@ -794,7 +735,7 @@ void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
   // Read note in function declaration for more details.
   if (eval < -INF_MINUS_1000)
   {
-    if (is_stalemate(board_state))
+    if (attack_check::is_stalemate(board_state))
     {
       eval = 0;
       return;
@@ -1052,9 +993,72 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
-void SearchEngine::udpate_history_table(const Move &move, int &depth)
+auto SearchEngine::futility_prune_move(BoardState &board_state,
+                                       const Move &move,
+                                       const int &alpha,
+                                       const int &depth) -> bool
 {
-  int move_value = depth * depth;
+  // Don't do this during end game since it will prune pawn pushes which seem to
+  // not do much, but are very critical in the end game.
+  if (board_state.is_end_game ||
+      depth > FUTILITY_PRUNING_FRONTIER_NODES_THRESHOLD ||
+      max_iterative_search_depth < MIN_FUTILITY_PRUNING_ITERATION_DEPTH ||
+      move.captured_piece != nullptr ||
+      move.promotion_piece_type != PieceType::EMPTY ||
+      attack_check::king_is_checked(board_state, board_state.color_to_move))
+  {
+    return false;
+  }
+
+  // Get static evaluation of the board state.
+  int eval = position_evaluator::evaluate_position(board_state);
+
+  // PAWN_VALUE * depth is the cutoff margin.
+  return (eval + (PAWN_VALUE * depth) < alpha);
+}
+
+void SearchEngine::udpate_history_table(const Move &move,
+                                        const int &eval,
+                                        const int &depth,
+                                        const int &move_index,
+                                        const int &alpha,
+                                        const int &beta)
+{
+  int move_value;
+
+  // Beta cutoff - really good move.
+  if (alpha >= beta)
+  {
+    // If PV node, we only increase by depth * 2 so we don't overfit and become
+    // too biased to certain moves.
+    if (move_index == 0)
+    {
+      move_value = depth * 2;
+    }
+    else
+    {
+      move_value = depth * depth;
+    }
+  }
+  // Move improved alpha - Good Move.
+  else if (eval > alpha)
+  {
+    // If PV node, we only increase by depth / 2 so we don't overfit and become
+    // too biased to certain moves.
+    if (move_index == 0)
+    {
+      move_value = depth / 2;
+    }
+    else
+    {
+      move_value = depth;
+    }
+  }
+  // Move did not improve alpha - bad move.
+  else
+  {
+    move_value = -depth;
+  }
 
   const int &color = static_cast<int>(move.moving_piece->piece_color);
   const int &piece_type = static_cast<int>(move.moving_piece->piece_type);

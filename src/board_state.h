@@ -41,6 +41,9 @@ public:
   /// @brief Represents which color is to move.
   PieceColor color_to_move = PieceColor::WHITE;
 
+  /// @brief A vector to store all pieces on the board.
+  std::vector<Piece *> piece_list;
+
   // EVALUATION HELPER PROPERTIES
 
   /// @brief Flag to check if the white king is on the board.
@@ -88,6 +91,13 @@ public:
 
   /**
    * @brief Copy constructor to copy another board state.
+   *
+   * @note Ensure the new board state is an exact copy of the other board state.
+   *
+   * @note Keeping the piece_list order the same is important as it is used in
+   * move_generator functions. Order of moves generated must be the same for the
+   * same chess_board. This is because we rely on the move index to determine
+   * the same move for identical chess_boards.
    *
    * @param other The board state to copy.
    */
@@ -156,37 +166,6 @@ public:
   void undo_null_move();
 
   /**
-   * @brief Checks if the given square is attacked.
-   *
-   * @param x_file The x coordinate of the square (file).
-   * @param y_rank The y coordinate of the square (rank).
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked(int x_file,
-                          int y_rank,
-                          PieceColor color_being_attacked) -> bool;
-
-  /**
-   * @brief Checks if the king of the given color is in check.
-   *
-   * @param color_of_king The color of the king to check (WHITE or BLACK).
-   *
-   * @return True if the king is in check, false otherwise.
-   */
-  auto king_is_checked(PieceColor color_of_king) -> bool;
-
-  /**
-   * @brief Checks if the given move leaves the king in check.
-   *
-   * @param move The move to check.
-   *
-   * @return True if the move leaves the king in check, false otherwise.
-   */
-  auto move_leaves_king_in_check(Move &move) -> bool;
-
-  /**
    * @brief Clears all pieces from the chess board.
    *
    * @details Also resets properties to null values since there are no pieces
@@ -251,6 +230,11 @@ public:
    */
   void is_end_game_check();
 
+  /**
+   * @brief Updates the pieces list with all pieces on the board.
+   */
+  void update_pieces_list();
+
 private:
   // PROPERTIES
 
@@ -263,8 +247,9 @@ private:
   /// @brief Zobrist key for the side to move.
   uint64_t zobrist_side_to_move;
 
-  /// @brief All empty squares point to the same Piece instance.
-  Piece empty_piece;
+  /// @brief All empty squares point to this Empty Piece instance.
+  Piece empty_piece =
+      Piece(-1, -1, PieceType ::EMPTY, PieceColor::WHITE, false);
 
   /// @brief Map to keep track of visited states. This is used to detect three
   /// fold repetition. Game is drawn if the same state is repeated three times.
@@ -295,70 +280,6 @@ private:
    * @return The Zobrist hash value.
    */
   [[nodiscard]] auto compute_zobrist_hash() const -> uint64_t;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a pawn.
-   *
-   * @param x_file The x coordinate of the pawn.
-   * @param y_rank The y coordinate of the pawn.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_pawn(int &x_file,
-                                  int &y_rank,
-                                  PieceColor &color_being_attacked) -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a knight.
-   *
-   * @param x_file The x coordinate of the knight.
-   * @param y_rank The y coordinate of the knight.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_knight(int &x_file,
-                                    int &y_rank,
-                                    PieceColor &color_being_attacked) -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a rook or queen.
-   *
-   * @param x_file The x coordinate of the rook or queen.
-   * @param y_rank The y coordinate of the rook or queen.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_rook_or_queen(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a bishop or
-   * queen.
-   *
-   * @param x_file The x coordinate of the bishop or queen.
-   * @param y_rank The y coordinate of the bishop or queen.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_bishop_or_queen(
-      int &x_file, int &y_rank, PieceColor &color_being_attacked) -> bool;
-
-  /**
-   * @brief Helper function to check if a square is attacked by a king.
-   *
-   * @param x_file The x coordinate of the king.
-   * @param y_rank The y coordinate of the king.
-   * @param color_being_attacked The color of the pieces being attacked.
-   *
-   * @return True if the square is attacked, false otherwise.
-   */
-  auto square_is_attacked_by_king(int &x_file,
-                                  int &y_rank,
-                                  PieceColor &color_being_attacked) -> bool;
 
   /**
    * @brief Manages the piece counts after a move.
