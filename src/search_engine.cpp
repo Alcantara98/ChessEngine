@@ -534,10 +534,8 @@ auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
   {
     return quiescence_search(alpha, beta, board_state);
   }
-  else
-  {
-    return position_evaluator::evaluate_position(board_state);
-  }
+
+  return position_evaluator::evaluate_position(board_state);
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
