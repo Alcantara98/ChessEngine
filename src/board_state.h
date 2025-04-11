@@ -92,6 +92,13 @@ public:
   /**
    * @brief Copy constructor to copy another board state.
    *
+   * @note Ensure the new board state is an exact copy of the other board state.
+   *
+   * @note Keeping the piece_list order the same is important as it is used in
+   * move_generator functions. Order of moves generated must be the same for the
+   * same chess_board. This is because we rely on the move index to determine
+   * the same move for identical chess_boards.
+   *
    * @param other The board state to copy.
    */
   BoardState(const BoardState &other);
