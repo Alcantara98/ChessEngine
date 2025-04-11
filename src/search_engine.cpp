@@ -525,8 +525,6 @@ auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  int eval = position_evaluator::evaluate_position(board_state);
-
   if (board_state.is_end_game ||
       board_state.previous_move_stack.top().captured_piece != nullptr ||
       board_state.previous_move_stack.top().promotion_piece_type !=
@@ -536,7 +534,10 @@ auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
   {
     return quiescence_search(alpha, beta, board_state);
   }
-  return eval;
+  else
+  {
+    return position_evaluator::evaluate_position(board_state);
+  }
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)

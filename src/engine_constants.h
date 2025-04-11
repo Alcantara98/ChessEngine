@@ -144,7 +144,7 @@ const std::array<int, 4> ASPIRATION_WINDOWS = {
 // POSITION EVALUATION MAP FOR PIECES
 const std::array<int, 8> PAWN_POSITION_EVAL_MAP = {{0, 4, 8, 10, 10, 8, 4, 0}};
 const std::array<int, 8> KNIGHT_POSITION_EVAL_MAP = {
-    {3, 5, 10, 15, 15, 10, 5, 3}};
+    {1, 3, 4, 5, 5, 4, 3, 1}};
 
 const std::array<int, 8> KING_POSITION_EVAL_MAP = {{5, 20, 0, 0, 0, 0, 20, 5}};
 

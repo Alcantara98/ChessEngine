@@ -193,13 +193,8 @@ void BoardState::apply_move(Move &move)
 {
   if (move.capture_is_en_passant)
   {
-    // Remove captured pawn.
-    int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
-                             ? move.to_y - 1
-                             : move.to_y + 1;
-
     // Clear old square (point to empty_piece).
-    chess_board[move.to_x][captured_y_pos] = &empty_piece;
+    chess_board[move.to_x][move.from_y] = &empty_piece;
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
   {
@@ -233,15 +228,17 @@ void BoardState::apply_move(Move &move)
       {
       case 2:
         // King Side Castle.
-        chess_board[XH_FILE][move.to_y]->piece_has_moved = true;
         std::swap(chess_board[XH_FILE][move.to_y],
                   chess_board[XF_FILE][move.to_y]);
+        chess_board[XF_FILE][move.to_y]->piece_has_moved = true;
+        chess_board[XF_FILE][move.to_y]->x_file = XF_FILE;
         break;
       case -2:
         // Queen Side Castle.
-        chess_board[XA_FILE][move.to_y]->piece_has_moved = true;
         std::swap(chess_board[XA_FILE][move.to_y],
                   chess_board[XD_FILE][move.to_y]);
+        chess_board[XD_FILE][move.to_y]->piece_has_moved = true;
+        chess_board[XD_FILE][move.to_y]->x_file = XD_FILE;
         break;
       default:
         break;
@@ -303,16 +300,12 @@ void BoardState::undo_move()
   Move &move = previous_move_stack.top();
   if (move.capture_is_en_passant)
   {
-    int captured_y_pos = (move.moving_piece->piece_color == PieceColor::WHITE)
-                             ? move.to_y - 1
-                             : move.to_y + 1;
-
     // Update position of captured piece.
     move.captured_piece->x_file = move.to_x;
-    move.captured_piece->y_rank = captured_y_pos;
+    move.captured_piece->y_rank = move.from_y;
 
     // Add captured pawn.
-    chess_board[move.to_x][captured_y_pos] = move.captured_piece;
+    chess_board[move.to_x][move.from_y] = move.captured_piece;
   }
   else if (move.moving_piece->piece_type == PieceType::KING)
   {
@@ -349,12 +342,14 @@ void BoardState::undo_move()
         std::swap(chess_board[XF_FILE][move.to_y],
                   chess_board[XH_FILE][move.to_y]);
         chess_board[XH_FILE][move.to_y]->piece_has_moved = false;
+        chess_board[XH_FILE][move.to_y]->x_file = XH_FILE;
         break;
       case -2:
         // Queen Side Castle.
         std::swap(chess_board[XD_FILE][move.to_y],
                   chess_board[XA_FILE][move.to_y]);
         chess_board[XA_FILE][move.to_y]->piece_has_moved = false;
+        chess_board[XA_FILE][move.to_y]->x_file = XA_FILE;
         break;
       default:
         break;
@@ -386,6 +381,10 @@ void BoardState::undo_move()
   {
     move.moving_piece->piece_has_moved = false;
   }
+
+  // Update position of moving piece.
+  move.moving_piece->x_file = move.from_x;
+  move.moving_piece->y_rank = move.from_y;
 
   // Update move color, it is now the other player's turn.
   color_to_move = (color_to_move == PieceColor::WHITE) ? PieceColor::BLACK
