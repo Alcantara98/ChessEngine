@@ -222,7 +222,7 @@ void evaluate_knight(const int x_file,
   // Less value if knight has moved. Development is important.
   if (!knight_piece.piece_has_moved)
   {
-    eval -= LARGE_EVAL_VALUE;
+    eval -= MEDIUM_EVAL_VALUE;
   }
 
   // Check how many attacks the knight has. The more attacks, the better.
@@ -276,7 +276,7 @@ void evaluate_bishop(const int x_file,
   eval += BISHOP_VALUE;
   if (!bishop_piece.piece_has_moved)
   {
-    eval -= LARGE_EVAL_VALUE;
+    eval -= MEDIUM_EVAL_VALUE;
   }
 
   // We don't generally want bishops on the back rank. We want them to be
@@ -458,7 +458,7 @@ void evaluate_king(const int x_file,
         (king_piece.piece_color == PieceColor::BLACK &&
          board_state.black_has_castled))
     {
-      eval += LARGE_EVAL_VALUE;
+      eval += MEDIUM_EVAL_VALUE;
     }
   }
 
