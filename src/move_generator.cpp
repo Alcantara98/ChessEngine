@@ -29,7 +29,7 @@ auto calculate_possible_moves(BoardState &board_state,
     int x_file = current_piece->x_file;
     int y_rank = current_piece->y_rank;
 
-    if(board_state.chess_board[x_file][y_rank] != current_piece)
+    if (board_state.chess_board[x_file][y_rank] != current_piece)
     {
       printf("Piece pointer mismatch at (%d, %d)\n", x_file, y_rank);
       continue;
