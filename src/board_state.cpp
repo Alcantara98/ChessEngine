@@ -47,7 +47,15 @@ BoardState::BoardState(const BoardState &other)
     }
   }
   // Update pointers in piece_list to point to the new pieces.
-  update_pieces_list();
+  for (Piece *piece_pointer : other.piece_list)
+  {
+    if(piece_pointer->x_file != -1 && piece_pointer->y_rank != -1)
+    {
+      piece_list.push_back(chess_board[piece_pointer->x_file][piece_pointer->y_rank]);
+    }else{
+      piece_list.push_back(new Piece(*piece_pointer));
+    }
+  }
 }
 
 BoardState::~BoardState() { clear_pointers(); }
