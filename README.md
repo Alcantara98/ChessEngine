@@ -29,17 +29,23 @@
   - Branching Factor: `9-10`
   - Speed: `8000-9000 kN/s`
 
-### **v1.4.0** (Coming Soon)
+### **v1.4.0**
 - Aspiration Window
 - Move-Ordering - Capture Moves First
+- MVV-LVV Move Ordering
+- History Heuristic
+- Late Move Reduction
+- Quiescence Search
+- Futility Pruning
+- Delta Pruning
 - Pondering - Search during Player's Turn
 - **Performance**:
-  - Branching Factor: `7-8`
-  - Speed: `8000-9000 kN/s`
+  - Branching Factor: `4-5`
+  - Speed: `2000-5000 kN/s`
 
-**Current Branching Factor**: `9-10` ((branching_factor)^(search_depth) = leaf_nodes_visited)
+**Current Branching Factor**: `4-5` ((branching_factor)^(search_depth) = leaf_nodes_visited)
 <br/>
-**Current Performance**: `8000-9000 kN/s` (8-9 million nodes per second)
+**Current Performance**: `4000-5000 kN/s` (4-5 million nodes per second)
 
 ---
 
