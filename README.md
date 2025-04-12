@@ -5,6 +5,7 @@
 
 ## **Search Engine Features** 🔭
 
+#### Speed is measured using an M2 Macbook Air during the Middle Game.
 ### **v1.0.0** 🛠️
 - ~~Min Max Search~~ (deprecated by NegaMax)
 - Alpha Beta Pruning
@@ -41,7 +42,7 @@
 - Pondering - Search during Player's Turn
 - **Performance**:
   - Branching Factor: `4-5`
-  - Speed: `2000-5000 kN/s`
+  - Speed: `4000-5000 kN/s`
 
 **Current Branching Factor**: `4-5` ((branching_factor)^(search_depth) = leaf_nodes_visited)
 <br/>
