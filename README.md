@@ -96,7 +96,7 @@ I will not explain the rules of chess here. Learn how to play before continuing.
   ```bash
   cmake -DCMAKE_C_COMPILER="C:/path/to/compiler" -DCMAKE_CXX_COMPILER="C:/path/to/compiler++"
   ```
-- Use `clang-format` and `clang-tidy` for code formatting and static analysis. Install LLVM version 18.1.8. See here: [LLVM Project Releases](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8)
+- Use `clang-format` and `clang-tidy` for code formatting and static analysis. Project uses LLVM version 18.1.8. See here to install: [LLVM Project Releases](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8)
 
 ### **Hooks** 🔗
 
@@ -109,7 +109,7 @@ I will not explain the rules of chess here. Learn how to play before continuing.
 
 - Run on terminal:
   ```bash
-  clang-format -i src/*.cpp include/*.h
+  clang-format -i src/*.cpp src/*.h
   ```
 
 ### **Static Analysis** 🔍
@@ -117,13 +117,13 @@ I will not explain the rules of chess here. Learn how to play before continuing.
 - Run CMake on a build directory to create compile_commands.json.
 - Run on terminal:
   ```bash
-  clang-tidy --fix -p build/ src/*.cpp include/*.h
+  clang-tidy --fix -p build/ src/*.cpp src/*.h
   ```
 
 ### **CI/CD Jobs** ⚙️
 
 - **Linting**: Will use clang-format and clang-tidy, both at v18.1.8. This job must pass before a branch can be pushed to main.
-- **Build**: Will build the project using CMake. This job must pass before a branch can be pushed to main.
+- **Build**: Will build the project using CMake-MinGW-GCC/G++. This job must pass before a branch can be pushed to main.
 - **Artifact**: `chess_engine.exe` artifact will be uploaded when Build is run on the main branch.
 
 
