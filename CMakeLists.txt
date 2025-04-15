@@ -20,6 +20,13 @@ option(RELEASE "Enable Release Optimization" OFF)
 # Add source files
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
+# Static linking for MinGW/GCC
+if(MINGW)
+    message(STATUS "Using MinGW - enabling static linking")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++")
+    set(EXTRA_LIBS -lwinmm -lws2_32 -static-libgcc -static-libstdc++)
+endif()
+
 # If ASan is enabled, add the necessary flags
 if(ASAN)
     message(STATUS "Building with AddressSanitizer (ASan)")
@@ -41,5 +48,9 @@ if(RELEASE)
     endif()
 endif()
 
-# Create the executable
+# Create the executable and link libraries
 add_executable(chess_engine ${SOURCES})
+
+if(EXTRA_LIBS)
+    target_link_libraries(chess_engine ${EXTRA_LIBS})
+endif()
