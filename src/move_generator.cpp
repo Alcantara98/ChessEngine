@@ -349,7 +349,7 @@ void generate_castle_king_moves(BoardState &board_state,
     // Castle queen side.
     potential_rook_piece = chess_board[X_MIN][y_rank];
     if (can_castle(board_state, king_piece, y_rank, potential_rook_piece,
-                   {XB_FILE, XC_FILE, XD_FILE}))
+                   {XC_FILE, XD_FILE}))
     {
       possible_normal_moves.emplace_back(x_file, y_rank, x_file - 2, y_rank,
                                          king_piece, first_move, false);
