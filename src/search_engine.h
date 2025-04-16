@@ -232,8 +232,8 @@ private:
    *
    * @return Evaluation score from search branch.
    */
-  auto run_search_with_aspiration_window(BoardState &board_state,
-                                         int depth) -> int;
+  auto run_search_with_aspiration_window(BoardState &board_state, int depth)
+      -> int;
 
   /**
    * @brief Recursive function to evaluate the best move for the given board

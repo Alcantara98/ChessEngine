@@ -603,7 +603,7 @@ auto BoardState::compute_zobrist_hash() const -> uint64_t
       {
         int piece_index = static_cast<int>(piece->piece_type);
         int color_index = (piece->piece_color == PieceColor::WHITE) ? 0 : 1;
-        hash ^= zobrist_keys[y_rank * BOARD_WIDTH + x_file][piece_index]
+        hash ^= zobrist_keys[(y_rank * BOARD_WIDTH) + x_file][piece_index]
                             [color_index];
       }
     }

@@ -275,10 +275,8 @@ void SearchEngine::prune_root_moves(
     // number of moves in the move_scores vector.
     int number_of_moves_to_keep_searching = moves_to_search.size() / 2;
 
-    if (number_of_moves_to_keep_searching < MIN_SEARCH_THREADS)
-    {
-      number_of_moves_to_keep_searching = MIN_SEARCH_THREADS;
-    }
+    number_of_moves_to_keep_searching =
+        std::max(number_of_moves_to_keep_searching, MIN_SEARCH_THREADS);
 
     moves_to_search.clear();
 
@@ -447,6 +445,13 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
       {
         return tt_eval;
       }
+    }
+
+    if (!is_null_move_line &&
+        tt_entry_search_depth >= TT_FUTILITY_PRUNING_MIN_DEPTH &&
+        tt_eval + PAWN_VALUE < alpha)
+    {
+      return tt_eval;
     }
   }
 
