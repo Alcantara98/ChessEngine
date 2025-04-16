@@ -72,8 +72,8 @@ auto setup_custom_board(BoardState &board_state,
  *
  * @return True if the board was successfully initialized, false otherwise.
  */
-auto initialize_board(BoardState &board_state,
-                      std::string board_configuration) -> bool;
+auto initialize_board(BoardState &board_state, std::string board_configuration)
+    -> bool;
 
 /**
  * @brief Worker function for setup_custom_board. Creates the pieces and
@@ -102,9 +102,9 @@ static void create_pieces(BoardState &board_state,
  *
  * @return True if the castling rights string is valid, false otherwise.
  */
-static auto
-validate_castling_rights(BoardState &board_state,
-                         const std::string &castling_rights) -> bool;
+static auto validate_castling_rights(BoardState &board_state,
+                                     const std::string &castling_rights)
+    -> bool;
 
 /**
  * @brief Validates the white king side castle.
@@ -154,9 +154,9 @@ static auto validate_black_queen_side_castle(BoardState &board_state) -> bool;
  * @return True if the en passant target square string is valid, false
  * otherwise.
  */
-static auto
-validate_en_passant_target(BoardState &board_state,
-                           const std::string &en_passant_target) -> bool;
+static auto validate_en_passant_target(BoardState &board_state,
+                                       const std::string &en_passant_target)
+    -> bool;
 
 } // namespace engine::parts::fen_interface
 

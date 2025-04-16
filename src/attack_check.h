@@ -77,11 +77,11 @@ auto move_leaves_king_in_check(BoardState &board_state, Move &move) -> bool;
  *
  * @return True if the square is attacked, false otherwise.
  */
-static auto
-square_is_attacked_by_pawn(BoardState &board_state,
-                           int &x_file,
-                           int &y_rank,
-                           PieceColor &color_being_attacked) -> bool;
+static auto square_is_attacked_by_pawn(BoardState &board_state,
+                                       int &x_file,
+                                       int &y_rank,
+                                       PieceColor &color_being_attacked)
+    -> bool;
 
 /**
  * @brief Helper function to check if a square is attacked by a knight.
@@ -93,11 +93,11 @@ square_is_attacked_by_pawn(BoardState &board_state,
  *
  * @return True if the square is attacked, false otherwise.
  */
-static auto
-square_is_attacked_by_knight(BoardState &board_state,
-                             int &x_file,
-                             int &y_rank,
-                             PieceColor &color_being_attacked) -> bool;
+static auto square_is_attacked_by_knight(BoardState &board_state,
+                                         int &x_file,
+                                         int &y_rank,
+                                         PieceColor &color_being_attacked)
+    -> bool;
 
 /**
  * @brief Helper function to check if a square is attacked by a rook or queen.
@@ -142,11 +142,11 @@ square_is_attacked_by_bishop_or_queen(BoardState &board_state,
  *
  * @return True if the square is attacked, false otherwise.
  */
-static auto
-square_is_attacked_by_king(BoardState &board_state,
-                           int &x_file,
-                           int &y_rank,
-                           PieceColor &color_being_attacked) -> bool;
+static auto square_is_attacked_by_king(BoardState &board_state,
+                                       int &x_file,
+                                       int &y_rank,
+                                       PieceColor &color_being_attacked)
+    -> bool;
 } // namespace engine::parts::attack_check
 
 #endif // ATTACK_CHECK_H

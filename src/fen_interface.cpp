@@ -53,8 +53,8 @@ auto setup_custom_board(BoardState &board_state,
   return true;
 }
 
-auto initialize_board(BoardState &board_state,
-                      std::string board_configuration) -> bool
+auto initialize_board(BoardState &board_state, std::string board_configuration)
+    -> bool
 {
   // Set all squares to empty and set properties to null values.
   board_state.clear_chess_board();

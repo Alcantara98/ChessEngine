@@ -174,8 +174,8 @@ private:
    *
    * @return Valid integer input.
    */
-  auto
-  get_valid_int_input(const std::string &user_message, int min, int max) -> int;
+  auto get_valid_int_input(const std::string &user_message, int min, int max)
+      -> int;
 
   /**
    * @brief Gets a valid character input from the user.
