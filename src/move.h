@@ -45,6 +45,9 @@ struct Move
   /// @note This is used to identify the best move in the possible moves list.
   int list_index = 0;
 
+  /// @brief The score of the move in the history table.
+  int history_table_score = 0;
+
   // CONSTRUCTORS
 
   /**
