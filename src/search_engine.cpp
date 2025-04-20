@@ -630,20 +630,22 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
 
     int new_search_depth = depth - 1;
     bool make_late_move_reduction_line = false;
-    if (max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
+    if (move_index > LMR_THRESHOLD &&
+        max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
         (max_iterative_search_depth - depth) >= MIN_LMR_DEPTH && !is_lmr_line &&
         !is_null_move_line &&
         board_state.previous_move_stack.top().promotion_piece_type ==
             PieceType::EMPTY)
     {
       make_late_move_reduction_line = true;
-      if (move_index > LMR_THRESHOLD)
+      new_search_depth -= LATE_MOVE_REDUCTION;
+
+      if (move_index > EXTREME_LMR_THRESHOLD)
       {
-        new_search_depth -= LATE_MOVE_REDUCTION;
-      }
-      else if (move_index > EXTREME_LMR_THRESHOLD)
-      {
-        new_search_depth -= depth / LMR_EXTREME_REDUCTION_DEPTH_DIVISOR;
+        // If the move is late enough, we can reduce the search depth even
+        // further.
+        new_search_depth -= LATE_MOVE_REDUCTION +
+                            (move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
       }
     }
 
@@ -705,7 +707,7 @@ void SearchEngine::run_pvs_scout_search()
   board_state.undo_move();
 
   // If eval is within the window or higher, set the best move eval to eval.
-  if (eval > alpha)
+  if (eval > beta)
   {
     best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
   }
