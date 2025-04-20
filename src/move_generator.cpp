@@ -91,7 +91,7 @@ auto calculate_possible_moves(BoardState &board_state,
 
   if (capture_only)
   {
-    return std::move(possible_capture_moves);
+    return possible_capture_moves;
   }
 
   if (history_table != nullptr)
@@ -105,7 +105,7 @@ auto calculate_possible_moves(BoardState &board_state,
       std::make_move_iterator(possible_capture_moves.begin()),
       std::make_move_iterator(possible_capture_moves.end()));
 
-  return std::move(possible_normal_moves);
+  return possible_normal_moves;
 }
 
 // STATIC FUNCTIONS
@@ -529,18 +529,23 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
 }
 
 void sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
-                                  const history_table_type history_table)
+                                  const history_table_type &history_table)
 {
-  std::sort(
-      possible_normal_moves.begin(), possible_normal_moves.end(),
-      [&history_table](const Move &move1, const Move &move2) -> bool
-      {
-        return history_table[static_cast<int>(move1.moving_piece->piece_color)]
-                            [static_cast<int>(move1.moving_piece->piece_type)]
-                            [move1.to_x][move1.to_y] >
-               history_table[static_cast<int>(move2.moving_piece->piece_color)]
-                            [static_cast<int>(move2.moving_piece->piece_type)]
-                            [move2.to_x][move2.to_y];
-      });
+  // Add history table score to each move.
+  // We cannot use the history table directly in the sorting since the values in
+  // the table are getting updated constantly during the search which may result
+  // in infinite loops when sorting (program will crash).
+  for (auto &move : possible_normal_moves)
+  {
+    move.history_table_score =
+        history_table[static_cast<int>(move.moving_piece->piece_color)]
+                     [static_cast<int>(move.moving_piece->piece_type)]
+                     [move.to_x][move.to_y];
+  }
+
+  // Sort moves based on history table score.
+  std::sort(possible_normal_moves.begin(), possible_normal_moves.end(),
+            [&history_table](const Move &move1, const Move &move2) -> bool
+            { return move1.history_table_score > move2.history_table_score; });
 }
 } // namespace engine::parts::move_generator

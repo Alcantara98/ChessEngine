@@ -304,7 +304,7 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves);
  */
 static void
 sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
-                             history_table_type history_table);
+                             const history_table_type &history_table);
 } // namespace engine::parts::move_generator
 
 #endif // MOVE_GENERATOR_H
