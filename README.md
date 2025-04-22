@@ -50,47 +50,16 @@
 
 ---
 
-## **Chess Engine Docker Setup** 🧠
-
-This repository includes a simple Bash script to build and run a Docker container for your chess engine.
-
-### **Prerequisites** 📦
-
-Before you can build and run the container, make sure you have:
-
-- **[Docker](https://www.docker.com/)** installed and running (version 20.10+ recommended).
-- A **Unix-like shell environment** with `bash` (macOS, Linux, or [WSL](https://learn.microsoft.com/en-us/windows/wsl/) on Windows).
-
-### **Usage (Linux/macOS/WSL)** 🚀
-
-To build and run the chess engine container:
-
-```bash
-./run_chess_engine.sh
-```
-
-The script will:
-
-1. Check if the Docker image `chess-engine` already exists.
-2. Prompt you to rebuild it (optional).
-3. Run the container interactively.
-
-### **One-liner for Windows CMD or PowerShell** 💡
-
-If you're on Windows and not using WSL or Bash, you can build and run the container with this one-liner:
-
-```
-docker build -t chess-engine . && docker run --rm -it chess-engine
-```
----
-
 ## **How to Run** 🏃‍♂️
 
 1. **Build and Run Locally (Cross-Platform)**
    Use the provided Docker setup to build and run the chess engine container. See the [Docker Setup](#chess-engine-docker-setup) section for detailed instructions.
 
-2. **Run on Windows or ARM64**
+2. **Run on Windows**
    Execute the prebuilt binary `chess_engine.exe` available as an artifact from the CI/CD pipeline.
+
+3. **Run on ARM64**
+   Use the prebuilt binary `chess_engine` available as an artifact from the CI/CD pipeline.
 
 ---
 
@@ -128,6 +97,40 @@ I will not explain the rules of chess here. Learn how to play before continuing.
 - **Promotion Moves** - `'pe7e8=q'`
   - Add `'='` + piece letter (see Normal Moves above) at the end of a Normal Move.
 
+---
+
+## **Chess Engine Docker Setup** 🧠
+
+This repository includes a simple Bash script to build and run a Docker container for your chess engine.
+
+### **Prerequisites** 📦
+
+Before you can build and run the container, make sure you have:
+
+- **[Docker](https://www.docker.com/)** installed and running (version 20.10+ recommended).
+- A **Unix-like shell environment** with `bash` (macOS, Linux, or [WSL](https://learn.microsoft.com/en-us/windows/wsl/) on Windows).
+
+### **Usage (Linux/macOS/WSL)** 🚀
+
+To build and run the chess engine container:
+
+```bash
+./run_chess_engine.sh
+```
+
+The script will:
+
+1. Check if the Docker image `chess-engine` already exists.
+2. Prompt you to rebuild it (optional).
+3. Run the container interactively.
+
+### **One-liner for Windows CMD or PowerShell** 💡
+
+If you're on Windows and not using WSL or Bash, you can build and run the container with this one-liner:
+
+```
+docker build -t chess-engine . && docker run --rm -it chess-engine
+```
 ---
 
 ## **Development Environment Setup** 🛠️
