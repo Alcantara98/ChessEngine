@@ -360,6 +360,26 @@ private:
                       bool &is_pvs_line,
                       const bool &color_to_move_is_in_check);
 
+  /**
+   * @brief Handles the transposition table entry.
+   *
+   * @details Checks if the transposition table entry is valid and updates
+   * the alpha and beta values based on the entry.
+   *
+   * @param board_state BoardState object to search.
+   * @param depth Current depth of search.
+   * @param tt_entry_search_depth Depth of the transposition table entry.
+   * @param tt_flag Flag of the transposition table entry.
+   * @param tt_eval Evaluation score of the transposition table entry.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param hash Hash of the board state.
+   *
+   * @return If the entry is valid, it returns true and the search can be
+   * skipped. If the entry is not valid, it returns false and the search
+   * continues.
+   */
   auto handle_tt_entry(BoardState &board_state,
                        int &depth,
                        int &tt_entry_search_depth,
@@ -567,17 +587,20 @@ private:
    * quiescence search and for capture moves.
    *
    * @param board_state BoardState object to search.
-   * @param beta Lowest score to be picked by minimizing node.
+   * @param alpha Highest score to be picked by maximizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score of the move.
-   *
+   * @param move_index Index of the move in the possible moves vector.
+   * @param move Move to check.
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
   auto futility_prune_move(BoardState &board_state,
-                           const int &beta,
+                           const int &alpha,
                            const int &depth,
-                           int &eval) -> bool;
+                           int &eval,
+                           int &move_index,
+                           Move &move) -> bool;
 
   /**
    * @brief Updates the history table.

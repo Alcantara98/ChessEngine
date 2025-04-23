@@ -415,14 +415,6 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
           ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
           : attack_check::king_is_checked(board_state, PieceColor::BLACK);
 
-  // FUTILITY PRUNING HEURISTIC
-
-  if (!color_to_move_is_in_check &&
-      futility_prune_move(board_state, beta, depth, eval))
-  {
-    return eval;
-  }
-
   // HANDLE LEAF NODE
 
   // There is a scnario where the depth is less than 0. This can happen if the
@@ -550,9 +542,21 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     board_state.apply_move(possible_moves[move_index]);
 
-    run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
-                   beta, depth, is_forward_pruning_line, is_pvs_line,
-                   color_to_move_is_in_check);
+    // FUTILITY PRUNING HEURISTIC
+
+    bool futile_move = false;
+    if (!color_to_move_is_in_check)
+    {
+      futile_move = futility_prune_move(board_state, alpha, depth, eval,
+                                        move_index, possible_moves[move_index]);
+    }
+
+    if (!futile_move)
+    {
+      run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
+                     beta, depth, is_forward_pruning_line, is_pvs_line,
+                     color_to_move_is_in_check);
+    }
 
     board_state.undo_move();
 
@@ -696,7 +700,7 @@ auto SearchEngine::handle_tt_entry(BoardState &board_state,
 
     if (!is_pvs_line && tt_flag == EXACT &&
         tt_entry_search_depth >= TT_FUTILITY_PRUNING_MIN_DEPTH &&
-        tt_eval + PAWN_VALUE < alpha)
+        tt_eval + (PAWN_VALUE * 2) < alpha)
     {
       return true;
     }
@@ -1090,26 +1094,38 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
 }
 
 auto SearchEngine::futility_prune_move(BoardState &board_state,
-                                       const int &beta,
+                                       const int &alpha,
                                        const int &depth,
-                                       int &eval) -> bool
+                                       int &eval,
+                                       int &move_index,
+                                       Move &move) -> bool
 {
-  Move &previous_move = board_state.previous_move_stack.top();
-  // Don't do this during end game since it will prune pawn pushes which seem
-  // to not do much, but are very critical in the end game.
-  if (board_state.is_end_game ||
+  if (move_index == 0 || alpha < -INF_MINUS_1000 ||
       (max_iterative_search_depth - depth) < MIN_FUTILITY_PRUNING_PLY ||
-      previous_move.captured_piece != nullptr ||
-      previous_move.promotion_piece_type != PieceType::EMPTY)
+      move.captured_piece != nullptr ||
+      move.promotion_piece_type != PieceType::EMPTY ||
+      attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
     return false;
   }
 
   // Get static evaluation of the board state.
-  eval = position_evaluator::evaluate_position(board_state);
+  // Eval has to be negated because we are still in the perspective of the
+  // parent node.
+  eval = -position_evaluator::evaluate_position(board_state);
 
-  // PAWN_VALUE * depth is the cutoff margin.
-  return (eval - (PAWN_VALUE * depth) > beta);
+  // (PAWN_VALUE + (PAWN_VALUE * depth) - (move_index * 2)) is the cutoff
+  // margin. Later moves will have a smaller margin, so they will be pruned
+  // more aggressively.
+  bool result =
+      (eval + (PAWN_VALUE + (PAWN_VALUE * depth) - (move_index * 2)) < alpha);
+  if (result)
+  {
+    printf("Futility Prune Move: %s, Eval: %d, Alpha: %d, Depth: %d\n",
+           MoveInterface::move_to_string(move).c_str(), eval, alpha, depth);
+    board_state.print_board(board_state.color_to_move);
+  }
+  return result;
 }
 
 void SearchEngine::udpate_history_table(const Move &move,
