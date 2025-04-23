@@ -99,7 +99,7 @@ I will not explain the rules of chess here. Learn how to play before continuing.
 
 ---
 
-## **Chess Engine Docker Setup** 🧠
+## **Chess Engine Docker Setup**
 
 This repository includes a simple Bash script to build and run a Docker container for your chess engine.
 
