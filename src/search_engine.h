@@ -250,6 +250,7 @@ private:
    * @param is_forward_pruning_line Flag to indicate if the search line is from
    * a null move, late move reduction, or probability cut line.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param ply Current ply of the search.
    *
    * @return Evaluation score from search branch.
    */
@@ -258,7 +259,8 @@ private:
                                  int beta,
                                  int depth,
                                  bool is_forward_pruning_line,
-                                 bool is_pvs_line) -> int;
+                                 bool is_pvs_line,
+                                 int ply) -> int;
 
   /**
    * @brief Handles the leaf node of the search tree.
@@ -303,6 +305,7 @@ private:
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
    * @param color_to_move_is_in_check Flag to indicate if the color to move is
    * in check.
+   * @param ply Current ply of the search.
    */
   void run_negamax_procedure(BoardState &board_state,
                              int &alpha,
@@ -314,7 +317,8 @@ private:
                              std::vector<Move> &possible_moves,
                              bool &is_forward_pruning_line,
                              bool &is_pvs_line,
-                             const bool &color_to_move_is_in_check);
+                             const bool &color_to_move_is_in_check,
+                             int &ply);
 
   /**
    * @brief Runs the Principal Variation Search (PVS) algorithm.
@@ -348,6 +352,8 @@ private:
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
    * @param color_to_move_is_in_check Flag to indicate if the color to move is
    * in check.
+   * @param is_capture_move Flag to indicate if the move is a capture move.
+   * @param ply Current ply of the search.
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
@@ -358,7 +364,9 @@ private:
                       int &depth,
                       bool &is_forward_pruning_line,
                       bool &is_pvs_line,
-                      const bool &color_to_move_is_in_check);
+                      const bool &color_to_move_is_in_check,
+                      bool is_capture_move,
+                      int &ply);
 
   /**
    * @brief Handles the transposition table entry.
@@ -420,6 +428,7 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score to be updated.
+   * @param ply Current ply of the search.
    *
    * @return True if eval failed high.
    */
@@ -427,7 +436,8 @@ private:
                            int &alpha,
                            int &beta,
                            int &depth,
-                           int &eval) -> bool;
+                           int &eval,
+                           int &ply) -> bool;
 
   /**
    * @brief Does a probability cut search.
@@ -449,6 +459,7 @@ private:
    * a null move, late move reduction, or probability cut line.
    * @param max_eval Maximum evaluation score.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param ply Current ply of the search.
    *
    * @return True if we can prune the move.
    */
@@ -460,7 +471,8 @@ private:
                           bool color_to_move_is_in_check,
                           bool &is_forward_pruning_line,
                           int &max_eval,
-                          bool &is_pvs_line) -> bool;
+                          bool &is_pvs_line,
+                          int &ply) -> bool;
 
   /**
    * @brief Handles necessary eval adjustments to prevent stalemates and loops.
@@ -592,15 +604,17 @@ private:
    * @param eval Evaluation score of the move.
    * @param move_index Index of the move in the possible moves vector.
    * @param move Move to check.
+   * @param ply Current ply of the search.
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  auto futility_prune_move(BoardState &board_state,
-                           const int &alpha,
-                           const int &depth,
-                           int &eval,
-                           int &move_index,
-                           Move &move) -> bool;
+  static auto futility_prune_move(BoardState &board_state,
+                                  const int &alpha,
+                                  const int &depth,
+                                  int &eval,
+                                  int &move_index,
+                                  Move &move,
+                                  int &ply) -> bool;
 
   /**
    * @brief Updates the history table.
