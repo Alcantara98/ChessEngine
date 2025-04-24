@@ -109,6 +109,12 @@ void evaluate_pawn(const int x_file,
 {
   // Piece value.
   eval += PAWN_VALUE;
+  if (!board_state.is_end_game)
+  {
+    // Less value for pawn during development and middle game.
+    // Essentially, PAWN_VALUE = 80 during development and middle game.
+    eval -= MEDIUM_EVAL_VALUE;
+  }
 
   // Position value - x coordinate.
   eval += PAWN_POSITION_EVAL_MAP[x_file];
@@ -160,7 +166,8 @@ void evaluate_pawn_file_quality(int x_file,
 
   bool is_passed_pawn = true;
   for (int current_rank = y_rank + direction;
-       current_rank <= Y_MAX && current_rank >= Y_MIN; ++current_rank)
+       current_rank <= Y_MAX && current_rank >= Y_MIN;
+       current_rank += direction)
   {
     Piece &piece = *board_state.chess_board[x_file][current_rank];
 
