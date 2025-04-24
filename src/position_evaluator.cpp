@@ -109,12 +109,6 @@ void evaluate_pawn(const int x_file,
 {
   // Piece value.
   eval += PAWN_VALUE;
-  if (!board_state.is_end_game)
-  {
-    // Less value for pawn during development and middle game.
-    // Essentially, PAWN_VALUE = 80 during development and middle game.
-    eval -= MEDIUM_EVAL_VALUE;
-  }
 
   // Position value - x coordinate.
   eval += PAWN_POSITION_EVAL_MAP[x_file];
