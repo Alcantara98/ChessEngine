@@ -545,6 +545,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     // FUTILITY PRUNING HEURISTIC
 
     bool futile_move = false;
+
     if (!color_to_move_is_in_check)
     {
       futile_move = futility_prune_move(board_state, alpha, depth, eval,
@@ -699,8 +700,7 @@ auto SearchEngine::handle_tt_entry(BoardState &board_state,
     }
 
     if (!is_pvs_line && tt_flag == EXACT &&
-        tt_entry_search_depth >= TT_FUTILITY_PRUNING_MIN_DEPTH &&
-        tt_eval + (PAWN_VALUE * 2) < alpha)
+        tt_eval + ((QUEEN_VALUE * 2) / tt_entry_search_depth) < alpha)
     {
       return true;
     }
@@ -806,7 +806,7 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
     eval = -quiescence_search(-prob_cut_beta_threshold,
                               -prob_cut_beta_threshold + 1, board_state);
 
-    int prob_cut_depth = std::max(depth - 4, 0);
+    int prob_cut_depth = depth / 2;
     if (eval >= prob_cut_beta_threshold && prob_cut_depth > 0)
     {
       // If move survives quiescence search, do normal reduced depth search
@@ -1114,18 +1114,18 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
   // parent node.
   eval = -position_evaluator::evaluate_position(board_state);
 
+  int futility_cutoff_index = 3 + ((depth * depth) / 2);
+
+  int futility_margin = PAWN_VALUE;
+  if (move_index < futility_cutoff_index)
+  {
+    futility_margin += (PAWN_VALUE * depth) - (move_index * 2);
+  }
+
   // (PAWN_VALUE + (PAWN_VALUE * depth) - (move_index * 2)) is the cutoff
   // margin. Later moves will have a smaller margin, so they will be pruned
   // more aggressively.
-  bool result =
-      (eval + (PAWN_VALUE + (PAWN_VALUE * depth) - (move_index * 2)) < alpha);
-  if (result)
-  {
-    printf("Futility Prune Move: %s, Eval: %d, Alpha: %d, Depth: %d\n",
-           MoveInterface::move_to_string(move).c_str(), eval, alpha, depth);
-    board_state.print_board(board_state.color_to_move);
-  }
-  return result;
+  return eval + futility_margin < alpha;
 }
 
 void SearchEngine::udpate_history_table(const Move &move,
