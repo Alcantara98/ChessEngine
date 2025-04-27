@@ -662,6 +662,13 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
       board_state, -alpha - 1, -alpha, new_search_depth,
       make_late_move_reduction_line, move_index == 0, ply + 1);
 
+  if (eval > alpha && depth - 1 > new_search_depth)
+  {
+    eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
+                                      depth - 1, is_forward_pruning_line,
+                                      move_index == 0, ply + 1);
+  }
+
   // Check if eval is greater than alpha. If it is, do a full search.
   // If window is already null, don't do a redundant search. This means parent
   // nodes are doing a null window search, and we just did a null window
@@ -827,7 +834,7 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
 
     board_state.apply_move(move);
 
-    int prob_cut_beta_threshold = beta + (PAWN_VALUE * 2);
+    int prob_cut_beta_threshold = beta + PAWN_VALUE;
 
     // Check with quiescence search first with null window around
     // prob_cut_beta_threshold.
