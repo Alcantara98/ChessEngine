@@ -594,16 +594,16 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     udpate_history_table(possible_moves[move_index], eval, depth, move_index,
                          alpha, beta);
 
-    if (ply == 1 &&
-        -best_eval_of_search_iteration.load(std::memory_order_relaxed) < beta)
-    {
-      beta = -best_eval_of_search_iteration.load(std::memory_order_relaxed);
-    }
-
     if (ply == 1 && eval > alpha && eval < beta &&
         eval < -best_eval_of_search_iteration.load(std::memory_order_relaxed))
     {
       best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
+    }
+
+    if (ply == 1 &&
+        -best_eval_of_search_iteration.load(std::memory_order_relaxed) < beta)
+    {
+      beta = -best_eval_of_search_iteration.load(std::memory_order_relaxed);
     }
 
     if (alpha >= beta)
