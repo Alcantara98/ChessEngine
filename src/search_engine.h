@@ -342,6 +342,8 @@ private:
    *
    * @param board_state BoardState object to search.
    * @param move_index Index of the move to search.
+   * @param quiet_move_index Index of the quiet move in the possible moves
+   * vector.
    * @param late_move_threshold Threshold to determine if a move is late.
    * @param eval Evaluation score from search branch.
    * @param alpha Highest score to be picked by maximizing node.
@@ -357,6 +359,7 @@ private:
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
+                      int &quiet_move_index,
                       int &late_move_threshold,
                       int &eval,
                       int &alpha,
@@ -602,7 +605,8 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score of the move.
-   * @param move_index Index of the move in the possible moves vector.
+   * @param quiet_move_index Index of the quiet move in the possible moves
+   * vector.
    * @param move Move to check.
    * @param ply Current ply of the search.
    *
@@ -612,7 +616,7 @@ private:
                                   const int &alpha,
                                   const int &depth,
                                   int &eval,
-                                  int &move_index,
+                                  int &quiet_move_index,
                                   Move &move,
                                   int &ply) -> bool;
 

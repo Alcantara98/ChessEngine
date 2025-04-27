@@ -538,9 +538,21 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          const bool &color_to_move_is_in_check,
                                          int &ply)
 {
+  int quiet_move_index = 0;
+  bool is_capture_move = false;
   int late_move_threshold = possible_moves.size() / 3;
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
+    if (possible_moves[move_index].captured_piece != nullptr)
+    {
+      is_capture_move = true;
+    }
+    else
+    {
+      ++quiet_move_index;
+      is_capture_move = false;
+    }
+
     // Check if the engine wants to stop searching.
     if (!running_search_flag)
     {
@@ -553,7 +565,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     bool futile_move = false;
 
-    if (!color_to_move_is_in_check)
+    if (!color_to_move_is_in_check && move_index != 0 && !is_capture_move)
     {
       futile_move =
           futility_prune_move(board_state, alpha, depth, eval, move_index,
@@ -562,10 +574,10 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     if (!futile_move)
     {
-      run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
-                     beta, depth, is_forward_pruning_line, is_pvs_line,
-                     color_to_move_is_in_check,
-                     possible_moves[move_index].captured_piece != nullptr, ply);
+      run_pvs_search(board_state, move_index, quiet_move_index,
+                     late_move_threshold, eval, alpha, beta, depth,
+                     is_forward_pruning_line, is_pvs_line,
+                     color_to_move_is_in_check, is_capture_move, ply);
     }
 
     board_state.undo_move();
@@ -582,6 +594,18 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     udpate_history_table(possible_moves[move_index], eval, depth, move_index,
                          alpha, beta);
 
+    if (ply == 1 &&
+        -best_eval_of_search_iteration.load(std::memory_order_relaxed) < beta)
+    {
+      beta = -best_eval_of_search_iteration.load(std::memory_order_relaxed);
+    }
+
+    if (ply == 1 && eval > alpha && eval < beta &&
+        eval < -best_eval_of_search_iteration.load(std::memory_order_relaxed))
+    {
+      best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
+    }
+
     if (alpha >= beta)
     {
       break;
@@ -591,6 +615,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
 void SearchEngine::run_pvs_search(BoardState &board_state,
                                   int &move_index,
+                                  int &quiet_move_index,
                                   int &late_move_threshold,
                                   int &eval,
                                   int &alpha,
@@ -607,23 +632,23 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
 
   int new_search_depth = depth - 1;
   bool make_late_move_reduction_line = false;
-  if (move_index > 4 && !color_to_move_is_in_check && !is_capture_move &&
-      !is_forward_pruning_line && move_index > LMR_THRESHOLD &&
+  if (quiet_move_index > LMR_THRESHOLD && !color_to_move_is_in_check &&
+      !is_capture_move && !is_forward_pruning_line &&
       max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
       ply >= MIN_LMR_DEPTH &&
       board_state.previous_move_stack.top().promotion_piece_type ==
           PieceType::EMPTY)
   {
     make_late_move_reduction_line = true;
-    new_search_depth -=
-        LATE_MOVE_REDUCTION + (depth / LMR_REDUCTION_DEPTH_DIVISOR);
+    new_search_depth -= LATE_MOVE_REDUCTION;
 
-    if (move_index > EXTREME_LMR_THRESHOLD)
+    if (quiet_move_index > EXTREME_LMR_THRESHOLD)
     {
+      new_search_depth -= std::min(ply / LMR_PLY_REDUCTION_DIVISOR, 3);
       // If the move is late enough, we can reduce the search depth even
       // further.
-      new_search_depth -= LATE_MOVE_REDUCTION +
-                          (move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
+      new_search_depth -=
+          (quiet_move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
     }
   }
 
@@ -809,7 +834,7 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
     eval = -quiescence_search(-prob_cut_beta_threshold,
                               -prob_cut_beta_threshold + 1, board_state);
 
-    int prob_cut_depth = std::max(depth - 4, 0);
+    int prob_cut_depth = std::max(std::min(depth - 4, depth / 2), 0);
     if (eval >= prob_cut_beta_threshold && prob_cut_depth > 0)
     {
       // If move survives quiescence search, do normal reduced depth search
@@ -1100,12 +1125,11 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
                                        const int &alpha,
                                        const int &depth,
                                        int &eval,
-                                       int &move_index,
+                                       int &quiet_move_index,
                                        Move &move,
                                        int &ply) -> bool
 {
-  if (move_index == 0 || alpha < -INF_MINUS_1000 ||
-      ply < MIN_FUTILITY_PRUNING_PLY || move.captured_piece != nullptr ||
+  if (alpha < -INF_MINUS_1000 || ply < MIN_FUTILITY_PRUNING_PLY ||
       move.promotion_piece_type != PieceType::EMPTY ||
       attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
@@ -1119,10 +1143,10 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
 
   int futility_cutoff_index = 3 + ((depth * depth) / 2);
 
-  int futility_margin = PAWN_VALUE;
-  if (move_index < futility_cutoff_index)
+  int futility_margin = 0;
+  if (quiet_move_index < futility_cutoff_index)
   {
-    futility_margin += (PAWN_VALUE * depth) - (move_index * 2);
+    futility_margin += (PAWN_VALUE * depth) - (quiet_move_index * 2);
   }
 
   return eval + futility_margin < alpha;
