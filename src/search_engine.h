@@ -432,6 +432,7 @@ private:
    * @param depth Current depth of search.
    * @param eval Evaluation score to be updated.
    * @param ply Current ply of the search.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
    *
    * @return True if eval failed high.
    */
@@ -440,7 +441,8 @@ private:
                            int &beta,
                            int &depth,
                            int &eval,
-                           int &ply) -> bool;
+                           int &ply,
+                           bool &is_pvs_line) -> bool;
 
   /**
    * @brief Does a probability cut search.

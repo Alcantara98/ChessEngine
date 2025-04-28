@@ -437,12 +437,13 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // We curently only allow one null move per search line, and only when
   // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will
   // make the search too shallow and return BS evals.
-  if (!is_pvs_line && !is_forward_pruning_line &&
+  if (!is_forward_pruning_line &&
       max_iterative_search_depth > MIN_NULL_MOVE_ITERATION_DEPTH &&
       ply >= MIN_NULL_MOVE_DEPTH && !board_state.is_end_game &&
       !color_to_move_is_in_check)
   {
-    if (do_null_move_search(board_state, alpha, beta, depth, eval, ply))
+    if (do_null_move_search(board_state, alpha, beta, depth, eval, ply,
+                            is_pvs_line))
     {
       // If we played a null move (which is theoretically a losing move) and get
       // an eval still greater than beta, then there is no need to search
@@ -788,19 +789,22 @@ auto SearchEngine::do_null_move_search(BoardState &board_state,
                                        int &beta,
                                        int &depth,
                                        int &eval,
-                                       int &ply) -> bool
+                                       int &ply,
+                                       bool &is_pvs_line) -> bool
 {
   board_state.apply_null_move();
 
   // We search with a null window around beta (beta to beta + 1). We just need
   // to find out if there is an eval greater than beta. If there is, we don't
   // need to search further.
+  int reduction = NULL_MOVE_REDUCTION;
+  if (!is_pvs_line)
+  {
+    reduction += depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
+  }
 
-  eval = -negamax_alpha_beta_search(
-      board_state, -beta, -(beta - 1),
-      depth -
-          (NULL_MOVE_REDUCTION + (depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR)),
-      true, false, ply + 1);
+  eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
+                                    depth - reduction, true, false, ply + 1);
   board_state.undo_null_move();
 
   return eval >= beta;
