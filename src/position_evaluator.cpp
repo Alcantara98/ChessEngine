@@ -160,15 +160,17 @@ void evaluate_pawn_file_quality(int x_file,
 
   bool is_passed_pawn = true;
   for (int current_rank = y_rank + direction;
-       current_rank <= Y_MAX && current_rank >= Y_MIN; ++current_rank)
+       current_rank <= Y_MAX && current_rank >= Y_MIN;
+       current_rank += direction)
   {
     Piece &piece = *board_state.chess_board[x_file][current_rank];
 
     // Decrease evaluation if there is a pawn in front of the pawn. This
     // will also cover doubled pawns.
-    if (piece.piece_type == PieceType::PAWN)
+    if (piece.piece_type == PieceType::PAWN &&
+        piece.piece_color == pawn_piece.piece_color)
     {
-      eval -= EXTREMELY_SMALL_EVAL_VALUE;
+      eval -= MEDIUM_EVAL_VALUE;
     }
 
     // If there is an enemy pawn in front of the pawn, it is not a passed
@@ -432,9 +434,9 @@ void evaluate_queen(const int x_file,
     enemy_king_y = board_state.white_king_y_rank;
   }
 
-  // Check if the queen is within 3 squares of the enemy king. If it is, give
+  // Check if the queen is within 4 squares of the enemy king. If it is, give
   // it a bonus.
-  if (abs(x_file - enemy_king_x) <= 3 && abs(y_rank - enemy_king_y) <= 3)
+  if (abs(x_file - enemy_king_x) <= 4 && abs(y_rank - enemy_king_y) <= 4)
   {
     eval += MEDIUM_EVAL_VALUE;
   }
@@ -485,6 +487,13 @@ void evaluate_king_safety(const int x_file,
     // King has same directions as queen.
     for (const auto &direction : QUEEN_DIRECTIONS)
     {
+      if (direction[1] == 0)
+      {
+        // Skip horizontal moves.
+        // This allows the rook, when castled, to move freely in the back rank.
+        continue;
+      }
+
       new_x = x_file + direction[0];
       new_y = y_rank + direction[1];
       while (new_x >= X_MIN && new_x <= X_MAX && new_y >= Y_MIN &&
@@ -498,7 +507,7 @@ void evaluate_king_safety(const int x_file,
           break;
         }
 
-        eval -= VERY_SMALL_EVAL_VALUE;
+        eval -= SMALL_EVAL_VALUE;
 
         new_x += direction[0];
         new_y += direction[1];

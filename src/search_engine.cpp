@@ -211,7 +211,7 @@ auto SearchEngine::run_iterative_deepening_search_evaluation()
             {
               eval = -negamax_alpha_beta_search(
                   thread_board_states[search_index], -INF, INF,
-                  iterative_depth - 1, false, false, false);
+                  iterative_depth - 1, false, false, 1);
             }
             promises[search_index].set_value(eval);
           });
@@ -333,7 +333,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
     // Swap and negate alpha and beta and negate the eval because of the negamax
     // algorithm.
     eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      false, false, false);
+                                      false, false, 1);
 
     if (eval > best_eval_of_search_iteration && eval > alpha)
     {
@@ -358,39 +358,23 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
                                              int alpha,
                                              int beta,
                                              int depth,
-                                             bool is_null_move_line,
-                                             bool is_lmr_line,
-                                             bool is_pvs_line) -> int
+                                             bool is_forward_pruning_line,
+                                             bool is_pvs_line,
+                                             int ply) -> int
 {
   // Check if the engine wants to stop searching.
-  if (!running_search_flag)
+  // Check if the current state has been repeated three times. If it has, the
+  // game is drawn. Evaluation for a draw is 0.
+  if (!running_search_flag ||
+      board_state.current_state_has_been_repeated_three_times())
   {
     return 0;
   }
+
+  depth = std::max(depth, 0);
 
   // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
-  // CHECK FOR THREEFOLD REPETITION DRAW
-
-  // Check if the current state has been repeated three times. If it has, the
-  // game is drawn. Evaluation for a draw is 0.
-  if (board_state.current_state_has_been_repeated_three_times())
-  {
-    return 0;
-  }
-
-  // CHECKMATE DETECTION
-
-  // If the king is no longer in the board, checkmate has occurred.
-  // Return -INF evaluation for the side that has lost its king.
-  if ((board_state.color_to_move == PieceColor::WHITE &&
-       !board_state.white_king_is_alive) ||
-      (board_state.color_to_move == PieceColor::BLACK &&
-       !board_state.black_king_is_alive))
-  {
-    return -INF;
-  }
 
   // TRANSPOSITION TABLE LOOKUP
 
@@ -408,51 +392,33 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   int tt_entry_search_depth;
   int tt_best_move_index = -1;
   uint64_t hash = board_state.get_current_state_hash();
-  // Check transposition table if position has been searched before.
-  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
-                                   tt_flag, tt_best_move_index) &&
-      !(board_state.is_end_game &&
-        board_state.current_state_has_been_visited()))
+
+  if (handle_tt_entry(board_state, depth, tt_entry_search_depth, tt_flag,
+                      tt_eval, alpha, beta, is_pvs_line, hash,
+                      tt_best_move_index))
   {
-    // Check if tt_value can be used.
-    // If the depth of the stored position is greater than or equal to the
-    // current depth, then the stored value is reliable. The higher the stored
-    // depth, the deeper the node has been searched.
-    if (depth <= tt_entry_search_depth)
-    {
-      switch (tt_flag)
-      {
-      case EXACT: // alpha < eval < beta
-        return tt_eval;
+    return tt_eval;
+  }
 
-      case FAILED_HIGH: // eval >= beta
-        alpha = std::max(alpha, tt_eval);
-        break;
+  // CHECK WHICH SIDE IS IN CHECK
+  bool other_color_is_in_check =
+      (board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(board_state, PieceColor::BLACK)
+          : attack_check::king_is_checked(board_state, PieceColor::WHITE);
 
-      case FAILED_LOW: // eval <= alpha
-        beta = std::min(beta, tt_eval);
-        break;
+  if (other_color_is_in_check)
+  {
+    return INF;
+  }
 
-      default:
-        // Handle unexpected tt_flag value.
-        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
-      }
+  bool color_to_move_is_in_check =
+      (board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
+          : attack_check::king_is_checked(board_state, PieceColor::BLACK);
 
-      // Check if we still fail high or low with the current alpha and beta.
-      // If flag is FAILED_HIGH, (tt_value >= beta)
-      // If flag is FAILED_LOW, (tt_value <= alpha)
-      if (alpha >= beta)
-      {
-        return tt_eval;
-      }
-    }
-
-    if (!is_null_move_line &&
-        tt_entry_search_depth >= TT_FUTILITY_PRUNING_MIN_DEPTH &&
-        tt_eval + PAWN_VALUE < alpha)
-    {
-      return tt_eval;
-    }
+  if (depth == 0 && color_to_move_is_in_check)
+  {
+    depth = 1;
   }
 
   // HANDLE LEAF NODE
@@ -462,21 +428,22 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // with depth - 2 since it is skipping a turn.
   if (depth <= 0)
   {
-    return evaluate_leaf_node(board_state, alpha, beta);
+    return evaluate_leaf_node(board_state, alpha, beta,
+                              color_to_move_is_in_check);
   }
 
   // NULL MOVE PRUNING HEURISTIC
 
   // We curently only allow one null move per search line, and only when
-  // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will make
-  // the search too shallow and return BS evals.
-  if (!is_pvs_line && !is_null_move_line && !is_lmr_line &&
+  // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will
+  // make the search too shallow and return BS evals.
+  if (!is_forward_pruning_line &&
       max_iterative_search_depth > MIN_NULL_MOVE_ITERATION_DEPTH &&
-      (max_iterative_search_depth - depth) >= MIN_NULL_MOVE_DEPTH &&
-      !board_state.is_end_game &&
-      !attack_check::king_is_checked(board_state, board_state.color_to_move))
+      ply >= MIN_NULL_MOVE_DEPTH && !board_state.is_end_game &&
+      !color_to_move_is_in_check)
   {
-    if (do_null_move_search(board_state, alpha, beta, depth, eval, is_lmr_line))
+    if (do_null_move_search(board_state, alpha, beta, depth, eval, ply,
+                            is_pvs_line))
     {
       // If we played a null move (which is theoretically a losing move) and get
       // an eval still greater than beta, then there is no need to search
@@ -497,10 +464,18 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   int max_eval = -INF;
 
-  // Search and evaluate each move.
-  run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
-                        tt_best_move_index, possible_moves, is_null_move_line,
-                        is_lmr_line, is_pvs_line);
+  if (!do_prob_cut_search(board_state, beta, depth, eval, possible_moves,
+                          color_to_move_is_in_check, is_forward_pruning_line,
+                          max_eval, is_pvs_line, ply))
+  {
+    max_eval = -INF;
+
+    // Search and evaluate each move.
+    run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
+                          tt_best_move_index, possible_moves,
+                          is_forward_pruning_line, is_pvs_line,
+                          color_to_move_is_in_check, ply);
+  }
 
   // If search has stopped, don't save the states in the transposition
   // table. This will cause invalid states to be stored with eval scores of 0.
@@ -525,7 +500,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
 auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
                                       int alpha,
-                                      int beta) -> int
+                                      int beta,
+                                      bool color_to_move_is_in_check) -> int
 {
   // Increment leaf nodes visited.
   leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
@@ -534,8 +510,7 @@ auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
       board_state.previous_move_stack.top().captured_piece != nullptr ||
       board_state.previous_move_stack.top().promotion_piece_type !=
           PieceType::EMPTY ||
-      attack_check::king_is_checked(board_state, PieceColor::BLACK) ||
-      attack_check::king_is_checked(board_state, PieceColor::WHITE))
+      color_to_move_is_in_check)
   {
     return quiescence_search(alpha, beta, board_state);
   }
@@ -559,30 +534,52 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          int &depth,
                                          int &best_move_index,
                                          std::vector<Move> &possible_moves,
-                                         bool &is_null_move_line,
-                                         bool &is_lmr_line,
-                                         bool &is_pvs_line)
+                                         bool &is_forward_pruning_line,
+                                         bool &is_pvs_line,
+                                         const bool &color_to_move_is_in_check,
+                                         int &ply)
 {
+  int quiet_move_index = 0;
+  bool is_capture_move = false;
   int late_move_threshold = possible_moves.size() / 3;
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
+    if (possible_moves[move_index].captured_piece != nullptr)
+    {
+      is_capture_move = true;
+    }
+    else
+    {
+      ++quiet_move_index;
+      is_capture_move = false;
+    }
+
     // Check if the engine wants to stop searching.
     if (!running_search_flag)
     {
       return;
     }
 
-    if (move_index != 0 &&
-        futility_prune_move(board_state, possible_moves[move_index], alpha,
-                            depth))
-    {
-      continue;
-    }
-
     board_state.apply_move(possible_moves[move_index]);
 
-    run_pvs_search(board_state, move_index, late_move_threshold, eval, alpha,
-                   beta, depth, is_null_move_line, is_lmr_line, is_pvs_line);
+    // FUTILITY PRUNING HEURISTIC
+
+    bool futile_move = false;
+
+    if (!color_to_move_is_in_check && move_index != 0)
+    {
+      futile_move = futility_razor_prune_move(
+          board_state, alpha, beta, depth, eval, move_index,
+          possible_moves[move_index], ply, is_capture_move);
+    }
+
+    if (!futile_move)
+    {
+      run_pvs_search(board_state, move_index, quiet_move_index,
+                     late_move_threshold, eval, alpha, beta, depth,
+                     is_forward_pruning_line, is_pvs_line,
+                     color_to_move_is_in_check, is_capture_move, ply);
+    }
 
     board_state.undo_move();
 
@@ -598,6 +595,18 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     udpate_history_table(possible_moves[move_index], eval, depth, move_index,
                          alpha, beta);
 
+    if (ply == 1 && eval > alpha && eval < beta &&
+        eval < -best_eval_of_search_iteration.load(std::memory_order_relaxed))
+    {
+      best_eval_of_search_iteration.store(eval, std::memory_order_relaxed);
+    }
+
+    if (ply == 1 &&
+        -best_eval_of_search_iteration.load(std::memory_order_relaxed) < beta)
+    {
+      beta = -best_eval_of_search_iteration.load(std::memory_order_relaxed);
+    }
+
     if (alpha >= beta)
     {
       break;
@@ -607,68 +616,130 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
 void SearchEngine::run_pvs_search(BoardState &board_state,
                                   int &move_index,
+                                  int &quiet_move_index,
                                   int &late_move_threshold,
                                   int &eval,
                                   int &alpha,
                                   int &beta,
                                   int &depth,
-                                  bool &is_null_move_line,
-                                  bool &is_lmr_line,
-                                  bool &is_pvs_line)
+                                  bool &is_forward_pruning_line,
+                                  bool &is_pvs_line,
+                                  const bool &color_to_move_is_in_check,
+                                  bool is_capture_move,
+                                  int &ply)
 {
-  // PVS SEARCH
 
-  if (move_index == 0)
-  {
-    // Best move (PVS Node) will be at index 0. Do a full search.
-    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      is_null_move_line, is_lmr_line, true);
-  }
-  else
-  {
-    // LATE MOVE REDUCTION HEURISTIC
+  // LATE MOVE REDUCTION HEURISTIC
 
-    int new_search_depth = depth - 1;
-    bool make_late_move_reduction_line = false;
-    if (move_index > LMR_THRESHOLD &&
-        max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
-        (max_iterative_search_depth - depth) >= MIN_LMR_DEPTH && !is_lmr_line &&
-        !is_null_move_line &&
-        board_state.previous_move_stack.top().promotion_piece_type ==
-            PieceType::EMPTY)
+  int new_search_depth = depth - 1;
+  bool make_late_move_reduction_line = false;
+  if (quiet_move_index > LMR_THRESHOLD && !color_to_move_is_in_check &&
+      !is_capture_move && !is_forward_pruning_line &&
+      max_iterative_search_depth > MIN_LMR_ITERATION_DEPTH &&
+      ply >= MIN_LMR_DEPTH &&
+      board_state.previous_move_stack.top().promotion_piece_type ==
+          PieceType::EMPTY)
+  {
+    make_late_move_reduction_line = true;
+    new_search_depth -= LATE_MOVE_REDUCTION;
+
+    if (quiet_move_index > EXTREME_LMR_THRESHOLD)
     {
-      make_late_move_reduction_line = true;
-      new_search_depth -= LATE_MOVE_REDUCTION;
+      new_search_depth -= std::min(ply / LMR_PLY_REDUCTION_DIVISOR, 3);
+      // If the move is late enough, we can reduce the search depth even
+      // further.
+      new_search_depth -=
+          (quiet_move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
+    }
+  }
 
-      if (move_index > EXTREME_LMR_THRESHOLD)
+  make_late_move_reduction_line =
+      (make_late_move_reduction_line || is_forward_pruning_line);
+
+  // Do a null window search around alpha. We just want to know
+  // if there is an eval that is greater than alpha. If there is, we do a full
+  // search.
+  eval = -negamax_alpha_beta_search(
+      board_state, -alpha - 1, -alpha, new_search_depth,
+      make_late_move_reduction_line, move_index == 0, ply + 1);
+
+  if (eval > alpha && depth - 1 > new_search_depth)
+  {
+    eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
+                                      depth - 1, is_forward_pruning_line,
+                                      move_index == 0, ply + 1);
+  }
+
+  // Check if eval is greater than alpha. If it is, do a full search.
+  // If window is already null, don't do a redundant search. This means parent
+  // nodes are doing a null window search, and we just did a null window
+  // search above.
+  if (eval > alpha && beta - alpha > 1)
+  {
+    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
+                                      is_forward_pruning_line, move_index == 0,
+                                      ply + 1);
+  }
+}
+
+auto SearchEngine::handle_tt_entry(BoardState &board_state,
+                                   int &depth,
+                                   int &tt_entry_search_depth,
+                                   int &tt_flag,
+                                   int &tt_eval,
+                                   int &alpha,
+                                   int &beta,
+                                   bool &is_pvs_line,
+                                   uint64_t &hash,
+                                   int &tt_best_move_index) -> bool
+{
+  // Check transposition table if position has been searched before.
+  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
+                                   tt_flag, tt_best_move_index) &&
+      !(board_state.is_end_game &&
+        board_state.current_state_has_been_visited()))
+  {
+    // Check if tt_value can be used.
+    // If the depth of the stored position is greater than or equal to the
+    // current depth, then the stored value is reliable. The higher the stored
+    // depth, the deeper the node has been searched.
+    if (depth <= tt_entry_search_depth)
+    {
+      switch (tt_flag)
       {
-        // If the move is late enough, we can reduce the search depth even
-        // further.
-        new_search_depth -= LATE_MOVE_REDUCTION +
-                            (move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
+      case EXACT: // alpha < eval < beta
+        return true;
+
+      case FAILED_HIGH: // eval >= beta
+        alpha = std::max(alpha, tt_eval);
+        break;
+
+      case FAILED_LOW: // eval <= alpha
+        beta = std::min(beta, tt_eval);
+        break;
+
+      default:
+        // Handle unexpected tt_flag value.
+        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+      }
+
+      // Check if we still fail high or low with the current alpha and beta.
+      // If flag is FAILED_HIGH, (tt_value >= beta)
+      // If flag is FAILED_LOW, (tt_value <= alpha)
+      if (alpha >= beta)
+      {
+        return true;
       }
     }
 
-    make_late_move_reduction_line =
-        (make_late_move_reduction_line || is_lmr_line);
-
-    // Do a null window search around alpha. We just want to know
-    // if there is an eval that is greater than alpha. If there is, we do a full
-    // search.
-    eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
-                                      new_search_depth, is_null_move_line,
-                                      make_late_move_reduction_line, false);
-
-    // Check if eval is greater than alpha. If it is, do a full search.
-    // If window is already null, don't do a redundant search. This means parent
-    // nodes are doing a null window search, and we just did a null window
-    // search above.
-    if (eval > alpha && beta - alpha > 1)
+    if (!is_pvs_line && tt_flag == EXACT &&
+        tt_eval + ((QUEEN_VALUE * 2) / tt_entry_search_depth) < alpha)
     {
-      eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                        is_null_move_line, is_lmr_line, false);
+      return true;
     }
   }
+
+  return false;
 }
 
 void SearchEngine::run_pvs_scout_search()
@@ -702,7 +773,7 @@ void SearchEngine::run_pvs_scout_search()
   int beta = alpha + 1;
   int eval = -negamax_alpha_beta_search(board_state, -beta, -alpha,
                                         max_iterative_search_depth - 1, false,
-                                        false, true);
+                                        true, 1);
 
   board_state.undo_move();
 
@@ -718,22 +789,83 @@ auto SearchEngine::do_null_move_search(BoardState &board_state,
                                        int &beta,
                                        int &depth,
                                        int &eval,
-                                       bool &is_lmr_line) -> bool
+                                       int &ply,
+                                       bool &is_pvs_line) -> bool
 {
   board_state.apply_null_move();
 
   // We search with a null window around beta (beta to beta + 1). We just need
   // to find out if there is an eval greater than beta. If there is, we don't
   // need to search further.
+  int reduction = NULL_MOVE_REDUCTION;
+  if (!is_pvs_line)
+  {
+    reduction += depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
+  }
 
-  eval = -negamax_alpha_beta_search(
-      board_state, -beta, -(beta - 1),
-      depth - (NULL_MOVE_REDUCTION + (max_iterative_search_depth /
-                                      NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR)),
-      true, is_lmr_line, false);
+  eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
+                                    depth - reduction, true, false, ply + 1);
   board_state.undo_null_move();
 
   return eval >= beta;
+}
+
+auto SearchEngine::do_prob_cut_search(BoardState &board_state,
+                                      int &beta,
+                                      int &depth,
+                                      int &eval,
+                                      std::vector<Move> &possible_moves,
+                                      bool color_to_move_is_in_check,
+                                      bool &is_forward_pruning_line,
+                                      int &max_eval,
+                                      bool &is_pvs_line,
+                                      int &ply) -> bool
+{
+  // PROBABILITY CUT HEURISTIC
+  if (is_forward_pruning_line || is_pvs_line || color_to_move_is_in_check ||
+      depth <= PROB_CUT_DEPTH_THRESHOLD || beta > INF_MINUS_1000 ||
+      ply <= MIN_PROB_CUT_DEPTH)
+  {
+    return false;
+  }
+
+  for (Move move : possible_moves)
+  {
+    if (!running_search_flag)
+    {
+      break;
+    }
+
+    board_state.apply_move(move);
+
+    int prob_cut_beta_threshold = beta + PAWN_VALUE;
+
+    // Check with quiescence search first with null window around
+    // prob_cut_beta_threshold.
+    eval = -quiescence_search(-prob_cut_beta_threshold,
+                              -prob_cut_beta_threshold + 1, board_state);
+
+    int prob_cut_depth = std::max(std::min(depth - 4, depth / 2), 0);
+    if (eval >= prob_cut_beta_threshold && prob_cut_depth > 0)
+    {
+      // If move survives quiescence search, do normal reduced depth search
+      // with null window around prob_cut_beta_threshold.
+      eval = -negamax_alpha_beta_search(board_state, -prob_cut_beta_threshold,
+                                        -prob_cut_beta_threshold + 1,
+                                        prob_cut_depth, true, false, ply + 1);
+    }
+
+    board_state.undo_move();
+
+    max_eval = std::max(eval, max_eval);
+
+    if (eval >= prob_cut_beta_threshold)
+    {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
@@ -749,8 +881,8 @@ void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
     }
   }
 
-  // Adjust checkmate evals accordingly so that boardstates that are closer to a
-  // checkmate state have higher evals allowing the engine to follow the
+  // Adjust checkmate evals accordingly so that boardstates that are closer to
+  // a checkmate state have higher evals allowing the engine to follow the
   // sequence of moves that lead to a checkmate. See note in function
   // declaration for more details.
   if (eval > INF_MINUS_1000)
@@ -1000,17 +1132,17 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
-auto SearchEngine::futility_prune_move(BoardState &board_state,
-                                       const Move &move,
-                                       const int &alpha,
-                                       const int &depth) -> bool
+auto SearchEngine::futility_razor_prune_move(BoardState &board_state,
+                                             const int &alpha,
+                                             const int &beta,
+                                             const int &depth,
+                                             int &eval,
+                                             int &quiet_move_index,
+                                             Move &move,
+                                             int &ply,
+                                             bool &is_capture_move) -> bool
 {
-  // Don't do this during end game since it will prune pawn pushes which seem to
-  // not do much, but are very critical in the end game.
-  if (board_state.is_end_game ||
-      depth > FUTILITY_PRUNING_FRONTIER_NODES_THRESHOLD ||
-      max_iterative_search_depth < MIN_FUTILITY_PRUNING_ITERATION_DEPTH ||
-      move.captured_piece != nullptr ||
+  if (alpha < -INF_MINUS_1000 || ply < MIN_RAZOR_PRUNING_PLY ||
       move.promotion_piece_type != PieceType::EMPTY ||
       attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
@@ -1018,10 +1150,37 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
   }
 
   // Get static evaluation of the board state.
-  int eval = position_evaluator::evaluate_position(board_state);
+  // Eval has to be negated because we are still in the perspective of the
+  // parent node.
+  eval = -position_evaluator::evaluate_position(board_state);
 
-  // PAWN_VALUE * depth is the cutoff margin.
-  return (eval + (PAWN_VALUE * depth) < alpha);
+  // RAZOR HEURISTIC
+  int razor_margin =
+      std::min(RAZOR_BASE_MARGIN + (depth * depth * RAZOR_MARGIN_MULTIPLIER),
+               RAZOR_MAX_MARGIN);
+
+  if (eval + razor_margin < alpha)
+  {
+    eval = -quiescence_search(alpha, beta, board_state);
+    return true;
+  }
+
+  if (is_capture_move && ply < MIN_FUTILITY_PRUNING_PLY)
+  {
+    return false;
+  }
+
+  // FUTILITY PRUNING
+
+  int futility_cutoff_index = 3 + ((depth * depth) / 2);
+
+  int futility_margin = 0;
+  if (quiet_move_index < futility_cutoff_index)
+  {
+    futility_margin += (PAWN_VALUE * depth) - (quiet_move_index * 2);
+  }
+
+  return eval + futility_margin < alpha;
 }
 
 void SearchEngine::udpate_history_table(const Move &move,
@@ -1036,8 +1195,8 @@ void SearchEngine::udpate_history_table(const Move &move,
   // Beta cutoff - really good move.
   if (alpha >= beta)
   {
-    // If PV node, we only increase by depth * 2 so we don't overfit and become
-    // too biased to certain moves.
+    // If PV node, we only increase by depth * 2 so we don't overfit and
+    // become too biased to certain moves.
     if (move_index == 0)
     {
       move_value = depth * 2;
@@ -1050,8 +1209,8 @@ void SearchEngine::udpate_history_table(const Move &move,
   // Move improved alpha - Good Move.
   else if (eval > alpha)
   {
-    // If PV node, we only increase by depth / 2 so we don't overfit and become
-    // too biased to certain moves.
+    // If PV node, we only increase by depth / 2 so we don't overfit and
+    // become too biased to certain moves.
     if (move_index == 0)
     {
       move_value = depth / 2;

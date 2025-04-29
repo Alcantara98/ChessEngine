@@ -247,11 +247,10 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
-   * @param is_null_move_line Flag to indicate if the search line is from a null
-   * move.
-   * @param is_lmr_line Flag to indicate if the search line is from a late move
-   * reduction line.
+   * @param is_forward_pruning_line Flag to indicate if the search line is from
+   * a null move, late move reduction, or probability cut line.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param ply Current ply of the search.
    *
    * @return Evaluation score from search branch.
    */
@@ -259,9 +258,9 @@ private:
                                  int alpha,
                                  int beta,
                                  int depth,
-                                 bool is_null_move_line,
-                                 bool is_lmr_line,
-                                 bool is_pvs_line) -> int;
+                                 bool is_forward_pruning_line,
+                                 bool is_pvs_line,
+                                 int ply) -> int;
 
   /**
    * @brief Handles the leaf node of the search tree.
@@ -273,10 +272,15 @@ private:
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
+   * @param color_to_move_is_in_check Flag to indicate if the color to move is
+   * in check.
    *
    * @return Evaluation score of the leaf node.
    */
-  auto evaluate_leaf_node(BoardState &board_state, int alpha, int beta) -> int;
+  auto evaluate_leaf_node(BoardState &board_state,
+                          int alpha,
+                          int beta,
+                          bool color_to_move_is_in_check) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -296,11 +300,12 @@ private:
    * @param depth Current depth of search.
    * @param best_move_index Index of best move.
    * @param possible_moves Vector of possible moves.
-   * @param is_null_move_line Flag to indicate if the search line is from a null
-   * move.
-   * @param is_lmr_line Flag to indicate if the search line is from a late move
-   * reduction line.
+   * @param is_forward_pruning_line Flag to indicate if the search line is from
+   * a null move, late move reduction, or probability cut line.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param color_to_move_is_in_check Flag to indicate if the color to move is
+   * in check.
+   * @param ply Current ply of the search.
    */
   void run_negamax_procedure(BoardState &board_state,
                              int &alpha,
@@ -310,9 +315,10 @@ private:
                              int &depth,
                              int &best_move_index,
                              std::vector<Move> &possible_moves,
-                             bool &is_null_move_line,
-                             bool &is_lmr_line,
-                             bool &is_pvs_line);
+                             bool &is_forward_pruning_line,
+                             bool &is_pvs_line,
+                             const bool &color_to_move_is_in_check,
+                             int &ply);
 
   /**
    * @brief Runs the Principal Variation Search (PVS) algorithm.
@@ -336,27 +342,65 @@ private:
    *
    * @param board_state BoardState object to search.
    * @param move_index Index of the move to search.
+   * @param quiet_move_index Index of the quiet move in the possible moves
+   * vector.
    * @param late_move_threshold Threshold to determine if a move is late.
    * @param eval Evaluation score from search branch.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
-   * @param is_null_move_line Flag to indicate if the search line is from a null
-   * move.
-   * @param is_lmr_line Flag to indicate if the search line is from a late move
-   * reduction line.
+   * @param is_forward_pruning_line Flag to indicate if the search line is from
+   * a null move, late move reduction, or probability cut line.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param color_to_move_is_in_check Flag to indicate if the color to move is
+   * in check.
+   * @param is_capture_move Flag to indicate if the move is a capture move.
+   * @param ply Current ply of the search.
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
+                      int &quiet_move_index,
                       int &late_move_threshold,
                       int &eval,
                       int &alpha,
                       int &beta,
                       int &depth,
-                      bool &is_null_move_line,
-                      bool &is_lmr_line,
-                      bool &is_pvs_line);
+                      bool &is_forward_pruning_line,
+                      bool &is_pvs_line,
+                      const bool &color_to_move_is_in_check,
+                      bool is_capture_move,
+                      int &ply);
+
+  /**
+   * @brief Handles the transposition table entry.
+   *
+   * @details Checks if the transposition table entry is valid and updates
+   * the alpha and beta values based on the entry.
+   *
+   * @param board_state BoardState object to search.
+   * @param depth Current depth of search.
+   * @param tt_entry_search_depth Depth of the transposition table entry.
+   * @param tt_flag Flag of the transposition table entry.
+   * @param tt_eval Evaluation score of the transposition table entry.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param hash Hash of the board state.
+   *
+   * @return If the entry is valid, it returns true and the search can be
+   * skipped. If the entry is not valid, it returns false and the search
+   * continues.
+   */
+  auto handle_tt_entry(BoardState &board_state,
+                       int &depth,
+                       int &tt_entry_search_depth,
+                       int &tt_flag,
+                       int &tt_eval,
+                       int &alpha,
+                       int &beta,
+                       bool &is_pvs_line,
+                       uint64_t &hash,
+                       int &tt_best_move_index) -> bool;
 
   /**
    * @brief Runs the PVS scout search algorithm.
@@ -387,8 +431,8 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score to be updated.
-   * @param is_lmr_line Flag to indicate if the search line is from a late move
-   * reduction line.
+   * @param ply Current ply of the search.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
    *
    * @return True if eval failed high.
    */
@@ -397,7 +441,43 @@ private:
                            int &beta,
                            int &depth,
                            int &eval,
-                           bool &is_lmr_line) -> bool;
+                           int &ply,
+                           bool &is_pvs_line) -> bool;
+
+  /**
+   * @brief Does a probability cut search.
+   *
+   * @details We search with a null window around the probability cut beta
+   * threshold with a reduced depth. If the eval is above the probability cut
+   * beta threshold, we don't need to search the move further as the probability
+   * of the move being good is high and will most likely cause a beta cut when
+   * searched fully.
+   *
+   * @param board_state BoardState object to search.
+   * @param beta Lowest score to be picked by minimizing node.
+   * @param depth Current depth of search.
+   * @param eval Evaluation score to be updated.
+   * @param possible_moves Vector of possible moves.
+   * @param color_to_move_is_in_check Flag to indicate if the color to move is
+   * in check.
+   * @param is_forward_pruning_line Flag to indicate if the search line is from
+   * a null move, late move reduction, or probability cut line.
+   * @param max_eval Maximum evaluation score.
+   * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param ply Current ply of the search.
+   *
+   * @return True if we can prune the move.
+   */
+  auto do_prob_cut_search(BoardState &board_state,
+                          int &beta,
+                          int &depth,
+                          int &eval,
+                          std::vector<Move> &possible_moves,
+                          bool color_to_move_is_in_check,
+                          bool &is_forward_pruning_line,
+                          int &max_eval,
+                          bool &is_pvs_line,
+                          int &ply) -> bool;
 
   /**
    * @brief Handles necessary eval adjustments to prevent stalemates and loops.
@@ -519,21 +599,35 @@ private:
    * the evaluation of a move is so low that it is unlikely to be the best move,
    * then we can prune it from the search tree.
    *
+   * @details Razoring is similar to futility pruning, but also runs in capture
+   * moves unlike futility pruning which only prunes quiet moves.
+   *
    * @note This is similar to Delta pruning. Futility pruning is used during the
    * main search and for non-capture moves. Delta pruning is used during
    * quiescence search and for capture moves.
    *
    * @param board_state BoardState object to search.
-   * @param move Move to check.
    * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
+   * @param eval Evaluation score of the move.
+   * @param quiet_move_index Index of the quiet move in the possible moves
+   * vector.
+   * @param move Move to check.
+   * @param ply Current ply of the search.
+   * @param is_capture_move Flag to indicate if the move is a capture move.
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  auto futility_prune_move(BoardState &board_state,
-                           const Move &move,
-                           const int &alpha,
-                           const int &depth) -> bool;
+  auto futility_razor_prune_move(BoardState &board_state,
+                                 const int &alpha,
+                                 const int &beta,
+                                 const int &depth,
+                                 int &eval,
+                                 int &quiet_move_index,
+                                 Move &move,
+                                 int &ply,
+                                 bool &is_capture_move) -> bool;
 
   /**
    * @brief Updates the history table.
