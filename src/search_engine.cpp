@@ -566,11 +566,11 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     bool futile_move = false;
 
-    if (!color_to_move_is_in_check && move_index != 0 && !is_capture_move)
+    if (!color_to_move_is_in_check && move_index != 0)
     {
-      futile_move =
-          futility_prune_move(board_state, alpha, depth, eval, move_index,
-                              possible_moves[move_index], ply);
+      futile_move = futility_razor_prune_move(
+          board_state, alpha, beta, depth, eval, move_index,
+          possible_moves[move_index], ply, is_capture_move);
     }
 
     if (!futile_move)
@@ -1132,15 +1132,17 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
-auto SearchEngine::futility_prune_move(BoardState &board_state,
-                                       const int &alpha,
-                                       const int &depth,
-                                       int &eval,
-                                       int &quiet_move_index,
-                                       Move &move,
-                                       int &ply) -> bool
+auto SearchEngine::futility_razor_prune_move(BoardState &board_state,
+                                             const int &alpha,
+                                             const int &beta,
+                                             const int &depth,
+                                             int &eval,
+                                             int &quiet_move_index,
+                                             Move &move,
+                                             int &ply,
+                                             bool &is_capture_move) -> bool
 {
-  if (alpha < -INF_MINUS_1000 || ply < MIN_FUTILITY_PRUNING_PLY ||
+  if (alpha < -INF_MINUS_1000 || ply < MIN_RAZOR_PRUNING_PLY ||
       move.promotion_piece_type != PieceType::EMPTY ||
       attack_check::king_is_checked(board_state, board_state.color_to_move))
   {
@@ -1151,6 +1153,24 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
   // Eval has to be negated because we are still in the perspective of the
   // parent node.
   eval = -position_evaluator::evaluate_position(board_state);
+
+  // RAZOR HEURISTIC
+  int razor_margin =
+      std::min(RAZOR_BASE_MARGIN + (depth * depth * RAZOR_MARGIN_MULTIPLIER),
+               RAZOR_MAX_MARGIN);
+
+  if (eval + razor_margin < alpha)
+  {
+    eval = -quiescence_search(alpha, beta, board_state);
+    return true;
+  }
+
+  if (is_capture_move && ply < MIN_FUTILITY_PRUNING_PLY)
+  {
+    return false;
+  }
+
+  // FUTILITY PRUNING
 
   int futility_cutoff_index = 3 + ((depth * depth) / 2);
 

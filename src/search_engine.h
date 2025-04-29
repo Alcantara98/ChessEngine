@@ -599,28 +599,35 @@ private:
    * the evaluation of a move is so low that it is unlikely to be the best move,
    * then we can prune it from the search tree.
    *
+   * @details Razoring is similar to futility pruning, but also runs in capture
+   * moves unlike futility pruning which only prunes quiet moves.
+   *
    * @note This is similar to Delta pruning. Futility pruning is used during the
    * main search and for non-capture moves. Delta pruning is used during
    * quiescence search and for capture moves.
    *
    * @param board_state BoardState object to search.
    * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
    * @param eval Evaluation score of the move.
    * @param quiet_move_index Index of the quiet move in the possible moves
    * vector.
    * @param move Move to check.
    * @param ply Current ply of the search.
+   * @param is_capture_move Flag to indicate if the move is a capture move.
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  static auto futility_prune_move(BoardState &board_state,
-                                  const int &alpha,
-                                  const int &depth,
-                                  int &eval,
-                                  int &quiet_move_index,
-                                  Move &move,
-                                  int &ply) -> bool;
+  auto futility_razor_prune_move(BoardState &board_state,
+                                 const int &alpha,
+                                 const int &beta,
+                                 const int &depth,
+                                 int &eval,
+                                 int &quiet_move_index,
+                                 Move &move,
+                                 int &ply,
+                                 bool &is_capture_move) -> bool;
 
   /**
    * @brief Updates the history table.
