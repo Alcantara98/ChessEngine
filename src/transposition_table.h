@@ -36,6 +36,11 @@ struct TranspositionTableEntry
 
   /// @brief Checksum of the entry.
   uint32_t checksum = 0;
+
+  /// @brief Flag to check if the entry is a singular move. This means that the
+  /// TT move is most likely the only good move, and very likely a forcing move
+  /// (Only move to not be check mated is an extreme example).
+  bool tt_move_is_singular = false;
 };
 
 /**
@@ -71,6 +76,8 @@ public:
    * @param flag Flag of the value (0 = exact, 1 = lower bound, 2 = upper
    * bound).
    * @param best_move_index Index of the best move in the board state.
+   * @param tt_move_is_singular Flag to check if the entry is a singular move
+   * (default is false).
    * @param is_quiescence Flag to check if the entry is a quiescence search
    * (default is false).
    */
@@ -79,6 +86,7 @@ public:
              int eval_score,
              int flag,
              int best_move_index,
+             bool tt_move_is_singular,
              bool is_quiescence = false);
 
   /**
@@ -90,6 +98,8 @@ public:
    * @param flag Flag of the value (output parameter).
    * @param best_move_index Index of the best move in the board state (output
    * parameter).
+   * @param tt_move_is_singular Flag to check if the entry is a singular
+   * Move (default is false).
    * @param is_quiescence Flag to check if the entry is a quiescence search
    * (default is false).
    *
@@ -100,6 +110,7 @@ public:
                 int &eval_score,
                 int &flag,
                 int &best_move_index,
+                bool &tt_move_is_singular,
                 bool is_quiescence = false) -> bool;
 
   /**
@@ -129,16 +140,18 @@ private:
    * @param eval_score Evaluation score of the board state.
    * @param flag Flag of the value.
    * @param best_move_index Index of the best move in the board state.
+   * @param tt_move_is_singular Flag to check if the entry is a singular move.
    * @param is_quiescence Flag to check if the entry is a quiescence search.
    *
    * @return Calculated checksum.
    */
-  static auto calculate_checksum(uint64_t hash,
-                                 int depth,
-                                 int eval_score,
-                                 int flag,
-                                 int best_move_index,
-                                 bool is_quiescence) -> uint32_t;
+  static auto calculate_checksum(uint64_t &hash,
+                                 int &depth,
+                                 int &eval_score,
+                                 int &flag,
+                                 int &best_move_index,
+                                 bool &tt_move_is_singular,
+                                 bool &is_quiescence) -> uint32_t;
 };
 } // namespace engine::parts
 
