@@ -325,7 +325,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
 
       if (best_eval_of_search_iteration > alpha && beta != INF)
       {
-        alpha = best_eval_of_search_iteration;
+        alpha = best_eval_of_search_iteration - PAWN_VALUE / 4;
         beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
       }
     }
