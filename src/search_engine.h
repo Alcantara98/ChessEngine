@@ -306,6 +306,10 @@ private:
    * @param color_to_move_is_in_check Flag to indicate if the color to move is
    * in check.
    * @param ply Current ply of the search.
+   * @param original_alpha Original alpha value.
+   * @param best_move_is_singular Flag to update if the best move is singular.
+   * @param tt_move_is_singular Flag to indicate if the transposition table
+   * entry is a singular move.
    */
   void run_negamax_procedure(BoardState &board_state,
                              int &alpha,
@@ -318,7 +322,10 @@ private:
                              bool &is_forward_pruning_line,
                              bool &is_pvs_line,
                              const bool &color_to_move_is_in_check,
-                             int &ply);
+                             int &ply,
+                             int &original_alpha,
+                             bool &best_move_is_singular,
+                             bool &tt_move_is_singular);
 
   /**
    * @brief Runs the Principal Variation Search (PVS) algorithm.
@@ -356,6 +363,8 @@ private:
    * in check.
    * @param is_capture_move Flag to indicate if the move is a capture move.
    * @param ply Current ply of the search.
+   * @param tt_move_is_singular Flag to indicate if the transposition table
+   * entry is a singular move.
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
@@ -364,12 +373,13 @@ private:
                       int &eval,
                       int &alpha,
                       int &beta,
-                      int &depth,
+                      int depth,
                       bool &is_forward_pruning_line,
                       bool &is_pvs_line,
                       const bool &color_to_move_is_in_check,
                       bool is_capture_move,
-                      int &ply);
+                      int &ply,
+                      bool &tt_move_is_singular);
 
   /**
    * @brief Handles the transposition table entry.
@@ -386,6 +396,10 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
    * @param hash Hash of the board state.
+   * @param tt_best_move_index Index of the best move in the transposition table
+   * entry.
+   * @param tt_move_is_singular Flag to indicate if the transposition table
+   * entry is a singular move.
    *
    * @return If the entry is valid, it returns true and the search can be
    * skipped. If the entry is not valid, it returns false and the search
@@ -400,7 +414,8 @@ private:
                        int &beta,
                        bool &is_pvs_line,
                        uint64_t &hash,
-                       int &tt_best_move_index) -> bool;
+                       int &tt_best_move_index,
+                       bool &tt_move_is_singular) -> bool;
 
   /**
    * @brief Runs the PVS scout search algorithm.
@@ -514,6 +529,8 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param best_move_index Index of best move.
+   * @param best_move_is_singular Flag to indicate if the move is a singular
+   * move.
    * @param is_quiescence Flag to check if the entry is a quiescence search.
    */
   void store_state_in_transposition_table(uint64_t &hash,
@@ -522,6 +539,7 @@ private:
                                           int &alpha,
                                           int &beta,
                                           int &best_move_index,
+                                          bool best_move_is_singular,
                                           bool is_quiescence = false);
 
   /**

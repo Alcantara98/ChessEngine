@@ -18,12 +18,14 @@ void TranspositionTable::store(uint64_t &hash,
                                int eval_score,
                                int flag,
                                int best_move_index,
+                               bool tt_move_is_singular,
                                bool is_quiescence)
 {
   // Get the entry.
   TranspositionTableEntry &entry = tt_table[hash % max_size];
-  uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
-                                         best_move_index, is_quiescence);
+  uint32_t checksum =
+      calculate_checksum(hash, search_depth, eval_score, flag, best_move_index,
+                         tt_move_is_singular, is_quiescence);
 
   // Update the entry.
   entry.hash = hash;
@@ -32,6 +34,7 @@ void TranspositionTable::store(uint64_t &hash,
   entry.flag = flag;
   entry.best_move_index = best_move_index;
   entry.is_quiescence = is_quiescence;
+  entry.tt_move_is_singular = tt_move_is_singular;
   entry.checksum = checksum;
 }
 
@@ -40,6 +43,7 @@ auto TranspositionTable::retrieve(uint64_t &hash,
                                   int &eval_score,
                                   int &flag,
                                   int &best_move_index,
+                                  bool &tt_move_is_singular,
                                   bool is_quiescence) -> bool
 {
   // We need to mod the hash to get the index because the hash has a larger
@@ -58,11 +62,13 @@ auto TranspositionTable::retrieve(uint64_t &hash,
   eval_score = entry.eval_score;
   flag = entry.flag;
   best_move_index = entry.best_move_index;
+  tt_move_is_singular = entry.tt_move_is_singular;
   bool tt_is_quiescence = entry.is_quiescence;
   uint32_t tt_checksum = entry.checksum;
 
-  uint32_t checksum = calculate_checksum(hash, search_depth, eval_score, flag,
-                                         best_move_index, tt_is_quiescence);
+  uint32_t checksum =
+      calculate_checksum(hash, search_depth, eval_score, flag, best_move_index,
+                         tt_move_is_singular, tt_is_quiescence);
 
   if (checksum != tt_checksum)
   {
@@ -84,23 +90,25 @@ void TranspositionTable::clear()
 }
 
 // PRIVATE FUNCTIONS
-auto TranspositionTable::calculate_checksum(uint64_t hash,
-                                            int depth,
-                                            int eval_score,
-                                            int flag,
-                                            int best_move_index,
-                                            bool is_quiescence) -> uint32_t
+auto TranspositionTable::calculate_checksum(uint64_t &hash,
+                                            int &depth,
+                                            int &eval_score,
+                                            int &flag,
+                                            int &best_move_index,
+                                            bool &tt_move_is_singular,
+                                            bool &is_quiescence) -> uint32_t
 {
   uint32_t checksum = CHECKSUM_SEED;
   checksum ^= hash;
 
   // Thes evalues may be small, so multiply by a prime number to get a better
   // distribution, and make the checksum more unique.
-  checksum ^= depth * CHECKSUM_PRIMES[0];
-  checksum ^= eval_score * CHECKSUM_PRIMES[1];
-  checksum ^= flag * CHECKSUM_PRIMES[2];
-  checksum ^= best_move_index * CHECKSUM_PRIMES[3];
-  checksum ^= static_cast<int>(is_quiescence) * CHECKSUM_PRIMES[4];
+  checksum ^= depth * CHECKSUM_PRIME_1;
+  checksum ^= eval_score * CHECKSUM_PRIME_2;
+  checksum ^= flag * CHECKSUM_PRIME_3;
+  checksum ^= best_move_index * CHECKSUM_PRIME_4;
+  checksum ^= static_cast<int>(tt_move_is_singular) * CHECKSUM_PRIME_5;
+  checksum ^= static_cast<int>(is_quiescence) * CHECKSUM_PRIME_6;
 
   return checksum;
 }

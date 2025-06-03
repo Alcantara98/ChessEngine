@@ -145,7 +145,12 @@ const std::array<std::array<int, 6>, 6> MVV_LVA_VALUES = {
 
 // CHECKSUM CONSTANTS
 const uint32_t CHECKSUM_SEED = 0x811C9DC5;
-const std::array<int, 5> CHECKSUM_PRIMES = {31, 37, 41, 43, 47};
+const int CHECKSUM_PRIME_1 = 31;
+const int CHECKSUM_PRIME_2 = 37;
+const int CHECKSUM_PRIME_3 = 41;
+const int CHECKSUM_PRIME_4 = 43;
+const int CHECKSUM_PRIME_5 = 47;
+const int CHECKSUM_PRIME_6 = 53;
 
 // ASPIRATION WINDOW CONSTANTS
 const std::array<int, 4> ASPIRATION_WINDOWS = {

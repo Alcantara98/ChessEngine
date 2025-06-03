@@ -325,7 +325,7 @@ auto SearchEngine::run_search_with_aspiration_window(BoardState &board_state,
 
       if (best_eval_of_search_iteration > alpha && beta != INF)
       {
-        alpha = best_eval_of_search_iteration;
+        alpha = best_eval_of_search_iteration - PAWN_VALUE / 4;
         beta = alpha + (ASPIRATION_WINDOWS[index] * 2);
       }
     }
@@ -391,11 +391,12 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   int tt_flag;
   int tt_entry_search_depth;
   int tt_best_move_index = -1;
+  bool tt_move_is_singular = false;
   uint64_t hash = board_state.get_current_state_hash();
 
   if (handle_tt_entry(board_state, depth, tt_entry_search_depth, tt_flag,
                       tt_eval, alpha, beta, is_pvs_line, hash,
-                      tt_best_move_index))
+                      tt_best_move_index, tt_move_is_singular))
   {
     return tt_eval;
   }
@@ -463,6 +464,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // NEGAMAX SEARCH
 
   int max_eval = -INF;
+  bool best_move_is_singular = false;
 
   if (!do_prob_cut_search(board_state, beta, depth, eval, possible_moves,
                           color_to_move_is_in_check, is_forward_pruning_line,
@@ -474,7 +476,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
     run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
                           tt_best_move_index, possible_moves,
                           is_forward_pruning_line, is_pvs_line,
-                          color_to_move_is_in_check, ply);
+                          color_to_move_is_in_check, ply, original_alpha,
+                          best_move_is_singular, tt_move_is_singular);
   }
 
   // If search has stopped, don't save the states in the transposition
@@ -493,7 +496,8 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   handle_eval_adjustments(max_eval, board_state);
 
   store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
-                                     beta, tt_best_move_index);
+                                     beta, tt_best_move_index,
+                                     best_move_is_singular, false);
 
   return max_eval;
 }
@@ -537,11 +541,15 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
                                          bool &is_forward_pruning_line,
                                          bool &is_pvs_line,
                                          const bool &color_to_move_is_in_check,
-                                         int &ply)
+                                         int &ply,
+                                         int &original_alpha,
+                                         bool &best_move_is_singular,
+                                         bool &tt_move_is_singular)
 {
   int quiet_move_index = 0;
   bool is_capture_move = false;
   int late_move_threshold = possible_moves.size() / 3;
+  int lower_bound_move_count = 0;
   for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
     if (possible_moves[move_index].captured_piece != nullptr)
@@ -575,10 +583,10 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     if (!futile_move)
     {
-      run_pvs_search(board_state, move_index, quiet_move_index,
-                     late_move_threshold, eval, alpha, beta, depth,
-                     is_forward_pruning_line, is_pvs_line,
-                     color_to_move_is_in_check, is_capture_move, ply);
+      run_pvs_search(
+          board_state, move_index, quiet_move_index, late_move_threshold, eval,
+          alpha, beta, depth, is_forward_pruning_line, is_pvs_line,
+          color_to_move_is_in_check, is_capture_move, ply, tt_move_is_singular);
     }
 
     board_state.undo_move();
@@ -587,6 +595,11 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
     {
       max_eval = eval;
       best_move_index = possible_moves[move_index].list_index;
+    }
+
+    if (eval < original_alpha)
+    {
+      ++lower_bound_move_count;
     }
 
     max_eval = std::max(eval, max_eval);
@@ -612,6 +625,7 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       break;
     }
   }
+  best_move_is_singular = possible_moves.size() - lower_bound_move_count == 1;
 }
 
 void SearchEngine::run_pvs_search(BoardState &board_state,
@@ -621,17 +635,26 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
                                   int &eval,
                                   int &alpha,
                                   int &beta,
-                                  int &depth,
+                                  int depth,
                                   bool &is_forward_pruning_line,
                                   bool &is_pvs_line,
                                   const bool &color_to_move_is_in_check,
                                   bool is_capture_move,
-                                  int &ply)
+                                  int &ply,
+                                  bool &tt_move_is_singular)
 {
+  int new_search_depth = depth - 1;
+
+  if (move_index == 0 && tt_move_is_singular &&
+      ply < max_iterative_search_depth + 3)
+  {
+    // printf("Singular move found, increasing search depth by 1.\n");
+    // If tt_move_is_singular, increase search depth by 1.
+    ++depth;
+  }
 
   // LATE MOVE REDUCTION HEURISTIC
 
-  int new_search_depth = depth - 1;
   bool make_late_move_reduction_line = false;
   if (quiet_move_index > LMR_THRESHOLD && !color_to_move_is_in_check &&
       !is_capture_move && !is_forward_pruning_line &&
@@ -650,6 +673,13 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
       // further.
       new_search_depth -=
           (quiet_move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
+
+      if (tt_move_is_singular)
+      {
+        // If tt_move_is_singular, increase reduction depth by 1 for quiet
+        // moves.
+        --new_search_depth;
+      }
     }
   }
 
@@ -691,14 +721,22 @@ auto SearchEngine::handle_tt_entry(BoardState &board_state,
                                    int &beta,
                                    bool &is_pvs_line,
                                    uint64_t &hash,
-                                   int &tt_best_move_index) -> bool
+                                   int &tt_best_move_index,
+                                   bool &tt_move_is_singular) -> bool
 {
   // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
-                                   tt_flag, tt_best_move_index) &&
+                                   tt_flag, tt_best_move_index,
+                                   tt_move_is_singular) &&
       !(board_state.is_end_game &&
         board_state.current_state_has_been_visited()))
   {
+    if (tt_move_is_singular && tt_entry_search_depth < depth)
+    {
+      // Don't treat tt move as singular if the search depth is too shallow.
+      tt_move_is_singular = false;
+    }
+
     // Check if tt_value can be used.
     // If the depth of the stored position is greater than or equal to the
     // current depth, then the stored value is reliable. The higher the stored
@@ -752,9 +790,10 @@ void SearchEngine::run_pvs_scout_search()
   int tt_flag;
   int tt_search_depth;
   int tt_best_move_index = -1;
+  bool tt_move_is_singular = false;
   uint64_t hash = board_state.get_current_state_hash();
   if (!transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
-                                    tt_best_move_index))
+                                    tt_best_move_index, tt_move_is_singular))
   {
     return;
   }
@@ -895,13 +934,15 @@ void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
   }
 }
 
-void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
-                                                      int &depth,
-                                                      int &max_eval,
-                                                      int &alpha,
-                                                      int &beta,
-                                                      int &best_move_index,
-                                                      bool is_quiescence)
+void SearchEngine::store_state_in_transposition_table(
+    uint64_t &hash,
+    int &depth,
+    int &max_eval,
+    int &alpha,
+    int &beta,
+    int &best_move_index,
+    bool best_move_is_singular,
+    bool is_quiescence)
 {
   // Store in transposition table.
   int tt_flag_to_store;
@@ -918,7 +959,8 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
     tt_flag_to_store = EXACT;
   }
   transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
-                            best_move_index, is_quiescence);
+                            best_move_index, best_move_is_singular,
+                            is_quiescence);
 }
 
 void SearchEngine::reset_and_print_performance_matrix(
@@ -1003,8 +1045,10 @@ auto SearchEngine::quiescence_search(int alpha,
   int tt_search_depth;
   int tt_flag;
   int tt_best_move_index = -1;
+  bool tt_is_singular_move = false;
   if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
-                                   tt_best_move_index, true))
+                                   tt_best_move_index, tt_is_singular_move,
+                                   true))
   {
     switch (tt_flag)
     {
@@ -1072,7 +1116,7 @@ auto SearchEngine::quiescence_search(int alpha,
   // Store in transposition table with quiescence flag set to true.
   int tt_depth = 0;
   store_state_in_transposition_table(hash, tt_depth, best_eval, original_alpha,
-                                     beta, tt_best_move_index, true);
+                                     beta, tt_best_move_index, false, true);
   return best_eval;
 }
 
