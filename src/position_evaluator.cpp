@@ -460,7 +460,7 @@ void evaluate_king(const int x_file,
         (king_piece.piece_color == PieceColor::BLACK &&
          board_state.black_has_castled))
     {
-      eval += MEDIUM_EVAL_VALUE;
+      eval += LARGE_EVAL_VALUE;
     }
   }
 

@@ -676,7 +676,6 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
 
     if (quiet_move_index > EXTREME_LMR_THRESHOLD)
     {
-      new_search_depth -= std::min(ply / LMR_PLY_REDUCTION_DIVISOR, 3);
       // If the move is late enough, we can reduce the search depth even
       // further.
       new_search_depth -=
