@@ -3,6 +3,10 @@ set -eo pipefail
 
 IMAGE_NAME="chess-engine"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+DOCKERFILE="${SCRIPT_DIR}/Dockerfile"
+
 # Function to check if the Docker image exists
 image_exists() {
   docker image inspect "$IMAGE_NAME" &> /dev/null
@@ -11,7 +15,7 @@ image_exists() {
 # Function to build the image
 build_image() {
   echo "Building Docker image '$IMAGE_NAME'..."
-  docker build -t "$IMAGE_NAME" .
+  docker build -f "$DOCKERFILE" -t "$IMAGE_NAME" "$PROJECT_ROOT"
 }
 
 # Function to run the container
