@@ -36,3 +36,5 @@ build
 out
 .vs
 .vscode
+.cache
+core

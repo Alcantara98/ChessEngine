@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <future>
 #include <thread>
 
@@ -125,15 +126,15 @@ private:
 
   /// @brief Number of leaf nodes visited.
   /// NOTE: Atomic because it is accessed by multiple search threads.
-  std::atomic<int> leaf_nodes_visited = 0;
+  std::atomic<size_t> leaf_nodes_visited = 0;
 
   /// @brief Number of nodes visited.
   /// NOTE: Atomic because it is accessed by multiple search threads.
-  std::atomic<int> nodes_visited = 0;
+  std::atomic<size_t> nodes_visited = 0;
 
   /// @brief Number of quiescence nodes visited.
   /// NOTE: Atomic because it is accessed by multiple search threads.
-  std::atomic<int> quiescence_nodes_visited = 0;
+  std::atomic<size_t> quiescence_nodes_visited = 0;
 
   /// @brief See BoardState.
   BoardState &game_board_state;
@@ -141,7 +142,7 @@ private:
   /// @brief The max depth that the current iterative search will reach.
   /// NOTE: Not to be confused with max_search_depth. This is the depth the
   /// current iteration will reach.
-  std::atomic<int> max_iterative_search_depth;
+  std::atomic<size_t> max_iterative_search_depth;
 
   /// @brief The evaluation score of the previous moves.
   std::stack<int> previous_move_evals;
@@ -232,8 +233,8 @@ private:
    *
    * @return Evaluation score from search branch.
    */
-  auto run_search_with_aspiration_window(BoardState &board_state, int depth)
-      -> int;
+  auto run_search_with_aspiration_window(BoardState &board_state,
+                                         int depth) -> int;
 
   /**
    * @brief Recursive function to evaluate the best move for the given board

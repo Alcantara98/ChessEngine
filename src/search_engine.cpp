@@ -927,7 +927,7 @@ void SearchEngine::reset_and_print_performance_matrix(
     std::chrono::time_point<std::chrono::steady_clock> search_end_time)
 {
   // Calculate duration of search.
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
                       search_end_time - search_start_time)
                       .count();
 
@@ -935,24 +935,38 @@ void SearchEngine::reset_and_print_performance_matrix(
   if ((show_performance && !engine_is_pondering) ||
       (show_ponder_performance && engine_is_pondering))
   {
-    int kilo_nodes_per_second = static_cast<int>(nodes_visited / duration);
+    // Avoid division by zero.
+    if (duration == 0)
+    {
+      duration = 1;
+    }
+    auto kilo_nodes_per_second = static_cast<size_t>(
+        nodes_visited * NANOSECONDS_IN_MILLISECOND / duration);
 
-    int quiescence_node_percentage = static_cast<int>(
-        (static_cast<double>(quiescence_nodes_visited) / nodes_visited) *
-        PERCENTAGE);
+    int quiescence_node_percentage = 0;
+    int normal_node_percentage = 0;
 
-    int normal_node_percentage = static_cast<int>(
-        (static_cast<double>(nodes_visited - quiescence_nodes_visited) /
-         nodes_visited) *
-        PERCENTAGE);
+    // Avoid division by zero.
+    if (nodes_visited != 0)
+    {
+      quiescence_node_percentage = static_cast<int>(
+          (static_cast<double>(quiescence_nodes_visited) / nodes_visited) *
+          PERCENTAGE);
 
-    printf("Depth: %d, Time: %lldms\n", iterative_depth, duration);
-    printf("Leaf Nodes Visited %d\n", leaf_nodes_visited.load());
-    printf("Quiessence Nodes Visited: %d\n", quiescence_nodes_visited.load());
-    printf("Nodes Visited: %d\n", nodes_visited.load());
+      normal_node_percentage = static_cast<int>(
+          (static_cast<double>(nodes_visited - quiescence_nodes_visited) /
+           nodes_visited) *
+          PERCENTAGE);
+    }
+
+    printf("Depth: %d, Time: %ldms\n", iterative_depth,
+           duration / NANOSECONDS_IN_MILLISECOND);
+    printf("Leaf Nodes Visited %zu\n", leaf_nodes_visited.load());
+    printf("Quiessence Nodes Visited: %zu\n", quiescence_nodes_visited.load());
+    printf("Nodes Visited: %zu\n", nodes_visited.load());
     printf("Quiescence Node Percentage: %d%%\n", quiescence_node_percentage);
     printf("Normal Node Percentage: %d%%\n", normal_node_percentage);
-    printf("Nodes per second: %d kN/s\n\n", kilo_nodes_per_second);
+    printf("Nodes per second: %lu kN/s\n\n", kilo_nodes_per_second);
   }
 
   // Reset performance metrics.
