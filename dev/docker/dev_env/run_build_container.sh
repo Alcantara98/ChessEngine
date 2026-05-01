@@ -36,6 +36,7 @@ build_image() {
   docker build \
     --build-arg "USER_UID=${HOST_UID}" \
     --build-arg "USER_GID=${HOST_GID}" \
+    --build-arg "HOST_HOME=${HOME}" \
     -t "${IMAGE_NAME}" \
     -f "${SCRIPT_DIR}/Dockerfile" \
     "${SCRIPT_DIR}"

@@ -691,15 +691,15 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
 }
 
 auto SearchEngine::handle_tt_entry(BoardState &board_state,
-                                   int &depth,
-                                   int &tt_entry_search_depth,
-                                   int &tt_flag,
-                                   int &tt_eval,
-                                   int &alpha,
-                                   int &beta,
+                                   uint8_t &depth,
+                                   uint8_t &tt_entry_search_depth,
+                                   uint8_t &tt_flag,
+                                   uint16_t &tt_eval,
+                                   uint16_t &alpha,
+                                   uint16_t &beta,
                                    bool &is_pvs_line,
                                    uint64_t &hash,
-                                   int &tt_best_move_index) -> bool
+                                   uint8_t &tt_best_move_index) -> bool
 {
   // Check transposition table if position has been searched before.
   if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
@@ -756,10 +756,10 @@ void SearchEngine::run_pvs_scout_search()
   BoardState board_state = BoardState(game_board_state);
 
   // Get TT entry.
-  int tt_eval;
-  int tt_flag;
-  int tt_search_depth;
-  int tt_best_move_index = -1;
+  int16_t tt_eval;
+  int8_t tt_flag;
+  uint8_t tt_search_depth;
+  int16_t tt_best_move_index = -1;
   uint64_t hash = board_state.get_current_state_hash();
   if (!transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
                                     tt_best_move_index))
@@ -983,9 +983,9 @@ void SearchEngine::reset_and_print_performance_matrix(
   quiescence_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescence_search(int alpha,
-                                     int beta,
-                                     BoardState &board_state) -> int
+auto SearchEngine::quiescence_search(int16_t alpha,
+                                     int16_t beta,
+                                     BoardState &board_state) -> int16_t
 {
   // Check if the engine wants to stop searching.
   if (!running_search_flag)
@@ -1021,10 +1021,10 @@ auto SearchEngine::quiescence_search(int alpha,
   // TRANSPOSITION TABLE LOOKUP
 
   uint64_t hash = board_state.get_current_state_hash();
-  int tt_eval;
-  int tt_search_depth;
-  int tt_flag;
-  int tt_best_move_index = -1;
+  uint16_t tt_eval;
+  uint8_t tt_search_depth;
+  int8_t tt_flag;
+  int16_t tt_best_move_index = -1;
   if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
                                    tt_best_move_index, true))
   {

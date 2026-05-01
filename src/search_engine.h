@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 
 namespace engine::parts
 {
@@ -386,15 +387,15 @@ private:
    * continues.
    */
   auto handle_tt_entry(BoardState &board_state,
-                       int &depth,
-                       int &tt_entry_search_depth,
-                       int &tt_flag,
-                       int &tt_eval,
-                       int &alpha,
-                       int &beta,
+                       uint8_t &depth,
+                       uint8_t &tt_entry_search_depth,
+                       uint8_t &tt_flag,
+                       int16_t &tt_eval,
+                       uint16_t &alpha,
+                       uint16_t &beta,
                        bool &is_pvs_line,
                        uint64_t &hash,
-                       int &tt_best_move_index) -> bool;
+                       int16_t &tt_best_move_index) -> bool;
 
   /**
    * @brief Runs the PVS scout search algorithm.

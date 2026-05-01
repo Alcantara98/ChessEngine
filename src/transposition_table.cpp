@@ -15,10 +15,10 @@ TranspositionTable::~TranspositionTable() { delete[] tt_table; }
 // PUBLIC FUNCTIONS
 
 void TranspositionTable::store(uint64_t &hash,
-                               int search_depth,
-                               int eval_score,
-                               int flag,
-                               int best_move_index,
+                               uint8_t search_depth,
+                               int16_t eval_score,
+                               int8_t flag,
+                               int16_t best_move_index,
                                bool is_quiescence)
 {
   // Get the entry.
@@ -37,10 +37,10 @@ void TranspositionTable::store(uint64_t &hash,
 }
 
 auto TranspositionTable::retrieve(uint64_t &hash,
-                                  int &search_depth,
-                                  int &eval_score,
-                                  int &flag,
-                                  int &best_move_index,
+                                  uint8_t &search_depth,
+                                  int16_t &eval_score,
+                                  int8_t &flag,
+                                  int16_t &best_move_index,
                                   bool is_quiescence) -> bool
 {
   // We need to mod the hash to get the index because the hash has a larger
@@ -86,10 +86,10 @@ void TranspositionTable::clear()
 
 // PRIVATE FUNCTIONS
 auto TranspositionTable::calculate_checksum(uint64_t hash,
-                                            int depth,
-                                            int eval_score,
-                                            int flag,
-                                            int best_move_index,
+                                            uint8_t depth,
+                                            int16_t eval_score,
+                                            int8_t flag,
+                                            int16_t best_move_index,
                                             bool is_quiescence) -> uint32_t
 {
   uint32_t checksum = CHECKSUM_SEED;

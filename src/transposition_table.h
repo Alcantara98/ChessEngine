@@ -16,16 +16,16 @@ struct TranspositionTableEntry
   uint64_t hash = 0;
 
   /// @brief Maximum depth of the search.
-  int search_depth = 0;
+  uint8_t search_depth = 0;
 
   /// @brief Value of the board state.
-  int eval_score = 0;
+  int16_t eval_score = 0;
 
   /// @brief Flag of the value. 0 = exact, 1 = lower bound, 2 = upper bound.
-  int flag = 0;
+  int8_t flag = 0; 
 
   /// @brief Index of the best move in the board state.
-  int best_move_index = 0;
+  int16_t best_move_index = 0;
 
   /// @brief Flag to check if the entry is a quiescence search.
   bool is_quiescence = false;
@@ -71,10 +71,10 @@ public:
    * (default is false).
    */
   void store(uint64_t &hash,
-             int search_depth,
-             int eval_score,
-             int flag,
-             int best_move_index,
+             uint8_t search_depth,
+             int16_t eval_score,
+             int8_t flag,
+             int16_t best_move_index,
              bool is_quiescence = false);
 
   /**
@@ -92,10 +92,10 @@ public:
    * @return True if the entry was found, false otherwise.
    */
   auto retrieve(uint64_t &hash,
-                int &search_depth,
-                int &eval_score,
-                int &flag,
-                int &best_move_index,
+                uint8_t &search_depth,
+                int16_t &eval_score,
+                int8_t &flag,
+                int16_t &best_move_index,
                 bool is_quiescence = false) -> bool;
 
   /**
@@ -130,10 +130,10 @@ private:
    * @return Calculated checksum.
    */
   static auto calculate_checksum(uint64_t hash,
-                                 int depth,
-                                 int eval_score,
-                                 int flag,
-                                 int best_move_index,
+                                 uint8_t depth,
+                                 int16_t eval_score,
+                                 int8_t flag,
+                                 int16_t best_move_index,
                                  bool is_quiescence) -> uint32_t;
 };
 } // namespace engine::parts

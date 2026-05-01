@@ -20,6 +20,7 @@ build-debug:
 format:
 	clang-format --version
 	clang-format -i src/*.cpp src/*.h
+	git diff --exit-code
 
 tidy:
 	cmake -B build -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX)

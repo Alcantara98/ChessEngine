@@ -12,6 +12,11 @@ ARG LLVM_VERSION=18
 ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 ARG USERNAME=master-elby
+# Host home directory, used to source the host's .bashrc from inside the
+# container. Pass via --build-arg HOST_HOME="${HOME}". A sentinel default
+# is used so the build still succeeds when the arg is omitted; the source
+# line in the container's .bashrc is guarded by `[ -f ... ]`.
+ARG HOST_HOME=/nonexistent
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -77,6 +82,14 @@ RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
 
 USER ${USERNAME}
 WORKDIR /workspaces/ChessEngine
+
+# Source the host's .bashrc (made available via the bind-mount of the host
+# HOME in run_build_container.sh) from the container user's .bashrc. The
+# `[ -f ... ]` guard makes this a no-op if the host home isn't mounted, and
+# `|| true` keeps shell startup from aborting if the host bashrc references
+# tools that don't exist inside the container.
+RUN printf '\n# Source host .bashrc if mounted.\n[ -f "%s/.bashrc" ] && . "%s/.bashrc" 2>/dev/null || true\n' \
+        "${HOST_HOME}" "${HOST_HOME}" >> /home/${USERNAME}/.bashrc
 
 # Keep container running
 CMD ["sleep", "infinity"]
