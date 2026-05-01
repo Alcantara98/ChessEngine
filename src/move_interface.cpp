@@ -1,11 +1,10 @@
 #include "move_interface.h"
 #include "attack_check.h"
 
+#include <cmath>
 #include <map>
 #include <regex>
 #include <string>
-#include <cmath>
-
 
 namespace engine::parts
 {

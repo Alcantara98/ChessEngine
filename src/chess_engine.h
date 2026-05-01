@@ -6,8 +6,6 @@
 #include "move_interface.h"
 #include "search_engine.h"
 
-
-
 namespace engine
 {
 /**
