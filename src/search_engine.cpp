@@ -1,4 +1,12 @@
 #include "search_engine.h"
+#include "attack_check.h"
+#include "move_generator.h"
+#include "move_interface.h"
+#include "position_evaluator.h"
+
+#include <algorithm>
+#include <future>
+#include <thread>
 
 namespace engine::parts
 {

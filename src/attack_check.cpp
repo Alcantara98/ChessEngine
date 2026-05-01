@@ -1,4 +1,9 @@
 #include "attack_check.h"
+#include "engine_constants.h"
+#include "move_generator.h"
+
+#include <algorithm>
+#include <vector>
 
 namespace engine::parts::attack_check
 {

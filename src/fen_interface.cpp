@@ -1,5 +1,7 @@
 #include "fen_interface.h"
 
+#include <regex>
+
 namespace engine::parts::fen_interface
 {
 auto setup_custom_board(BoardState &board_state,

@@ -1,4 +1,7 @@
 #include "move_generator.h"
+#include "attack_check.h"
+
+#include <algorithm>
 
 namespace engine::parts::move_generator
 {

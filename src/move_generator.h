@@ -1,11 +1,9 @@
 #ifndef MOVE_GENERATOR_H
 #define MOVE_GENERATOR_H
 
-#include "attack_check.h"
 #include "board_state.h"
 #include "move.h"
 #include "piece.h"
-#include "search_engine.h"
 
 #include <array>
 #include <vector>

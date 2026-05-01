@@ -2,7 +2,6 @@
 #define THREAD_HANDLER_H
 
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <thread>

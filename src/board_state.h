@@ -5,14 +5,8 @@
 #include "move.h"
 #include "piece.h"
 
-#include <algorithm>
 #include <array>
-#include <cctype>
-#include <cstdio>
-#include <random>
-#include <regex>
 #include <stack>
-#include <unordered_map>
 #include <vector>
 
 namespace engine::parts

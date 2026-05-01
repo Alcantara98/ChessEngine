@@ -2,6 +2,7 @@
 #define ENGINE_CONSTANTS_H
 
 #include "piece.h"
+
 #include <array>
 #include <limits>
 #include <map>
