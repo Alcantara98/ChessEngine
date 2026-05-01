@@ -1,10 +1,10 @@
 #ifndef FEN_INTERFACE_H
 #define FEN_INTERFACE_H
 
-#include <string>
-
 #include "board_state.h"
 #include "piece.h"
+
+#include <string>
 
 namespace engine::parts::fen_interface
 {

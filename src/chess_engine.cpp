@@ -1,4 +1,12 @@
 #include "chess_engine.h"
+#include "attack_check.h"
+#include "fen_interface.h"
+#include "move_generator.h"
+#include "move_interface.h"
+#include "search_engine.h"
+
+#include <iostream>
+#include <sstream>
 
 namespace engine
 {

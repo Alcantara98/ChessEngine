@@ -1,13 +1,8 @@
 #ifndef MOVE_INTERFACE_H
 #define MOVE_INTERFACE_H
 
-#include "attack_check.h"
 #include "board_state.h"
 
-#include <cmath>
-#include <iostream>
-#include <map>
-#include <regex>
 #include <string>
 
 namespace engine::parts

@@ -1,5 +1,7 @@
 #include "thread_handler.h"
 
+#include <chrono>
+
 namespace engine::parts
 {
 // CONSTRUCTORS

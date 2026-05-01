@@ -1,11 +1,7 @@
 #ifndef TRANSPOSITION_TABLE_H
 #define TRANSPOSITION_TABLE_H
 
-#include "board_state.h"
-#include <list>
-#include <mutex>
-#include <shared_mutex>
-#include <unordered_map>
+#include <cstdint>
 
 namespace engine::parts
 {

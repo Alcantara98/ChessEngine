@@ -1,5 +1,8 @@
 #include "board_state.h"
 
+#include <algorithm>
+#include <random>
+
 namespace engine::parts
 {
 // CONSTRUCTORS

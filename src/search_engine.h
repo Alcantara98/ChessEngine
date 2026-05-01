@@ -1,20 +1,13 @@
 #ifndef SEARCH_ENGINE_H
 #define SEARCH_ENGINE_H
 
-#include "attack_check.h"
 #include "board_state.h"
-#include "move_generator.h"
-#include "move_interface.h"
-#include "position_evaluator.h"
 #include "thread_handler.h"
 #include "transposition_table.h"
 
-#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
-#include <future>
-#include <thread>
 
 namespace engine::parts
 {

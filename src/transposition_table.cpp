@@ -1,4 +1,5 @@
 #include "transposition_table.h"
+#include "engine_constants.h"
 
 namespace engine::parts
 {

@@ -2,9 +2,7 @@
 #define ATTACK_CHECK_H
 
 #include "board_state.h"
-#include "engine_constants.h"
 #include "move.h"
-#include "move_generator.h"
 
 namespace engine::parts::attack_check
 {
