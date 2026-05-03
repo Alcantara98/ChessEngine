@@ -461,7 +461,6 @@ auto ChessEngine::handle_board_undo_reset_commands(
       search_engine.pop_last_move_eval();
       game_board_state.undo_move();
     }
-    game_board_state.print_board(game_board_state.color_to_move);
   }
   else if (user_input == "redo" &&
            current_state == &ChessEngine::engine_vs_player_state)
