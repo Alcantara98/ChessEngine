@@ -100,7 +100,7 @@ auto MoveInterface::create_move_from_string(Move &move,
   // Check if move is valid.
   std::smatch matches;
   std::regex move_pattern(
-      R"(^(O-O(?:-O)?)|([kqrbnp])([a-h][1-8])(x)?([a-h][1-8])=?([qrbns])?([+#])?$)");
+      R"(^(O-O(?:-O)?)|([kqrbnp])([a-h][1-8])([a-h][1-8])=?([qrbns])?([+#])?$)");
   if (std::regex_match(move_string, matches, move_pattern))
   {
     // Get initial and final coordinates.
@@ -141,24 +141,24 @@ auto MoveInterface::create_move_from_string(Move &move,
     // Check if it is the first move of the moving piece.
     move.first_move_of_moving_piece = !move.moving_piece->piece_has_moved;
 
-    // Capture move.
-    if (matches[4].matched)
+    // Capture moves.
+    // En-passant capture if pawn moves diagonally to empty square.
+    if (move.moving_piece->piece_type == PieceType::PAWN &&
+        move.from_x != move.to_x &&
+        game_board_state.chess_board[move.to_x][move.to_y]->piece_type ==
+            PieceType::EMPTY &&
+        game_board_state.chess_board[move.to_x][move.from_y]->piece_type ==
+            PieceType::PAWN)
     {
-      // En-passant capture if pawn moves diagonally to empty square.
-      if (move.moving_piece->piece_type == PieceType::PAWN &&
-          game_board_state.chess_board[move.to_x][move.to_y]->piece_type ==
-              PieceType::EMPTY)
-      {
-        move.capture_is_en_passant = true;
-        move.captured_piece =
-            game_board_state.chess_board[move.to_x][move.from_y];
-      }
-      // Normal capture.
-      else
-      {
-        move.captured_piece =
-            game_board_state.chess_board[move.to_x][move.to_y];
-      }
+      move.capture_is_en_passant = true;
+      move.captured_piece =
+          game_board_state.chess_board[move.to_x][move.from_y];
+    }
+    // Normal capture.
+    if (game_board_state.chess_board[move.to_x][move.to_y]->piece_type !=
+        PieceType::EMPTY)
+    {
+      move.captured_piece = game_board_state.chess_board[move.to_x][move.to_y];
     }
 
     // Pawn moved two squares.
