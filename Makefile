@@ -13,7 +13,7 @@ build-release:
 	cmake --build build --parallel
 
 build-debug:
-	cmake -B build -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_BUILD_TYPE=Debug -DASAN=ON
+	cmake -B build -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_BUILD_TYPE=Debug
 	cmake --build build --parallel
 
 # LINTING COMMANDS

@@ -18,12 +18,11 @@ MoveInterface::MoveInterface(BoardState &board_state)
 // PUBLIC FUNCTIONS
 
 auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
-                                  const std::string &move_string) -> bool
+                                  const std::string &move_string,
+                                  Move &move) -> bool
 {
   char piece_type;
 
-  Move move = Move(-1, -1, -1, -1, nullptr, nullptr, PieceType::EMPTY, false,
-                   false, false, -1, -1);
   // Parse input string move.
   if (!create_move_from_string(move, move_string, piece_type))
   {
@@ -37,7 +36,6 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
     return false;
   }
 
-  game_board_state.apply_move(move);
   return true;
 }
 
@@ -62,7 +60,7 @@ auto MoveInterface::move_to_string(const Move &move) -> std::string
     move_string += "=";
     move_string += PIECE_TYPE_TO_CHAR.at(move.promotion_piece_type);
   }
-    
+
   return move_string;
 }
 

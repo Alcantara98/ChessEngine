@@ -355,18 +355,23 @@ void ChessEngine::handle_player_turn()
       printf("\n");
       continue;
     }
+    parts::Move move =
+        parts::Move(-1, -1, -1, -1, nullptr, nullptr, parts::PieceType::EMPTY,
+                    false, false, false, -1, -1);
     if (move_interface.input_to_move(
             parts::move_generator::calculate_possible_moves(game_board_state),
-            user_input))
+            user_input, move))
     {
-      // Move was valid and played, end player's turn.
+      // Move was valid, apply it to the board.
+      if (search_engine.engine_is_pondering)
+      {
+        // Stop ppondering before applying move.
+        search_engine.stop_engine_pondering();
+      }
+
+      game_board_state.apply_move(move);
       break;
     }
-  }
-  if (search_engine.engine_is_pondering)
-  {
-    // End pondering after player's turn.
-    search_engine.stop_engine_pondering();
   }
 }
 

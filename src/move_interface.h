@@ -34,7 +34,8 @@ public:
    * @return Returns true if the move is valid, false otherwise.
    */
   auto input_to_move(const std::vector<Move> &possible_moves,
-                     const std::string &move_string) -> bool;
+                     const std::string &move_string,
+                     Move &move) -> bool;
 
   /**
    * @brief Converts a Move into a string (modern chess move notation).
