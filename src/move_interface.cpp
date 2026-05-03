@@ -100,35 +100,21 @@ auto MoveInterface::create_move_from_string(Move &move,
   // Check if move is valid.
   std::smatch matches;
   std::regex move_pattern(
-      R"(^(O-O(?:-O)?)|([kqrbnp])([a-h][1-8])([a-h][1-8])=?([qrbns])?([+#])?$)");
+      R"(^([kqrbnp])([a-h][1-8])([a-h][1-8])=?([qrbns])?([+#])?$)");
   if (std::regex_match(move_string, matches, move_pattern))
   {
-    // Get initial and final coordinates.
-    if (matches[CASTLE_MOVE_INDEX].matched)
-    {
-      // Castle Move.
-      piece_type = 'k';
-      // Initial x coordinate for both white and black king.
-      move.from_x = XE_FILE;
-      // King-side : Queen-side.
-      move.to_x = matches[1] == "O-O" ? XG_FILE : XC_FILE;
-      move.from_y = move.to_y =
-          game_board_state.color_to_move == PieceColor::WHITE ? Y_MIN : Y_MAX;
-    }
-    else
-    {
-      piece_type = matches[PIECE_TYPE_INDEX].str().at(0);
 
-      // Get initial coordinates.
-      std::string from_position = matches[FROM_POSITION_INDEX].str();
-      move.from_x = ALGEBRAIC_TO_INT.at(from_position.at(0));
-      move.from_y = from_position.at(1) - '0' - 1;
+    piece_type = matches[PIECE_TYPE_INDEX].str().at(0);
 
-      // Get final coordinates.
-      std::string to_position = matches[TO_POSITION_INDEX].str();
-      move.to_x = ALGEBRAIC_TO_INT.at(to_position.at(0));
-      move.to_y = to_position.at(1) - '0' - 1;
-    }
+    // Get initial coordinates.
+    std::string from_position = matches[FROM_POSITION_INDEX].str();
+    move.from_x = ALGEBRAIC_TO_INT.at(from_position.at(0));
+    move.from_y = from_position.at(1) - '0' - 1;
+
+    // Get final coordinates.
+    std::string to_position = matches[TO_POSITION_INDEX].str();
+    move.to_x = ALGEBRAIC_TO_INT.at(to_position.at(0));
+    move.to_y = to_position.at(1) - '0' - 1;
 
     // Get moving piece.
     move.moving_piece = game_board_state.chess_board[move.from_x][move.from_y];
