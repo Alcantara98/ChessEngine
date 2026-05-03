@@ -49,8 +49,6 @@ const int PIECE_TYPE_INDEX = 1;
 const int FROM_POSITION_INDEX = 2;
 const int TO_POSITION_INDEX = 3;
 const int PROMOTION_INDEX = 4;
-const std::vector<std::string> KING_CASTLE_MOVES = {"e1g1", "e1c1", "e8g8",
-                                                    "e8c8"};
 
 // MAX TRANSPOSITION TABLE CONSTANTS
 const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;

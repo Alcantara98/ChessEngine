@@ -44,50 +44,25 @@ auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
 auto MoveInterface::move_to_string(const Move &move) -> std::string
 {
   std::string move_string;
-  // Castle move.
-  if (move.moving_piece->piece_type == PieceType::KING &&
-      move.to_x - move.from_x == 2)
+
+  // Get piece type.
+  move_string += PIECE_TYPE_TO_CHAR.at(move.moving_piece->piece_type);
+
+  // Get initial coordinates.
+  move_string += INT_TO_ALGEBRAIC.at(move.from_x);
+  move_string += std::to_string(move.from_y + 1);
+
+  // Get final coordinates.
+  move_string += INT_TO_ALGEBRAIC.at(move.to_x);
+  move_string += std::to_string(move.to_y + 1);
+
+  // Pawn promotion.
+  if (move.promotion_piece_type != PieceType::EMPTY)
   {
-    move_string = "O-O";
+    move_string += "=";
+    move_string += PIECE_TYPE_TO_CHAR.at(move.promotion_piece_type);
   }
-  else if (move.moving_piece->piece_type == PieceType::KING &&
-           move.to_x - move.from_x == -2)
-  {
-    move_string = "O-O-O";
-  }
-  else
-  {
-    // Get piece type.
-    move_string += PIECE_TYPE_TO_CHAR.at(move.moving_piece->piece_type);
-
-    // Get initial coordinates.
-    move_string += INT_TO_ALGEBRAIC.at(move.from_x);
-    move_string += std::to_string(move.from_y + 1);
-
-    // Capture move.
-    if (move.captured_piece != nullptr)
-    {
-      if (move.moving_piece->piece_type == PieceType::PAWN)
-      {
-        move_string += "x";
-      }
-      else
-      {
-        move_string += "x";
-      }
-    }
-
-    // Get final coordinates.
-    move_string += INT_TO_ALGEBRAIC.at(move.to_x);
-    move_string += std::to_string(move.to_y + 1);
-
-    // Pawn promotion.
-    if (move.promotion_piece_type != PieceType::EMPTY)
-    {
-      move_string += "=";
-      move_string += PIECE_TYPE_TO_CHAR.at(move.promotion_piece_type);
-    }
-  }
+    
   return move_string;
 }
 
@@ -100,7 +75,7 @@ auto MoveInterface::create_move_from_string(Move &move,
   // Check if move is valid.
   std::smatch matches;
   std::regex move_pattern(
-      R"(^([kqrbnp])([a-h][1-8])([a-h][1-8])=?([qrbns])?([+#])?$)");
+      R"(^([kqrbnp])([a-h][1-8])([a-h][1-8])([qrbns])?([+#])?$)");
   if (std::regex_match(move_string, matches, move_pattern))
   {
 
