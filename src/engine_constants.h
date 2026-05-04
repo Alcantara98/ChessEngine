@@ -7,6 +7,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace engine::parts
 {
@@ -44,12 +45,10 @@ const int POSITIVE_DIRECTION = 1;
 const int NEGATIVE_DIRECTION = -1;
 
 // USER INPUT REGEX MATCH INDEXES
-const int CASTLE_MOVE_INDEX = 1;
-const int PIECE_TYPE_INDEX = 2;
-const int FROM_POSITION_INDEX = 3;
-const int CAPTURE_MOVE_INDEX = 4;
-const int TO_POSITION_INDEX = 5;
-const int PROMOTION_INDEX = 6;
+const int PIECE_TYPE_INDEX = 1;
+const int FROM_POSITION_INDEX = 2;
+const int TO_POSITION_INDEX = 3;
+const int PROMOTION_INDEX = 4;
 
 // MAX TRANSPOSITION TABLE CONSTANTS
 const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;

@@ -5,81 +5,45 @@
 
 #include <string>
 
-namespace engine::parts
+namespace engine::parts::move_interface
 {
+
 /**
- * @brief Class to convert user input into a Move and vice versa.
+ * @brief Converts a Move into a string in UCI format.
+ *
+ * @param move Move to convert into a string.
+ *
+ * @return Returns a string representing the move in modern chess notation.
  */
-class MoveInterface
-{
-public:
-  // CONSTRUCTORS
+auto move_to_string(const Move &move) -> std::string;
 
-  /**
-   * @brief User to Engine move interface.
-   *
-   * @param board_state Reference of the board state.
-   */
-  MoveInterface(BoardState &board_state);
+/**
+ * @brief Creates a Move object from a string in UCI format.
+ *
+ * @param move Move object to update based on user input.
+ * @param move_string String to convert into a Move.
+ * @param piece_type The type of piece that is moving.
+ * @param board_state The board state to validate the move on.
+ *
+ * @return Returns true if the move is valid, false otherwise.
+ */
+auto string_to_move(Move &move,
+                    const std::string &move_string,
+                    char &piece_type,
+                    BoardState &board_state) -> bool;
 
-  // FUNCTIONS
-
-  /**
-   * @brief Get user input and convert it into a Move and applies it to the
-   * board.
-   *
-   * @param possible_moves List of possible moves.
-   * @param move_string User input string representing the move.
-   *
-   * @return Returns true if the move is valid, false otherwise.
-   */
-  auto input_to_move(const std::vector<Move> &possible_moves,
-                     const std::string &move_string) -> bool;
-
-  /**
-   * @brief Converts a Move into a string (modern chess move notation).
-   *
-   * @param move Move to convert into a string.
-   *
-   * @return Returns a string representing the move in modern chess notation.
-   */
-  static auto move_to_string(const Move &move) -> std::string;
-
-private:
-  // PROPERTIES
-
-  /// @brief Reference of the board state.
-  BoardState &game_board_state;
-
-  // FUNCTIONS
-
-  /**
-   * @brief Retrieves information from a modern chess move notation string and
-   * transforms the given Move object to match the user input.
-   *
-   * @param move Move object to update based on user input.
-   * @param move_string String to convert into a Move.
-   * @param piece_type The type of piece that is moving.
-   *
-   * @return Returns true if the move is valid, false otherwise.
-   */
-  auto create_move_from_string(Move &move,
-                               const std::string &move_string,
-                               char &piece_type) -> bool;
-
-  /**
-   * @brief Validates a move.
-   *
-   * @param possible_moves List of possible moves.
-   * @param move Move to validate.
-   * @param piece_type The type of piece that is moving.
-   *
-   * @return Returns true if the move is valid, false otherwise.
-   */
-  auto validate_move(const std::vector<Move> &possible_moves,
-                     Move &move,
-                     char &piece_type) -> bool;
-};
-} // namespace engine::parts
+/**
+ * @brief Validates a move with the given board state.
+ *
+ * @param move Move to validate.
+ * @param piece_type The type of piece that is moving.
+ * @param board_state The board state to validate the move on.
+ *
+ * @return Returns true if the move is valid, false otherwise.
+ */
+auto validate_move(Move &move,
+                   char &piece_type,
+                   BoardState &board_state) -> bool;
+} // namespace engine::parts::move_interface
 
 #endif // MOVE_INTERFACE_H

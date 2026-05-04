@@ -86,7 +86,7 @@ auto SearchEngine::search_and_execute_best_move() -> bool
     for (auto move_score : move_scores)
     {
       printf("Move: %s, Score: %d\n",
-             MoveInterface::move_to_string(move_score.first).c_str(),
+             parts::move_interface::move_to_string(move_score.first).c_str(),
              move_score.second);
     }
     printf("\n");
@@ -130,7 +130,8 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   int eval_score = move_scores_filtered[0].second;
   eval_score = (engine_color == PieceColor::WHITE) ? eval_score : -eval_score;
   printf("Engine's Move: %s\n",
-         MoveInterface::move_to_string(move_scores_filtered[0].first).c_str());
+         parts::move_interface::move_to_string(move_scores_filtered[0].first)
+             .c_str());
   printf("Evaluation of Engine's Move: %d\n", eval_score);
 
   return true;

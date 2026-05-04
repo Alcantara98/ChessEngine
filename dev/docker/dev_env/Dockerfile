@@ -12,6 +12,7 @@ ARG LLVM_VERSION=18
 ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 ARG USERNAME=master-elby
+ARG HOST_USERNAME=master-user
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -75,8 +76,15 @@ RUN groupmod --gid ${USER_GID} --new-name ${USERNAME} ubuntu && \
 RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
     chmod 0440 /etc/sudoers.d/${USERNAME}
 
+# Import host bashrc when host home is bind-mounted into the container.
+RUN echo '' >> /home/${USERNAME}/.bashrc && \
+    echo '# Source host .bashrc if mounted.' >> /home/${USERNAME}/.bashrc && \
+    echo "[ -f \"/home/${HOST_USERNAME}/.bashrc\" ] && . \"/home/${HOST_USERNAME}/.bashrc\" 2>/dev/null || true" >> /home/${USERNAME}/.bashrc
+
 USER ${USERNAME}
 WORKDIR /workspaces/ChessEngine
+
+
 
 # Keep container running
 CMD ["sleep", "infinity"]
