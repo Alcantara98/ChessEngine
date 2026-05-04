@@ -44,8 +44,7 @@ auto string_to_move(Move &move,
 {
   // Check if move is valid.
   std::smatch matches;
-  std::regex move_pattern(
-      R"(^([kqrbnp])([a-h][1-8])([a-h][1-8])([qrbns])?([+#])?$)");
+  std::regex move_pattern(R"(^([kqrbnp])([a-h][1-8])([a-h][1-8])([qrbns])?$)");
   if (std::regex_match(move_string, matches, move_pattern))
   {
 
