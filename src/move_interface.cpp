@@ -1,45 +1,17 @@
 #include "move_interface.h"
 #include "attack_check.h"
+#include "move_generator.h"
 
 #include <cmath>
 #include <map>
 #include <regex>
 #include <string>
 
-namespace engine::parts
+namespace engine::parts::move_interface
 {
-// CONSTRUCTORS
-
-MoveInterface::MoveInterface(BoardState &board_state)
-    : game_board_state(board_state)
-{
-}
-
 // PUBLIC FUNCTIONS
 
-auto MoveInterface::input_to_move(const std::vector<Move> &possible_moves,
-                                  const std::string &move_string,
-                                  Move &move) -> bool
-{
-  char piece_type;
-
-  // Parse input string move.
-  if (!create_move_from_string(move, move_string, piece_type))
-  {
-    printf("Invalid Move - Regex Match Failure\n");
-    return false;
-  }
-
-  // Validate move.
-  if (!validate_move(possible_moves, move, piece_type))
-  {
-    return false;
-  }
-
-  return true;
-}
-
-auto MoveInterface::move_to_string(const Move &move) -> std::string
+auto move_to_string(const Move &move) -> std::string
 {
   std::string move_string;
 
@@ -57,7 +29,6 @@ auto MoveInterface::move_to_string(const Move &move) -> std::string
   // Pawn promotion.
   if (move.promotion_piece_type != PieceType::EMPTY)
   {
-    move_string += "=";
     move_string += PIECE_TYPE_TO_CHAR.at(move.promotion_piece_type);
   }
 
@@ -66,9 +37,10 @@ auto MoveInterface::move_to_string(const Move &move) -> std::string
 
 // PRIVATE FUNCTIONS
 
-auto MoveInterface::create_move_from_string(Move &move,
-                                            const std::string &move_string,
-                                            char &piece_type) -> bool
+auto string_to_move(Move &move,
+                    const std::string &move_string,
+                    char &piece_type,
+                    BoardState &board_state) -> bool
 {
   // Check if move is valid.
   std::smatch matches;
@@ -90,12 +62,12 @@ auto MoveInterface::create_move_from_string(Move &move,
     move.to_y = to_position.at(1) - '0' - 1;
 
     // Get moving piece.
-    move.moving_piece = game_board_state.chess_board[move.from_x][move.from_y];
+    move.moving_piece = board_state.chess_board[move.from_x][move.from_y];
 
     // Check if it is the first move of the moving piece.
     move.first_move_of_moving_piece =
         !move.moving_piece->piece_has_moved; // Get moving piece.
-    move.moving_piece = game_board_state.chess_board[move.from_x][move.from_y];
+    move.moving_piece = board_state.chess_board[move.from_x][move.from_y];
 
     // Check if it is the first move of the moving piece.
     move.first_move_of_moving_piece = !move.moving_piece->piece_has_moved;
@@ -104,20 +76,19 @@ auto MoveInterface::create_move_from_string(Move &move,
     // En-passant capture if pawn moves diagonally to empty square.
     if (move.moving_piece->piece_type == PieceType::PAWN &&
         move.from_x != move.to_x &&
-        game_board_state.chess_board[move.to_x][move.to_y]->piece_type ==
+        board_state.chess_board[move.to_x][move.to_y]->piece_type ==
             PieceType::EMPTY &&
-        game_board_state.chess_board[move.to_x][move.from_y]->piece_type ==
+        board_state.chess_board[move.to_x][move.from_y]->piece_type ==
             PieceType::PAWN)
     {
       move.capture_is_en_passant = true;
-      move.captured_piece =
-          game_board_state.chess_board[move.to_x][move.from_y];
+      move.captured_piece = board_state.chess_board[move.to_x][move.from_y];
     }
     // Normal capture.
-    if (game_board_state.chess_board[move.to_x][move.to_y]->piece_type !=
+    if (board_state.chess_board[move.to_x][move.to_y]->piece_type !=
         PieceType::EMPTY)
     {
-      move.captured_piece = game_board_state.chess_board[move.to_x][move.to_y];
+      move.captured_piece = board_state.chess_board[move.to_x][move.to_y];
     }
 
     // Pawn moved two squares.
@@ -144,9 +115,9 @@ auto MoveInterface::create_move_from_string(Move &move,
   return true;
 }
 
-auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
-                                  Move &move,
-                                  char &piece_type) -> bool
+auto validate_move(Move &move,
+                   char &piece_type,
+                   BoardState &board_state) -> bool
 {
   // Check if moving piece is empty.
   if (move.moving_piece->piece_type == PieceType::EMPTY)
@@ -179,6 +150,8 @@ auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
     }
   }
   // Check if move is in generated possible moves.
+  const std::vector<Move> &possible_moves =
+      move_generator::calculate_possible_moves(board_state);
   bool found_move = false;
   for (const auto &possible_move : possible_moves)
   {
@@ -195,11 +168,11 @@ auto MoveInterface::validate_move(const std::vector<Move> &possible_moves,
   }
 
   // Check if move puts king in check.
-  if (attack_check::move_leaves_king_in_check(game_board_state, move))
+  if (attack_check::move_leaves_king_in_check(board_state, move))
   {
     printf("Invalid Move - King is checked\n");
     return false;
   }
   return true;
 }
-} // namespace engine::parts
+} // namespace engine::parts::move_interface

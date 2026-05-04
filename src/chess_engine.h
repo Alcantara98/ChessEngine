@@ -3,7 +3,6 @@
 
 #include "board_state.h"
 #include "cross_plat_functions.h"
-#include "move_interface.h"
 #include "search_engine.h"
 
 namespace engine
@@ -36,9 +35,6 @@ private:
 
   /// @brief Best move finder object.
   parts::SearchEngine search_engine;
-
-  /// @brief Move interface object.
-  parts::MoveInterface move_interface;
 
   /// @brief Player color.
   parts::PieceColor player_color = parts::PieceColor::WHITE;
@@ -129,6 +125,15 @@ private:
    * @brief Takes user input and handles the player's turn.
    */
   void handle_player_turn();
+
+  /**
+   * @brief Handles the move input.
+   *
+   * @param user_input User input string.
+   *
+   * @return True if the move is valid, false otherwise.
+   */
+  auto handle_move_input(const std::string &user_input) -> bool;
 
   /**
    * @brief Handles the engine's turn.

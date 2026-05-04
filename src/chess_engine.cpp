@@ -13,8 +13,7 @@ namespace engine
 // CONSTRUCTORS
 
 ChessEngine::ChessEngine()
-    : search_engine(parts::SearchEngine(game_board_state)),
-      move_interface(parts::MoveInterface(game_board_state))
+    : search_engine(parts::SearchEngine(game_board_state))
 {
 }
 
@@ -355,24 +354,50 @@ void ChessEngine::handle_player_turn()
       printf("\n");
       continue;
     }
-    parts::Move move =
-        parts::Move(-1, -1, -1, -1, nullptr, nullptr, parts::PieceType::EMPTY,
-                    false, false, false, -1, -1);
-    if (move_interface.input_to_move(
-            parts::move_generator::calculate_possible_moves(game_board_state),
-            user_input, move))
+    if (handle_move_input(user_input))
     {
-      // Move was valid, apply it to the board.
-      if (search_engine.engine_is_pondering)
-      {
-        // Stop ppondering before applying move.
-        search_engine.stop_engine_pondering();
-      }
-
-      game_board_state.apply_move(move);
       break;
     }
   }
+  if (search_engine.engine_is_pondering)
+  {
+    // Stop ppondering if it was still running after player's turn.
+    search_engine.stop_engine_pondering();
+  }
+}
+
+auto ChessEngine::handle_move_input(const std::string &user_input) -> bool
+{
+  parts::Move move =
+      parts::Move(-1, -1, -1, -1, nullptr, nullptr, parts::PieceType::EMPTY,
+                  false, false, false, -1, -1);
+  char piece_type;
+
+  // Parse input string move.
+  if (!parts::move_interface::string_to_move(move, user_input, piece_type,
+                                             game_board_state))
+  {
+    printf("Invalid Move - Regex Match Failure\n");
+    return false;
+  }
+
+  // Validate move.
+  if (!parts::move_interface::validate_move(move, piece_type, game_board_state))
+  {
+    return false;
+  }
+
+  if (search_engine.engine_is_pondering)
+  {
+    // Stop ppondering before applying move to prevent concurrent access to
+    // the board.
+    search_engine.stop_engine_pondering();
+  }
+
+  // Move was valid, apply it to the board.
+  game_board_state.apply_move(move);
+
+  return true;
 }
 
 void ChessEngine::handle_player_during_engine_turn()
@@ -612,7 +637,7 @@ void ChessEngine::print_applied_moves()
   for (int index = previous_moves_temp.size() - 1; index >= 0; --index)
   {
     parts::Move move = previous_moves_temp[index];
-    printf("%s\n", parts::MoveInterface::move_to_string(move).c_str());
+    printf("%s\n", parts::move_interface::move_to_string(move).c_str());
     // Add move back to previous move stack.
     game_board_state.previous_move_stack.push(move);
   }
