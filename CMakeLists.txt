@@ -48,8 +48,9 @@ if(RELEASE)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto")
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_AR "gcc-ar")
-        set(CMAKE_RANLIB "gcc-ranlib")
+        string(REPLACE "g++" "gcc" _gcc_tool "${CMAKE_CXX_COMPILER}")
+        set(CMAKE_AR "${_gcc_tool}-ar")
+        set(CMAKE_RANLIB "${_gcc_tool}-ranlib")
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_AR "llvm-ar")
         set(CMAKE_RANLIB "llvm-ranlib")
@@ -59,18 +60,20 @@ endif()
 # Shared engine library
 add_library(chess_engine_core STATIC ${ENGINE_SOURCES})
 
-if(EXTRA_LIBS)
-    target_link_libraries(chess_engine ${EXTRA_LIBS})
-endif()
-
 # App 1: existing CLI main
 if(BUILD_CLI_APP)
     add_executable(chess_engine_cli src/main_cli.cpp)
     target_link_libraries(chess_engine_cli PRIVATE chess_engine_core)
+    if(EXTRA_LIBS)
+        target_link_libraries(chess_engine_cli PRIVATE ${EXTRA_LIBS})
+    endif()
 endif()
 
 # App 2: UCI main
 if(BUILD_UCI_APP)
     add_executable(chess_engine_uci src/main_uci.cpp)
     target_link_libraries(chess_engine_uci PRIVATE chess_engine_core)
+    if(EXTRA_LIBS)
+        target_link_libraries(chess_engine_uci PRIVATE ${EXTRA_LIBS})
+    endif()
 endif()
