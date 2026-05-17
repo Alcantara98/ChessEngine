@@ -6,4 +6,6 @@ auto main(int argc, char **argv) -> int
 
   printf("\n -- Welcome to Elby's Engine!!! -- \n");
   chess_engine.state_machine();
+
+  return 0;
 }

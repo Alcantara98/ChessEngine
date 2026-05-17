@@ -57,20 +57,31 @@ public:
    *
    * @param board_state BoardState object representing the current state of the
    * chess board.
+   * @param is_uci Flag to indicate if the engine is in UCI mode.
    */
-  SearchEngine(BoardState &board_state);
+  SearchEngine(BoardState &board_state, bool is_uci);
 
   // FUNCTIONS
 
   /**
-   * @brief Finds the best move for the engine and applies it to the board.
+   * @brief Starts the engine search.
+   *
+   * @details This function starts the search thread and the timeout thread.
    */
-  void handle_engine_turn();
+  void start_engine_search();
 
   /**
    * @brief Stops the engine from searching.
    */
-  void stop_engine_turn();
+  void stop_engine_search();
+
+  /**
+   * @brief Waits until the engine search is done and returns the best move
+   * string.
+   *
+   * @return The best move string.
+   */
+  auto wait_for_search_and_get_best_move() -> std::string;
 
   /**
    * @brief Starts the engine pondering.
@@ -158,6 +169,18 @@ private:
 
   /// @brief History Heuristic Table.
   history_table_type history_table = {};
+
+  /// @brief Best move found by the search.
+  std::string best_move;
+
+  /// @brief Best move score found by the search.
+  int best_move_score = 0;
+
+  /// @brief Flag to indicate if the engine is in UCI mode.
+  bool is_uci = false;
+
+  /// @brief Best move string found by the search.
+  std::string best_move_string;
 
   // FUNCTIONS
 

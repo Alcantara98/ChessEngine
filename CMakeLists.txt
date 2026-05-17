@@ -17,8 +17,16 @@ option(ASAN "Enable AddressSanitizer" OFF)
 # Option to create an optimized release build
 option(RELEASE "Enable Release Optimization" OFF)
 
+option(BUILD_CLI_APP "Build CLI app (main_cli.cpp)" ON)
+option(BUILD_UCI_APP "Build UCI app (main_uci.cpp)" ON)
+
 # Add source files
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp")
+list(REMOVE_ITEM ENGINE_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/main_cli.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/main_uci.cpp"
+)
+
 
 # Static linking for MinGW/GCC
 if(MINGW)
@@ -48,9 +56,21 @@ if(RELEASE)
     endif()
 endif()
 
-# Create the executable and link libraries
-add_executable(chess_engine ${SOURCES})
+# Shared engine library
+add_library(chess_engine_core STATIC ${ENGINE_SOURCES})
 
 if(EXTRA_LIBS)
     target_link_libraries(chess_engine ${EXTRA_LIBS})
+endif()
+
+# App 1: existing CLI main
+if(BUILD_CLI_APP)
+    add_executable(chess_engine_cli src/main_cli.cpp)
+    target_link_libraries(chess_engine_cli PRIVATE chess_engine_core)
+endif()
+
+# App 2: UCI main
+if(BUILD_UCI_APP)
+    add_executable(chess_engine_uci src/main_uci.cpp)
+    target_link_libraries(chess_engine_uci PRIVATE chess_engine_core)
 endif()

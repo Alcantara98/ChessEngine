@@ -30,6 +30,8 @@ void ThreadHandler::start_thread(int thread_timeout_ms)
         running_flag = false;
         std::lock_guard<std::mutex> lock(search_timeout_mutex);
         search_timeout_cv.notify_one();
+        std::lock_guard<std::mutex> done_lock(done_mutex);
+        done_cv.notify_all();
       });
 
   timeout_thread = std::thread([this, thread_timeout_ms]()
@@ -61,5 +63,11 @@ void ThreadHandler::initiate_search_timeout(const int thread_timeout_ms)
   {
     running_flag = false;
   }
+}
+
+void ThreadHandler::wait_until_done()
+{
+  std::unique_lock<std::mutex> lock(done_mutex);
+  done_cv.wait(lock, [this] { return !running_flag; });
 }
 } // namespace engine::parts

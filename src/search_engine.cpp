@@ -12,25 +12,39 @@ namespace engine::parts
 {
 // CONSTRUCTORS
 
-SearchEngine::SearchEngine(BoardState &board_state)
+SearchEngine::SearchEngine(BoardState &board_state, bool is_uci)
     : game_board_state(board_state),
-      transposition_table(MAX_TRANSPOSITION_TABLE_SIZE)
+      transposition_table(MAX_TRANSPOSITION_TABLE_SIZE), is_uci(is_uci)
 {
 } // Initialize with a max size
 
 // PUBLIC FUNCTIONS
 
-void SearchEngine::handle_engine_turn()
+void SearchEngine::start_engine_search()
 {
+  if (engine_is_searching())
+  {
+    return;
+  }
   search_thread_handler.start_thread(max_search_time_milliseconds);
 }
 
-void SearchEngine::stop_engine_turn() { search_thread_handler.stop_thread(); }
+void SearchEngine::stop_engine_search() { search_thread_handler.stop_thread(); }
+
+auto SearchEngine::wait_for_search_and_get_best_move() -> std::string
+{
+  search_thread_handler.wait_until_done();
+  return best_move_string;
+}
 
 void SearchEngine::start_engine_pondering()
 {
+  if (engine_is_pondering)
+  {
+    return;
+  }
   engine_is_pondering = true;
-  ponder_thread_handler.start_thread(MAX_SEARCH_TIME_MS);
+  ponder_thread_handler.start_thread(MAX_PONDER_SEARCH_TIME_MS);
 }
 
 void SearchEngine::stop_engine_pondering()
@@ -80,7 +94,7 @@ auto SearchEngine::search_and_execute_best_move() -> bool
 
   sort_moves(move_scores);
 
-  if (show_move_evaluations)
+  if (!is_uci && show_move_evaluations)
   {
     // Print all moves and their evaluations.
     for (auto move_score : move_scores)
@@ -127,12 +141,16 @@ auto SearchEngine::search_and_execute_best_move() -> bool
   // Apply the best move.
   game_board_state.apply_move(move_scores_filtered[0].first);
   previous_move_evals.push(move_scores_filtered[0].second);
-  int eval_score = move_scores_filtered[0].second;
-  eval_score = (engine_color == PieceColor::WHITE) ? eval_score : -eval_score;
-  printf("Engine's Move: %s\n",
-         parts::move_interface::move_to_string(move_scores_filtered[0].first)
-             .c_str());
-  printf("Evaluation of Engine's Move: %d\n", eval_score);
+  best_move_string =
+      parts::move_interface::move_to_string(move_scores_filtered[0].first);
+
+  if (!is_uci)
+  {
+    int eval_score = move_scores_filtered[0].second;
+    eval_score = (engine_color == PieceColor::WHITE) ? eval_score : -eval_score;
+    printf("Evaluation of Engine's Move: %d\n", eval_score);
+    printf("Engine's Move: %s\n", best_move_string.c_str());
+  }
 
   return true;
 }
@@ -976,15 +994,15 @@ void SearchEngine::reset_and_print_performance_matrix(
     std::chrono::time_point<std::chrono::steady_clock> search_start_time,
     std::chrono::time_point<std::chrono::steady_clock> search_end_time)
 {
-  // Calculate duration of search.
-  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                      search_end_time - search_start_time)
-                      .count();
-
   // Print performance metrics to user.
-  if ((show_performance && !engine_is_pondering) ||
-      (show_ponder_performance && engine_is_pondering))
+  if (!is_uci && ((show_performance && !engine_is_pondering) ||
+                  (show_ponder_performance && engine_is_pondering)))
   {
+    // Calculate duration of search.
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        search_end_time - search_start_time)
+                        .count();
+
     // Avoid division by zero.
     if (duration == 0)
     {

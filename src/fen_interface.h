@@ -8,6 +8,8 @@
 
 namespace engine::parts::fen_interface
 {
+// CONSTANTS
+const int FEN_FIELD_COUNT = 6;
 /**
  * @brief Sets up the given board state from a FEN string.
  *
