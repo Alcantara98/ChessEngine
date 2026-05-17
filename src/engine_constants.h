@@ -7,7 +7,6 @@
 #include <limits>
 #include <map>
 #include <string>
-#include <vector>
 
 namespace engine::parts
 {
@@ -45,10 +44,9 @@ const int POSITIVE_DIRECTION = 1;
 const int NEGATIVE_DIRECTION = -1;
 
 // USER INPUT REGEX MATCH INDEXES
-const int PIECE_TYPE_INDEX = 1;
-const int FROM_POSITION_INDEX = 2;
-const int TO_POSITION_INDEX = 3;
-const int PROMOTION_INDEX = 4;
+const int FROM_POSITION_INDEX = 1;
+const int TO_POSITION_INDEX = 2;
+const int PROMOTION_INDEX = 3;
 
 // MAX TRANSPOSITION TABLE CONSTANTS
 const int MAX_TRANSPOSITION_TABLE_SIZE = 100000000;
@@ -63,6 +61,7 @@ const int PERCENTAGE = 100;
 const int MAX_SEARCH_DEPTH = 100;
 const int DEFAULT_SEARCH_TIME_MS = 2000;
 const int MAX_SEARCH_TIME_MS = 600000;
+const int MAX_PONDER_SEARCH_TIME_MS = 20000;
 const int INF = std::numeric_limits<int>::max();
 const int INF_MINUS_1000 = INF - 1000;
 const int MIN_ROOT_MOVE_PRUNING_DEPTH = 8;

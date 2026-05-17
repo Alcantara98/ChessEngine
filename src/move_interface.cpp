@@ -15,9 +15,6 @@ auto move_to_string(const Move &move) -> std::string
 {
   std::string move_string;
 
-  // Get piece type.
-  move_string += PIECE_TYPE_TO_CHAR.at(move.moving_piece->piece_type);
-
   // Get initial coordinates.
   move_string += INT_TO_ALGEBRAIC.at(move.from_x);
   move_string += std::to_string(move.from_y + 1);
@@ -39,16 +36,13 @@ auto move_to_string(const Move &move) -> std::string
 
 auto string_to_move(Move &move,
                     const std::string &move_string,
-                    char &piece_type,
                     BoardState &board_state) -> bool
 {
   // Check if move is valid.
   std::smatch matches;
-  std::regex move_pattern(R"(^([kqrbnp])([a-h][1-8])([a-h][1-8])([qrbns])?$)");
+  std::regex move_pattern(R"(^([a-h][1-8])([a-h][1-8])([qrbns])?$)");
   if (std::regex_match(move_string, matches, move_pattern))
   {
-
-    piece_type = matches[PIECE_TYPE_INDEX].str().at(0);
 
     // Get initial coordinates.
     std::string from_position = matches[FROM_POSITION_INDEX].str();
@@ -114,23 +108,12 @@ auto string_to_move(Move &move,
   return true;
 }
 
-auto validate_move(Move &move,
-                   char &piece_type,
-                   BoardState &board_state) -> bool
+auto validate_move(Move &move, BoardState &board_state) -> bool
 {
   // Check if moving piece is empty.
   if (move.moving_piece->piece_type == PieceType::EMPTY)
   {
     printf("Invalid Move - Moving Piece is Empty Square\n");
-    return false;
-  }
-
-  // Check if input piece type matches square piece type.
-  if (CHAR_TO_PIECE_TYPE.at(piece_type) != move.moving_piece->piece_type)
-  {
-    printf("Invalid Move - Given piece type: %c does not match square piece "
-           "type: %c\n",
-           piece_type, PIECE_TYPE_TO_CHAR.at(move.moving_piece->piece_type));
     return false;
   }
 

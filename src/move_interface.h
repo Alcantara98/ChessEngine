@@ -22,28 +22,23 @@ auto move_to_string(const Move &move) -> std::string;
  *
  * @param move Move object to update based on user input.
  * @param move_string String to convert into a Move.
- * @param piece_type The type of piece that is moving.
  * @param board_state The board state to validate the move on.
  *
  * @return Returns true if the move is valid, false otherwise.
  */
 auto string_to_move(Move &move,
                     const std::string &move_string,
-                    char &piece_type,
                     BoardState &board_state) -> bool;
 
 /**
  * @brief Validates a move with the given board state.
  *
  * @param move Move to validate.
- * @param piece_type The type of piece that is moving.
  * @param board_state The board state to validate the move on.
  *
  * @return Returns true if the move is valid, false otherwise.
  */
-auto validate_move(Move &move,
-                   char &piece_type,
-                   BoardState &board_state) -> bool;
+auto validate_move(Move &move, BoardState &board_state) -> bool;
 } // namespace engine::parts::move_interface
 
 #endif // MOVE_INTERFACE_H

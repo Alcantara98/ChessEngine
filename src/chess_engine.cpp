@@ -13,7 +13,7 @@ namespace engine
 // CONSTRUCTORS
 
 ChessEngine::ChessEngine()
-    : search_engine(parts::SearchEngine(game_board_state))
+    : search_engine(parts::SearchEngine(game_board_state, false))
 {
 }
 
@@ -132,9 +132,9 @@ void ChessEngine::engine_vs_player_state()
     if (!game_over && game_board_state.color_to_move != player_color)
     {
       // Engine's turn.
-      search_engine.handle_engine_turn();
+      search_engine.start_engine_search();
       handle_player_during_engine_turn();
-      search_engine.stop_engine_turn();
+      search_engine.stop_engine_search();
     }
     else
     {
@@ -371,10 +371,9 @@ auto ChessEngine::handle_move_input(const std::string &user_input) -> bool
   parts::Move move =
       parts::Move(-1, -1, -1, -1, nullptr, nullptr, parts::PieceType::EMPTY,
                   false, false, false, -1, -1);
-  char piece_type;
 
   // Parse input string move.
-  if (!parts::move_interface::string_to_move(move, user_input, piece_type,
+  if (!parts::move_interface::string_to_move(move, user_input,
                                              game_board_state))
   {
     printf("Invalid Move - Regex Match Failure\n");
@@ -382,7 +381,7 @@ auto ChessEngine::handle_move_input(const std::string &user_input) -> bool
   }
 
   // Validate move.
-  if (!parts::move_interface::validate_move(move, piece_type, game_board_state))
+  if (!parts::move_interface::validate_move(move, game_board_state))
   {
     return false;
   }
@@ -475,7 +474,7 @@ auto ChessEngine::handle_board_undo_reset_commands(
     // these commands.
     if (search_engine.engine_is_searching())
     {
-      search_engine.stop_engine_turn();
+      search_engine.stop_engine_search();
     }
     if (search_engine.engine_is_pondering)
     {
@@ -530,7 +529,7 @@ auto ChessEngine::handle_general_commands(const std::string &user_input) -> bool
     // thread issues.
     if (search_engine.engine_is_searching())
     {
-      search_engine.stop_engine_turn();
+      search_engine.stop_engine_search();
     }
     if (search_engine.engine_is_pondering)
     {

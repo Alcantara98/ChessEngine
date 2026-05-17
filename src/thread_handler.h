@@ -53,6 +53,13 @@ public:
    */
   void stop_thread();
 
+  /**
+   * @brief Waits until the thread is done.
+   *
+   * @details Waits until the thread is done by checking the running flag.
+   */
+  void wait_until_done();
+
 private:
   // PROPERTIES
 
@@ -74,6 +81,12 @@ private:
 
   /// @brief Function to run in the thread.
   std::function<void()> function;
+
+  /// @brief Mutex for synchronizing thread done operations.
+  std::mutex done_mutex;
+
+  /// @brief Condition variable for managing thread done operations.
+  std::condition_variable done_cv;
 
   // FUNCTIONS
   /**

@@ -17,8 +17,16 @@ option(ASAN "Enable AddressSanitizer" OFF)
 # Option to create an optimized release build
 option(RELEASE "Enable Release Optimization" OFF)
 
+option(BUILD_CLI_APP "Build CLI app (main_cli.cpp)" ON)
+option(BUILD_UCI_APP "Build UCI app (main_uci.cpp)" ON)
+
 # Add source files
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp")
+list(REMOVE_ITEM ENGINE_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/main_cli.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/main_uci.cpp"
+)
+
 
 # Static linking for MinGW/GCC
 if(MINGW)
@@ -40,17 +48,39 @@ if(RELEASE)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto")
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_AR "gcc-ar")
-        set(CMAKE_RANLIB "gcc-ranlib")
+        if(MINGW)
+            find_program(GCC_AR_TOOL NAMES gcc-ar x86_64-w64-mingw32-gcc-ar)
+            find_program(GCC_RANLIB_TOOL NAMES gcc-ranlib x86_64-w64-mingw32-gcc-ranlib)
+            if(GCC_AR_TOOL AND GCC_RANLIB_TOOL)
+                set(CMAKE_AR "${GCC_AR_TOOL}")
+                set(CMAKE_RANLIB "${GCC_RANLIB_TOOL}")
+            else()
+                message(WARNING "gcc-ar/gcc-ranlib not found; using CMake default archiver tools.")
+            endif()
+        endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_AR "llvm-ar")
         set(CMAKE_RANLIB "llvm-ranlib")
     endif()
 endif()
 
-# Create the executable and link libraries
-add_executable(chess_engine ${SOURCES})
+# Shared engine library
+add_library(chess_engine_core STATIC ${ENGINE_SOURCES})
 
-if(EXTRA_LIBS)
-    target_link_libraries(chess_engine ${EXTRA_LIBS})
+# App 1: existing CLI main
+if(BUILD_CLI_APP)
+    add_executable(chess_engine_cli src/main_cli.cpp)
+    target_link_libraries(chess_engine_cli PRIVATE chess_engine_core)
+    if(EXTRA_LIBS)
+        target_link_libraries(chess_engine_cli PRIVATE ${EXTRA_LIBS})
+    endif()
+endif()
+
+# App 2: UCI main
+if(BUILD_UCI_APP)
+    add_executable(chess_engine_uci src/main_uci.cpp)
+    target_link_libraries(chess_engine_uci PRIVATE chess_engine_core)
+    if(EXTRA_LIBS)
+        target_link_libraries(chess_engine_uci PRIVATE ${EXTRA_LIBS})
+    endif()
 endif()
