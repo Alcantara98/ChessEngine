@@ -1,5 +1,6 @@
 #include "search_engine.h"
 #include "attack_check.h"
+#include "engine_constants.h"
 #include "move_generator.h"
 #include "move_interface.h"
 #include "position_evaluator.h"
@@ -494,8 +495,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   bool best_move_is_singular = false;
 
   if (!do_prob_cut_search(board_state, beta, depth, eval, possible_moves,
-                          color_to_move_is_in_check, is_forward_pruning_line,
-                          max_eval, is_pvs_line, ply))
+                          is_forward_pruning_line, max_eval, is_pvs_line, ply))
   {
     max_eval = -INF;
 
@@ -880,16 +880,15 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
                                       int &depth,
                                       int &eval,
                                       std::vector<Move> &possible_moves,
-                                      bool color_to_move_is_in_check,
                                       bool &is_forward_pruning_line,
                                       int &max_eval,
                                       bool &is_pvs_line,
                                       int &ply) -> bool
 {
   // PROBABILITY CUT HEURISTIC
-  if (is_forward_pruning_line || is_pvs_line || color_to_move_is_in_check ||
-      depth <= PROB_CUT_DEPTH_THRESHOLD || beta > INF_MINUS_1000 ||
-      ply <= MIN_PROB_CUT_DEPTH)
+  if (depth != PROB_CUT_DEPTH || is_forward_pruning_line || is_pvs_line ||
+      beta > INF_MINUS_1000 || ply <= MIN_PROB_CUT_DEPTH ||
+      board_state.previous_move_stack.top().captured_piece == nullptr)
   {
     return false;
   }
@@ -903,22 +902,13 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
 
     board_state.apply_move(move);
 
-    int prob_cut_beta_threshold = beta + PAWN_VALUE;
+    int prob_cut_beta_threshold = beta + PAWN_VALUE + PAWN_VALUE;
 
-    // Check with quiescence search first with null window around
-    // prob_cut_beta_threshold.
-    eval = -quiescence_search(-prob_cut_beta_threshold,
-                              -prob_cut_beta_threshold + 1, board_state);
-
-    int prob_cut_depth = std::max(std::min(depth - 4, depth / 2), 0);
-    if (eval >= prob_cut_beta_threshold && prob_cut_depth > 0)
-    {
-      // If move survives quiescence search, do normal reduced depth search
-      // with null window around prob_cut_beta_threshold.
-      eval = -negamax_alpha_beta_search(board_state, -prob_cut_beta_threshold,
-                                        -prob_cut_beta_threshold + 1,
-                                        prob_cut_depth, true, false, ply + 1);
-    }
+    // If move survives quiescence search, do normal reduced depth search
+    // with null window around prob_cut_beta_threshold.
+    eval = -negamax_alpha_beta_search(board_state, -prob_cut_beta_threshold,
+                                      -prob_cut_beta_threshold + 1,
+                                      PROB_CUT_DEPTH, true, false, ply + 1);
 
     board_state.undo_move();
 

@@ -485,6 +485,10 @@ private:
    * of the move being good is high and will most likely cause a beta cut when
    * searched fully.
    *
+   * @note We do not do probability cut pruning on quiet moves as it is too
+   * risky. Quiet moves are hard to evaluate properly when doing shallow
+   * searches.
+   *
    * @param board_state BoardState object to search.
    * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
@@ -492,8 +496,6 @@ private:
    * @param possible_moves Vector of possible moves.
    * @param color_to_move_is_in_check Flag to indicate if the color to move is
    * in check.
-   * @param is_forward_pruning_line Flag to indicate if the search line is from
-   * a null move, late move reduction, or probability cut line.
    * @param max_eval Maximum evaluation score.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
    * @param ply Current ply of the search.
@@ -505,7 +507,6 @@ private:
                           int &depth,
                           int &eval,
                           std::vector<Move> &possible_moves,
-                          bool color_to_move_is_in_check,
                           bool &is_forward_pruning_line,
                           int &max_eval,
                           bool &is_pvs_line,
