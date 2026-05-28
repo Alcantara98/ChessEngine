@@ -258,17 +258,10 @@ auto SearchEngine::run_iterative_deepening_search_evaluation()
     if (running_search_flag)
     {
       // Get results from threads.
-      move_scores.clear();
-      int future_index = 0;
-      for (auto &possible_move : possible_moves)
-      {
-        if (moves_to_search.find(possible_move.list_index) !=
-            moves_to_search.end())
-        {
-          move_scores.emplace_back(possible_move, futures[future_index].get());
-          ++future_index;
-        }
-      }
+      get_results_from_threads(move_scores, futures, possible_moves,
+                               moves_to_search);
+
+      sort_moves(move_scores);
 
       // Prune root moves.
       prune_root_moves(moves_to_search, move_scores, iterative_depth);
@@ -286,6 +279,53 @@ auto SearchEngine::run_iterative_deepening_search_evaluation()
   decay_history_table();
 
   return move_scores;
+}
+
+auto SearchEngine::get_results_from_threads(
+    std::vector<std::pair<Move, int>> &move_scores,
+    std::vector<std::future<int>> &futures,
+    std::vector<Move> &possible_moves,
+    std::map<int, bool> &moves_to_search) -> void
+{
+  move_scores.clear();
+  int future_index = 0;
+  for (auto &possible_move : possible_moves)
+  {
+    if (moves_to_search.find(possible_move.list_index) != moves_to_search.end())
+    {
+      move_scores.emplace_back(possible_move, futures[future_index].get());
+      ++future_index;
+    }
+  }
+}
+
+auto SearchEngine::stop_search_early(
+    std::vector<std::pair<Move, int>> &move_scores,
+    int &iterative_depth) -> bool
+{
+  std::string current_best_move_string =
+      parts::move_interface::move_to_string(move_scores[0].first);
+
+  if (current_best_move_string == best_move_string)
+  {
+    ++best_move_iteration_count;
+  }
+  else
+  {
+    best_move_string = current_best_move_string;
+    best_move_iteration_count = 0;
+  }
+
+  // Early stop the search if the first move is already way greater than the
+  // second move, we can stop the search early if the depth is at least 10
+  // already.
+  if (iterative_depth >= MIN_EARLY_STOP_DEPTH &&
+      move_scores[0].second > move_scores[1].second + EARLY_STOP_MARGIN_VALUE &&
+      best_move_iteration_count >= MIN_EARLY_STOP_ITERATIONS)
+  {
+    return true;
+  }
+  return false;
 }
 
 void SearchEngine::prune_root_moves(

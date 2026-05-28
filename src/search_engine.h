@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <future>
 
 namespace engine::parts
 {
@@ -182,6 +183,9 @@ private:
   /// @brief Best move string found by the search.
   std::string best_move_string;
 
+  /// @brief Number of iterations the best move has been found in.
+  int best_move_iteration_count = 0;
+
   // FUNCTIONS
 
   /**
@@ -208,6 +212,32 @@ private:
    */
   auto run_iterative_deepening_search_evaluation()
       -> std::vector<std::pair<Move, int>>;
+
+  /**
+   * @brief Gets the results from the threads and adds them to the move scores
+   * vector.
+   *
+   * @param move_scores Vector of moves and their scores.
+   * @param futures Vector of futures.
+   * @param possible_moves Vector of possible moves.
+   * @param moves_to_search Map of moves to search.
+   */
+  auto static get_results_from_threads(
+      std::vector<std::pair<Move, int>> &move_scores,
+      std::vector<std::future<int>> &futures,
+      std::vector<Move> &possible_moves,
+      std::map<int, bool> &moves_to_search) -> void;
+
+  /**
+   * @brief Stops the search early if the best move has been found in a certain
+   * number of iterations.
+   *
+   * @param move_scores Vector of moves and their scores.
+   *
+   * @return True if the search should be stopped early, false otherwise.
+   */
+  auto stop_search_early(std::vector<std::pair<Move, int>> &move_scores,
+                         int &iterative_depth) -> bool;
 
   /**
    * @brief Prunes the root moves that are not in the top 50% of the search so

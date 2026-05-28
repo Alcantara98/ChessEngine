@@ -57,6 +57,14 @@ const int EXACT = 0;
 // PERFORMANCE MATRIX CONVERSIONS
 const int PERCENTAGE = 100;
 
+// PIECE VALUES
+const int PAWN_VALUE = 80;
+const int KNIGHT_VALUE = 320;
+const int BISHOP_VALUE = 340;
+const int ROOK_VALUE = 500;
+const int QUEEN_VALUE = 900;
+const int KING_VALUE = 20000;
+
 // SEARCH ENGINE CONSTANTS
 const int MAX_SEARCH_DEPTH = 100;
 const int DEFAULT_SEARCH_TIME_MS = 2000;
@@ -73,14 +81,10 @@ const int TT_FUTILITY_PRUNING_MIN_DEPTH = 8;
 const int PROB_CUT_DEPTH = 5;
 const int MIN_PROB_CUT_DEPTH = 4;
 const int PROB_CUT_REDUCTION = 3;
+const int MIN_EARLY_STOP_DEPTH = 10;
+const int EARLY_STOP_MARGIN_VALUE = PAWN_VALUE * 2;
+const int MIN_EARLY_STOP_ITERATIONS = 3;
 
-// PIECE VALUES
-const int PAWN_VALUE = 80;
-const int KNIGHT_VALUE = 320;
-const int BISHOP_VALUE = 340;
-const int ROOK_VALUE = 500;
-const int QUEEN_VALUE = 900;
-const int KING_VALUE = 20000;
 // For getting MVV_LVA_VALUES.
 const std::array<int, 6> PIECE_VALUES = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE,
                                          ROOK_VALUE, QUEEN_VALUE,  KING_VALUE};
