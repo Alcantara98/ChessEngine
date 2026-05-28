@@ -319,9 +319,9 @@ void UCIEngine::search_for_best_move(int wtime_ms,
   }
   if (winc_ms > 0)
   {
-    // NOTE: -1 is to account for the time it takes for the move to actually be
+    // NOTE: -2 is to account for the time it takes for the move to actually be
     // played in the server.
-    search_engine.max_search_time_milliseconds += engine_increment - 1;
+    search_engine.max_search_time_milliseconds += engine_increment - 2;
   }
   if (movetime_ms > 0)
   {
