@@ -42,11 +42,11 @@ struct Move
   int pawn_moved_two_squares_to_x, pawn_moved_two_squares_to_y;
 
   /// @brief Index of the move in the move list.
-  /// @note This is used to identify the best move in the possible moves list.
+  /// @note This is used to identify the best move in the possible moves list as
+  /// calculate_possible_moves function may not return the moves in the same
+  /// order due to sorting based on history table which can change anytime
+  /// during search.
   int list_index = 0;
-
-  /// @brief The score of the move in the history table.
-  int history_table_score = 0;
 
   // CONSTRUCTORS
 
