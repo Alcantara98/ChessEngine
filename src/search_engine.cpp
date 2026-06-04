@@ -1,5 +1,6 @@
 #include "search_engine.h"
 #include "attack_check.h"
+#include "engine_constants.h"
 #include "move_generator.h"
 #include "move_interface.h"
 #include "position_evaluator.h"
@@ -257,17 +258,10 @@ auto SearchEngine::run_iterative_deepening_search_evaluation()
     if (running_search_flag)
     {
       // Get results from threads.
-      move_scores.clear();
-      int future_index = 0;
-      for (auto &possible_move : possible_moves)
-      {
-        if (moves_to_search.find(possible_move.list_index) !=
-            moves_to_search.end())
-        {
-          move_scores.emplace_back(possible_move, futures[future_index].get());
-          ++future_index;
-        }
-      }
+      get_results_from_threads(move_scores, futures, possible_moves,
+                               moves_to_search);
+
+      sort_moves(move_scores);
 
       // Prune root moves.
       prune_root_moves(moves_to_search, move_scores, iterative_depth);
@@ -285,6 +279,53 @@ auto SearchEngine::run_iterative_deepening_search_evaluation()
   decay_history_table();
 
   return move_scores;
+}
+
+auto SearchEngine::get_results_from_threads(
+    std::vector<std::pair<Move, int>> &move_scores,
+    std::vector<std::future<int>> &futures,
+    std::vector<Move> &possible_moves,
+    std::map<int, bool> &moves_to_search) -> void
+{
+  move_scores.clear();
+  int future_index = 0;
+  for (auto &possible_move : possible_moves)
+  {
+    if (moves_to_search.find(possible_move.list_index) != moves_to_search.end())
+    {
+      move_scores.emplace_back(possible_move, futures[future_index].get());
+      ++future_index;
+    }
+  }
+}
+
+auto SearchEngine::stop_search_early(
+    std::vector<std::pair<Move, int>> &move_scores,
+    int &iterative_depth) -> bool
+{
+  std::string current_best_move_string =
+      parts::move_interface::move_to_string(move_scores[0].first);
+
+  if (current_best_move_string == best_move_string)
+  {
+    ++best_move_iteration_count;
+  }
+  else
+  {
+    best_move_string = current_best_move_string;
+    best_move_iteration_count = 0;
+  }
+
+  // Early stop the search if the first move is already way greater than the
+  // second move, we can stop the search early if the depth is at least 10
+  // already.
+  if (iterative_depth >= MIN_EARLY_STOP_DEPTH &&
+      move_scores[0].second > move_scores[1].second + EARLY_STOP_MARGIN_VALUE &&
+      best_move_iteration_count >= MIN_EARLY_STOP_ITERATIONS)
+  {
+    return true;
+  }
+  return false;
 }
 
 void SearchEngine::prune_root_moves(
@@ -494,8 +535,7 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   bool best_move_is_singular = false;
 
   if (!do_prob_cut_search(board_state, beta, depth, eval, possible_moves,
-                          color_to_move_is_in_check, is_forward_pruning_line,
-                          max_eval, is_pvs_line, ply))
+                          is_forward_pruning_line, max_eval, is_pvs_line, ply))
   {
     max_eval = -INF;
 
@@ -880,16 +920,15 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
                                       int &depth,
                                       int &eval,
                                       std::vector<Move> &possible_moves,
-                                      bool color_to_move_is_in_check,
                                       bool &is_forward_pruning_line,
                                       int &max_eval,
                                       bool &is_pvs_line,
                                       int &ply) -> bool
 {
   // PROBABILITY CUT HEURISTIC
-  if (is_forward_pruning_line || is_pvs_line || color_to_move_is_in_check ||
-      depth <= PROB_CUT_DEPTH_THRESHOLD || beta > INF_MINUS_1000 ||
-      ply <= MIN_PROB_CUT_DEPTH)
+  if (depth != PROB_CUT_DEPTH || is_forward_pruning_line || is_pvs_line ||
+      beta > INF_MINUS_1000 || ply <= MIN_PROB_CUT_DEPTH ||
+      board_state.previous_move_stack.top().captured_piece == nullptr)
   {
     return false;
   }
@@ -903,22 +942,13 @@ auto SearchEngine::do_prob_cut_search(BoardState &board_state,
 
     board_state.apply_move(move);
 
-    int prob_cut_beta_threshold = beta + PAWN_VALUE;
+    int prob_cut_beta_threshold = beta + PAWN_VALUE + PAWN_VALUE;
 
-    // Check with quiescence search first with null window around
-    // prob_cut_beta_threshold.
-    eval = -quiescence_search(-prob_cut_beta_threshold,
-                              -prob_cut_beta_threshold + 1, board_state);
-
-    int prob_cut_depth = std::max(std::min(depth - 4, depth / 2), 0);
-    if (eval >= prob_cut_beta_threshold && prob_cut_depth > 0)
-    {
-      // If move survives quiescence search, do normal reduced depth search
-      // with null window around prob_cut_beta_threshold.
-      eval = -negamax_alpha_beta_search(board_state, -prob_cut_beta_threshold,
-                                        -prob_cut_beta_threshold + 1,
-                                        prob_cut_depth, true, false, ply + 1);
-    }
+    // If move survives quiescence search, do normal reduced depth search
+    // with null window around prob_cut_beta_threshold.
+    eval = -negamax_alpha_beta_search(board_state, -prob_cut_beta_threshold,
+                                      -prob_cut_beta_threshold + 1,
+                                      PROB_CUT_DEPTH, true, false, ply + 1);
 
     board_state.undo_move();
 

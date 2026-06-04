@@ -1,4 +1,6 @@
 #include "uci_engine.h"
+#include "fen_interface.h"
+#include "move_interface.h"
 
 #include <iostream>
 
@@ -317,7 +319,9 @@ void UCIEngine::search_for_best_move(int wtime_ms,
   }
   if (winc_ms > 0)
   {
-    search_engine.max_search_time_milliseconds += engine_increment / 2;
+    // NOTE: -2 is to account for the time it takes for the move to actually be
+    // played in the server.
+    search_engine.max_search_time_milliseconds += engine_increment - 2;
   }
   if (movetime_ms > 0)
   {
