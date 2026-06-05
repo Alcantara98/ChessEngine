@@ -561,11 +561,8 @@ private:
    *
    * @details Futility pruning is a technique used to reduce the number of
    * nodes searched in the minimax algorithm. It is based on the idea that if
-   * the evaluation of a move is so low that it is unlikely to be the best move,
-   * then we can prune it from the search tree.
-   *
-   * @details Razoring is similar to futility pruning, but also runs in capture
-   * moves unlike futility pruning which only prunes quiet moves.
+   * the evaluation of a quiet move is so low that it is unlikely to be the best
+   * move, then we can prune it from the search tree.
    *
    * @note This is similar to Delta pruning. Futility pruning is used during the
    * main search and for non-capture moves. Delta pruning is used during
@@ -585,16 +582,16 @@ private:
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  auto futility_razor_prune_move(BoardState &board_state,
-                                 const int &alpha,
-                                 const int &beta,
-                                 const int &depth,
-                                 int &eval,
-                                 int &quiet_move_index,
-                                 Move &move,
-                                 int &ply,
-                                 bool &is_capture_move,
-                                 int thread_index) -> bool;
+  static auto futility_prune_move(BoardState &board_state,
+                                  const int &alpha,
+                                  const int &beta,
+                                  const int &depth,
+                                  int &eval,
+                                  int &quiet_move_index,
+                                  Move &move,
+                                  int &ply,
+                                  bool &is_capture_move,
+                                  int thread_index) -> bool;
 
   /**
    * @brief Updates the history table.

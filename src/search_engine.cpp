@@ -7,7 +7,6 @@
 #include "position_evaluator.h"
 
 #include <algorithm>
-#include <future>
 #include <thread>
 
 namespace engine::parts
@@ -243,53 +242,6 @@ auto SearchEngine::run_iterative_deepening_search(int thread_index,
   }
 
   return final_move_scores;
-}
-
-auto SearchEngine::get_results_from_threads(
-    std::vector<std::pair<Move, int>> &move_scores,
-    std::vector<std::future<int>> &futures,
-    std::vector<Move> &possible_moves,
-    std::map<int, bool> &moves_to_search) -> void
-{
-  move_scores.clear();
-  int future_index = 0;
-  for (auto &possible_move : possible_moves)
-  {
-    if (moves_to_search.find(possible_move.list_index) != moves_to_search.end())
-    {
-      move_scores.emplace_back(possible_move, futures[future_index].get());
-      ++future_index;
-    }
-  }
-}
-
-auto SearchEngine::stop_search_early(
-    std::vector<std::pair<Move, int>> &move_scores,
-    int &iterative_depth) -> bool
-{
-  std::string current_best_move_string =
-      parts::move_interface::move_to_string(move_scores[0].first);
-
-  if (current_best_move_string == best_move_string)
-  {
-    ++best_move_iteration_count;
-  }
-  else
-  {
-    best_move_string = current_best_move_string;
-    best_move_iteration_count = 0;
-  }
-
-  // Early stop the search if the first move is already way greater than the
-  // second move, we can stop the search early if the depth is at least 10
-  // already.
-  if (iterative_depth >= MIN_EARLY_STOP_DEPTH &&
-      move_scores[0].second > move_scores[1].second + EARLY_STOP_MARGIN_VALUE &&
-      best_move_iteration_count >= MIN_EARLY_STOP_ITERATIONS)
-  {
-    return true;
-  }
-  return false;
 }
 
 auto SearchEngine::root_negamax_alpha_beta_search(
@@ -659,9 +611,9 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
 
     if (!color_to_move_is_in_check && move_index != 0)
     {
-      futile_move = futility_razor_prune_move(
-          board_state, alpha, beta, depth, eval, move_index,
-          possible_moves[move_index], ply, is_capture_move, thread_index);
+      futile_move = futility_prune_move(board_state, alpha, beta, depth, eval,
+                                        move_index, possible_moves[move_index],
+                                        ply, is_capture_move, thread_index);
     }
 
     if (!futile_move)
@@ -1128,20 +1080,22 @@ auto SearchEngine::delta_prune_move(const BoardState &board_state,
           alpha);
 }
 
-auto SearchEngine::futility_razor_prune_move(BoardState &board_state,
-                                             const int &alpha,
-                                             const int &beta,
-                                             const int &depth,
-                                             int &eval,
-                                             int &quiet_move_index,
-                                             Move &move,
-                                             int &ply,
-                                             bool &is_capture_move,
-                                             int thread_index) -> bool
+auto SearchEngine::futility_prune_move(BoardState &board_state,
+                                       const int &alpha,
+                                       const int &beta,
+                                       const int &depth,
+                                       int &eval,
+                                       int &quiet_move_index,
+                                       Move &move,
+                                       int &ply,
+                                       bool &is_capture_move,
+                                       int thread_index) -> bool
 {
-  if (alpha < -INF_MINUS_1000 || ply < MIN_RAZOR_PRUNING_PLY ||
+  if (alpha < -INF_MINUS_1000 ||
       move.promotion_piece_type != PieceType::EMPTY ||
-      attack_check::king_is_checked(board_state, board_state.color_to_move))
+      attack_check::king_is_checked(board_state, board_state.color_to_move) ||
+      is_capture_move || ply < MIN_FUTILITY_PRUNING_PLY ||
+      depth > TT_FUTILITY_PRUNING_MIN_DEPTH)
   {
     return false;
   }
@@ -1151,33 +1105,20 @@ auto SearchEngine::futility_razor_prune_move(BoardState &board_state,
   // parent node.
   eval = -position_evaluator::evaluate_position(board_state);
 
-  // RAZOR HEURISTIC
-  int razor_margin =
-      std::min(RAZOR_BASE_MARGIN + (depth * depth * RAZOR_MARGIN_MULTIPLIER),
-               RAZOR_MAX_MARGIN);
-
-  if (eval + razor_margin < alpha)
-  {
-    eval = -quiescence_search(alpha, beta, board_state, thread_index);
-    return eval + razor_margin < alpha;
-  }
-
-  if (is_capture_move && ply < MIN_FUTILITY_PRUNING_PLY)
-  {
-    return false;
-  }
-
-  // FUTILITY PRUNING
-
   int futility_cutoff_index = 3 + ((depth * depth) / 2);
 
   int futility_margin = 0;
   if (quiet_move_index < futility_cutoff_index)
   {
-    futility_margin += (PAWN_VALUE * depth) - (quiet_move_index * 2);
+    futility_margin += (PAWN_VALUE * depth * depth) - (quiet_move_index * 2);
   }
 
-  return eval + futility_margin < alpha;
+  if (eval + futility_margin < alpha)
+  {
+    return true;
+  }
+
+  return false;
 }
 
 void SearchEngine::update_history_table(const Move &move,
