@@ -22,19 +22,27 @@ RUN apt-get update && \
         make \
         clang-${LLVM_VERSION} \
         lld-${LLVM_VERSION} \
+        lldb-${LLVM_VERSION} \
         llvm-${LLVM_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlinks for the LLVM versioned binaries.
-RUN update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${LLVM_VERSION}   100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${LLVM_VERSION} 100
+RUN update-alternatives --install /usr/bin/clang        clang        /usr/bin/clang-${LLVM_VERSION}        100 && \
+    update-alternatives --install /usr/bin/clang++      clang++      /usr/bin/clang++-${LLVM_VERSION}      100 && \
+    update-alternatives --install /usr/bin/lld          lld          /usr/bin/lld-${LLVM_VERSION}          100 && \
+    update-alternatives --install /usr/bin/lldb         lldb         /usr/bin/lldb-${LLVM_VERSION}         100 && \
+    update-alternatives --install /usr/bin/llvm-ar      llvm-ar      /usr/bin/llvm-ar-${LLVM_VERSION}      100 && \
+    update-alternatives --install /usr/bin/llvm-ranlib  llvm-ranlib  /usr/bin/llvm-ranlib-${LLVM_VERSION}  100
 
 WORKDIR /src
 COPY CMakeLists.txt ./
 COPY src ./src
 COPY Makefile ./
 
-RUN make build
+ENV CC=clang \
+    CXX=clang++
+
+RUN make build-release
 
 # ---------- Stage 2: runtime ----------
 FROM ubuntu:24.04 AS runtime
@@ -47,6 +55,6 @@ RUN apt-get update && \
         libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /src/build/chess_engine /usr/local/bin/chess_engine
+COPY --from=builder /src/build/chess_engine_cli /usr/local/bin/chess_engine_cli
 
-ENTRYPOINT ["/usr/local/bin/chess_engine"]
+ENTRYPOINT ["/usr/local/bin/chess_engine_cli"]
