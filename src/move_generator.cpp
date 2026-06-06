@@ -534,21 +534,20 @@ static void sort_moves_mvv_lvv(std::vector<Move> &possible_capture_moves)
 void sort_moves_history_heuristic(std::vector<Move> &possible_normal_moves,
                                   const history_table_type &history_table)
 {
-  // Add history table score to each move.
-  // We cannot use the history table directly in the sorting since the values in
-  // the table are getting updated constantly during the search which may result
-  // in infinite loops when sorting (program will crash).
-  for (auto &move : possible_normal_moves)
-  {
-    move.history_table_score =
-        history_table[static_cast<int>(move.moving_piece->piece_color)]
-                     [static_cast<int>(move.moving_piece->piece_type)]
-                     [move.to_x][move.to_y];
-  }
-
-  // Sort moves based on history table score.
-  std::sort(possible_normal_moves.begin(), possible_normal_moves.end(),
-            [&history_table](const Move &move1, const Move &move2) -> bool
-            { return move1.history_table_score > move2.history_table_score; });
+  // Sort moves directly based on history table values.
+  std::sort(
+      possible_normal_moves.begin(), possible_normal_moves.end(),
+      [&history_table](const Move &move1, const Move &move2) -> bool
+      {
+        const int move1_score =
+            history_table[static_cast<int>(move1.moving_piece->piece_color)]
+                         [static_cast<int>(move1.moving_piece->piece_type)]
+                         [move1.to_x][move1.to_y];
+        const int move2_score =
+            history_table[static_cast<int>(move2.moving_piece->piece_color)]
+                         [static_cast<int>(move2.moving_piece->piece_type)]
+                         [move2.to_x][move2.to_y];
+        return move1_score > move2_score;
+      });
 }
 } // namespace engine::parts::move_generator

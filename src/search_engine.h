@@ -26,6 +26,11 @@ class SearchEngine
 {
 
 public:
+  // CONSTANTS
+  // TODO: Make this a runtime configurable constant - number of cores on the
+  // machine.
+  static constexpr int MAX_SEARCH_THREADS = 14;
+
   // PROPERTIES
 
   /// @brief Determines which color to maximise for.
@@ -125,10 +130,6 @@ public:
 private:
   // PROPERTIES
 
-  /// @brief Keeps track of the best eval of current search iteration.
-  /// NOTE: Atomic because it is accessed by multiple search threads.
-  std::atomic<int> best_eval_of_search_iteration = -INF;
-
   /// @brief Number of leaf nodes visited.
   /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<size_t> leaf_nodes_visited = 0;
@@ -143,11 +144,6 @@ private:
 
   /// @brief See BoardState.
   BoardState &game_board_state;
-
-  /// @brief The max depth that the current iterative search will reach.
-  /// NOTE: Not to be confused with max_search_depth. This is the depth the
-  /// current iteration will reach.
-  std::atomic<size_t> max_iterative_search_depth;
 
   /// @brief The evaluation score of the previous moves.
   std::stack<int> previous_move_evals;
@@ -165,11 +161,10 @@ private:
 
   /// @brief Runs and handles the pondering thread.
   ThreadHandler ponder_thread_handler = ThreadHandler(
-      running_search_flag,
-      [this]() { this->run_iterative_deepening_search_evaluation(); });
+      running_search_flag, [this]() { this->run_lazy_smp_search(); });
 
-  /// @brief History Heuristic Table.
-  history_table_type history_table = {};
+  /// @brief One History Heuristic Table for each search thread.
+  std::array<history_table_type, MAX_SEARCH_THREADS> history_tables;
 
   /// @brief Best move found by the search.
   std::string best_move;
@@ -197,90 +192,40 @@ private:
   auto search_and_execute_best_move() -> bool;
 
   /**
-   * @brief Evaluates all possible moves and scores them.
+   * @brief Runs the lazy SMP search.
    *
-   * @note This function is used to evaluate all possible moves and their scores
-   * using iterative deepening search. The search is done in parallel using
-   * multiple threads for each possible move.
-   *
-   * @details Iterative deepening search helps by searching at lower depths
-   * first and saving the best move it has found so far in the transposition
-   * table. This allows the next deeper search iteration to search a likely best
-   * move first, causing more alpha beta pruning to occur.
+   * @details The lazy SMP search is a search algorithm that uses multiple
+   * threads to search the game tree in parallel.
    *
    * @return Vector of pairs of moves and their scores.
    */
-  auto run_iterative_deepening_search_evaluation()
+  auto run_lazy_smp_search() -> std::vector<std::pair<Move, int>>;
+
+  /**
+   * @brief Runs the iterative deepening search.
+   *
+   * @param thread_index Thread index of the search thread.
+   * @param board_state BoardState object to search.
+   *
+   * @return Vector of pairs of moves and their scores.
+   */
+  auto run_iterative_deepening_search(int thread_index, BoardState &board_state)
       -> std::vector<std::pair<Move, int>>;
 
   /**
-   * @brief Gets the results from the threads and adds them to the move scores
-   * vector.
-   *
-   * @param move_scores Vector of moves and their scores.
-   * @param futures Vector of futures.
-   * @param possible_moves Vector of possible moves.
-   * @param moves_to_search Map of moves to search.
-   */
-  auto static get_results_from_threads(
-      std::vector<std::pair<Move, int>> &move_scores,
-      std::vector<std::future<int>> &futures,
-      std::vector<Move> &possible_moves,
-      std::map<int, bool> &moves_to_search) -> void;
-
-  /**
-   * @brief Stops the search early if the best move has been found in a certain
-   * number of iterations.
-   *
-   * @param move_scores Vector of moves and their scores.
-   *
-   * @return True if the search should be stopped early, false otherwise.
-   */
-  auto stop_search_early(std::vector<std::pair<Move, int>> &move_scores,
-                         int &iterative_depth) -> bool;
-
-  /**
-   * @brief Prunes the root moves that are not in the top 50% of the search so
-   * far.
-   *
-   * @details This is done to reduce the search space and focus on the most
-   * promising moves. The moves are sorted based on their scores and the top 50%
-   * of the moves are kept for further searching. The rest of the moves are
-   * removed from the search.
-   *
-   * @param moves_to_search Map of moves to search.
-   * @param move_scores Vector of moves and their scores.
-   * @param current_depth Current depth of iterative search.
-   */
-  static void prune_root_moves(std::map<int, bool> &moves_to_search,
-                               std::vector<std::pair<Move, int>> &move_scores,
-                               int &current_depth);
-
-  /**
-   * @brief Encapsulates the iterative deepening search for each move to apply
-   * aspiration window heuristic.
-   *
-   * @details Aspiration window heuristic is used to reduce the search space by
-   * only searching moves that are within a certain range of the previous
-   * evaluation score (previous evaluation score at the start is 0).
-   * If the evaluation score is within the window, the search stops and returns
-   * the score.
-   * If the evaluation score is outside the window, re-search the move with a
-   * larger window.
-   * Window size is increased 2x if the search is outside the window, with the
-   * last window being the full window (alpha = -INF, beta = INF).
-   * This will reduce the search space and make the search faster if the exact
-   * eval is within the window we choose. If the eval is not within the window,
-   * the search will be slower as we have to re-search with a larger window.
-   * Improve window selection!
+   * @brief Runs the negamax alpha beta search for the root node.
    *
    * @param board_state BoardState object to search.
+   * @param alpha Highest score to be picked by maximizing node.
+   * @param beta Lowest score to be picked by minimizing node.
    * @param depth Current depth of search.
+   * @param thread_index Thread index of the search thread.
    *
-   * @return Evaluation score from search branch.
+   * @return Vector of pairs of moves and their scores.
    */
-  auto run_search_with_aspiration_window(BoardState &board_state,
-                                         int depth) -> int;
+  auto root_negamax_alpha_beta_search(
+      BoardState &board_state, int alpha, int beta, int depth, int thread_index)
+      -> std::vector<std::pair<Move, int>>;
 
   /**
    * @brief Recursive function to evaluate the best move for the given board
@@ -298,6 +243,7 @@ private:
    * a null move, late move reduction, or probability cut line.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
    * @param ply Current ply of the search.
+   * @param thread_index Thread index of the search thread.
    *
    * @return Evaluation score from search branch.
    */
@@ -307,7 +253,8 @@ private:
                                  int depth,
                                  bool is_forward_pruning_line,
                                  bool is_pvs_line,
-                                 int ply) -> int;
+                                 int ply,
+                                 int thread_index) -> int;
 
   /**
    * @brief Handles the leaf node of the search tree.
@@ -321,13 +268,15 @@ private:
    * @param beta Lowest score to be picked by minimizing node.
    * @param color_to_move_is_in_check Flag to indicate if the color to move is
    * in check.
+   * @param thread_index Thread index of the search thread.
    *
    * @return Evaluation score of the leaf node.
    */
   auto evaluate_leaf_node(BoardState &board_state,
                           int alpha,
                           int beta,
-                          bool color_to_move_is_in_check) -> int;
+                          bool color_to_move_is_in_check,
+                          int thread_index) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -353,10 +302,7 @@ private:
    * @param color_to_move_is_in_check Flag to indicate if the color to move is
    * in check.
    * @param ply Current ply of the search.
-   * @param original_alpha Original alpha value.
-   * @param best_move_is_singular Flag to update if the best move is singular.
-   * @param tt_move_is_singular Flag to indicate if the transposition table
-   * entry is a singular move.
+   * @param thread_index Thread index of the search thread.
    */
   void run_negamax_procedure(BoardState &board_state,
                              int &alpha,
@@ -370,9 +316,7 @@ private:
                              bool &is_pvs_line,
                              const bool &color_to_move_is_in_check,
                              int &ply,
-                             int &original_alpha,
-                             bool &best_move_is_singular,
-                             bool &tt_move_is_singular);
+                             int thread_index);
 
   /**
    * @brief Runs the Principal Variation Search (PVS) algorithm.
@@ -410,8 +354,7 @@ private:
    * in check.
    * @param is_capture_move Flag to indicate if the move is a capture move.
    * @param ply Current ply of the search.
-   * @param tt_move_is_singular Flag to indicate if the transposition table
-   * entry is a singular move.
+   * @param thread_index Thread index of the search thread.
    */
   void run_pvs_search(BoardState &board_state,
                       int &move_index,
@@ -426,7 +369,7 @@ private:
                       const bool &color_to_move_is_in_check,
                       bool is_capture_move,
                       int &ply,
-                      bool &tt_move_is_singular);
+                      int thread_index);
 
   /**
    * @brief Handles the transposition table entry.
@@ -445,9 +388,6 @@ private:
    * @param hash Hash of the board state.
    * @param tt_best_move_index Index of the best move in the transposition table
    * entry.
-   * @param tt_move_is_singular Flag to indicate if the transposition table
-   * entry is a singular move.
-   *
    * @return If the entry is valid, it returns true and the search can be
    * skipped. If the entry is not valid, it returns false and the search
    * continues.
@@ -461,18 +401,7 @@ private:
                        int &beta,
                        bool &is_pvs_line,
                        uint64_t &hash,
-                       int &tt_best_move_index,
-                       bool &tt_move_is_singular) -> bool;
-
-  /**
-   * @brief Runs the PVS scout search algorithm.
-   *
-   * @details Search the best move first with a null window. If the eval is
-   * above alpha, set this as the best_eval_of_search_iteration. Null window
-   * should make the search quick, and if we get a high eval, we can do a lot of
-   * pruning in the aspiration window function.
-   */
-  void run_pvs_scout_search();
+                       int &tt_best_move_index) -> bool;
 
   /**
    * @brief Min search procedure for each possible move.
@@ -495,6 +424,7 @@ private:
    * @param eval Evaluation score to be updated.
    * @param ply Current ply of the search.
    * @param is_pvs_line Flag to indicate if the node is a PVS node.
+   * @param thread_index Thread index of the search thread.
    *
    * @return True if eval failed high.
    */
@@ -504,43 +434,8 @@ private:
                            int &depth,
                            int &eval,
                            int &ply,
-                           bool &is_pvs_line) -> bool;
-
-  /**
-   * @brief Does a probability cut search.
-   *
-   * @details We search with a null window around the probability cut beta
-   * threshold with a reduced depth. If the eval is above the probability cut
-   * beta threshold, we don't need to search the move further as the probability
-   * of the move being good is high and will most likely cause a beta cut when
-   * searched fully.
-   *
-   * @note We do not do probability cut pruning on quiet moves as it is too
-   * risky. Quiet moves are hard to evaluate properly when doing shallow
-   * searches.
-   *
-   * @param board_state BoardState object to search.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
-   * @param eval Evaluation score to be updated.
-   * @param possible_moves Vector of possible moves.
-   * @param color_to_move_is_in_check Flag to indicate if the color to move is
-   * in check.
-   * @param max_eval Maximum evaluation score.
-   * @param is_pvs_line Flag to indicate if the node is a PVS node.
-   * @param ply Current ply of the search.
-   *
-   * @return True if we can prune the move.
-   */
-  auto do_prob_cut_search(BoardState &board_state,
-                          int &beta,
-                          int &depth,
-                          int &eval,
-                          std::vector<Move> &possible_moves,
-                          bool &is_forward_pruning_line,
-                          int &max_eval,
-                          bool &is_pvs_line,
-                          int &ply) -> bool;
+                           bool &is_pvs_line,
+                           int thread_index) -> bool;
 
   /**
    * @brief Handles necessary eval adjustments to prevent stalemates and loops.
@@ -577,8 +472,6 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param best_move_index Index of best move.
-   * @param best_move_is_singular Flag to indicate if the move is a singular
-   * move.
    * @param is_quiescence Flag to check if the entry is a quiescence search.
    */
   void store_state_in_transposition_table(uint64_t &hash,
@@ -587,7 +480,6 @@ private:
                                           int &alpha,
                                           int &beta,
                                           int &best_move_index,
-                                          bool best_move_is_singular,
                                           bool is_quiescence = false);
 
   /**
@@ -612,10 +504,14 @@ private:
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
    * @param board_state BoardState object to search.
+   * @param thread_index Thread index of the search thread.
    *
    * @return Evaluation score from quiescence search.
    */
-  auto quiescence_search(int alpha, int beta, BoardState &board_state) -> int;
+  auto quiescence_search(int alpha,
+                         int beta,
+                         BoardState &board_state,
+                         int thread_index) -> int;
 
   /**
    * @brief Runs the quiescence search procedure.
@@ -627,6 +523,7 @@ private:
    * @param best_move_index Index of the best move.
    * @param current_eval Current evaluation score.
    * @param possible_moves Vector of possible moves.
+   * @param thread_index Thread index of the search thread.
    */
   void run_quiescence_search_procedure(BoardState &board_state,
                                        int &alpha,
@@ -634,7 +531,8 @@ private:
                                        int &best_eval,
                                        int &best_move_index,
                                        int &current_eval,
-                                       std::vector<Move> &possible_moves);
+                                       std::vector<Move> &possible_moves,
+                                       int thread_index);
 
   /**
    * @brief Checks if the given move can be delta pruned.
@@ -651,6 +549,7 @@ private:
    * @param move Move to check.
    * @param current_eval Current evaluation score.
    * @param alpha Highest score to be picked by maximizing node.
+   * @param thread_index Thread index of the search thread.
    */
   static auto delta_prune_move(const BoardState &board_state,
                                const Move &move,
@@ -662,11 +561,8 @@ private:
    *
    * @details Futility pruning is a technique used to reduce the number of
    * nodes searched in the minimax algorithm. It is based on the idea that if
-   * the evaluation of a move is so low that it is unlikely to be the best move,
-   * then we can prune it from the search tree.
-   *
-   * @details Razoring is similar to futility pruning, but also runs in capture
-   * moves unlike futility pruning which only prunes quiet moves.
+   * the evaluation of a quiet move is so low that it is unlikely to be the best
+   * move, then we can prune it from the search tree.
    *
    * @note This is similar to Delta pruning. Futility pruning is used during the
    * main search and for non-capture moves. Delta pruning is used during
@@ -682,18 +578,20 @@ private:
    * @param move Move to check.
    * @param ply Current ply of the search.
    * @param is_capture_move Flag to indicate if the move is a capture move.
+   * @param thread_index Thread index of the search thread.
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  auto futility_razor_prune_move(BoardState &board_state,
-                                 const int &alpha,
-                                 const int &beta,
-                                 const int &depth,
-                                 int &eval,
-                                 int &quiet_move_index,
-                                 Move &move,
-                                 int &ply,
-                                 bool &is_capture_move) -> bool;
+  static auto futility_prune_move(BoardState &board_state,
+                                  const int &alpha,
+                                  const int &beta,
+                                  const int &depth,
+                                  int &eval,
+                                  int &quiet_move_index,
+                                  Move &move,
+                                  int &ply,
+                                  bool &is_capture_move,
+                                  int thread_index) -> bool;
 
   /**
    * @brief Updates the history table.
@@ -704,13 +602,15 @@ private:
    * @param move_index Index of the move in the history table.
    * @param alpha Highest score to be picked by maximizing node.
    * @param beta Lowest score to be picked by minimizing node.
+   * @param history_table Reference to the history table.
    */
-  void udpate_history_table(const Move &move,
-                            const int &eval,
-                            const int &depth,
-                            const int &move_index,
-                            const int &alpha,
-                            const int &beta);
+  static void update_history_table(const Move &move,
+                                   const int &eval,
+                                   const int &depth,
+                                   const int &move_index,
+                                   const int &alpha,
+                                   const int &beta,
+                                   history_table_type &history_table);
 
   /**
    * @brief Decays the history table.
@@ -719,8 +619,10 @@ private:
    * This is to prevent the history table from being too biased towards a
    * certain move. The position changes throughout the game, and the history
    * table should reflect that.
+   *
+   * @param history_table Reference to the history table.
    */
-  void decay_history_table();
+  static void decay_history_table(history_table_type &history_table);
 
   /**
    * @brief Puts the best move at the front of the possible moves vector.

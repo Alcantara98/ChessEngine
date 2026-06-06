@@ -72,21 +72,22 @@ auto evaluate_position(const BoardState &board_state) -> int
     {
       if (piece.piece_color == PieceColor::WHITE)
       {
-        if (white_bishop_count >= BISHOP_PAIR_COUNT)
-        {
-          eval += MEDIUM_EVAL_VALUE;
-        }
         eval += eval_temp;
       }
       else
       {
-        if (black_bishop_count >= BISHOP_PAIR_COUNT)
-        {
-          eval -= MEDIUM_EVAL_VALUE;
-        }
         eval -= eval_temp;
       }
     }
+  }
+
+  if (white_bishop_count >= BISHOP_PAIR_COUNT)
+  {
+    eval += MEDIUM_EVAL_VALUE;
+  }
+  if (black_bishop_count >= BISHOP_PAIR_COUNT)
+  {
+    eval -= MEDIUM_EVAL_VALUE;
   }
 
   // In raw evaluations, positive eval is good for white and negative eval is

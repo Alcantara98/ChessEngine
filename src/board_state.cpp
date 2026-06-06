@@ -38,7 +38,7 @@ BoardState::BoardState(const BoardState &other)
   {
     for (int y_rank = Y_MIN; y_rank <= Y_MAX; ++y_rank)
     {
-      if (other.chess_board[x_file][x_file] != nullptr)
+      if (other.chess_board[x_file][y_rank] != nullptr)
       {
         chess_board[x_file][y_rank] =
             new Piece(*other.chess_board[x_file][y_rank]);
