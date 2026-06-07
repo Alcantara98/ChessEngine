@@ -132,13 +132,11 @@ void create_pieces(BoardState &board_state,
   case PieceType::KING:
     if (piece_color == PieceColor::WHITE)
     {
-      board_state.white_king_is_alive = true;
       board_state.white_king_x_file = x_file;
       board_state.white_king_y_rank = y_rank;
     }
     else
     {
-      board_state.black_king_is_alive = true;
       board_state.black_king_x_file = x_file;
       board_state.black_king_y_rank = y_rank;
     }
