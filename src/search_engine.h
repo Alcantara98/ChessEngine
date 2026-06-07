@@ -524,6 +524,8 @@ private:
    * @param current_eval Current evaluation score.
    * @param possible_moves Vector of possible moves.
    * @param thread_index Thread index of the search thread.
+   * @param color_to_move_is_in_check Flag to indicate if the color to move is
+   * in check.
    */
   void run_quiescence_search_procedure(BoardState &board_state,
                                        int &alpha,
@@ -532,7 +534,8 @@ private:
                                        int &best_move_index,
                                        int &current_eval,
                                        std::vector<Move> &possible_moves,
-                                       int thread_index);
+                                       int thread_index,
+                                       bool color_to_move_is_in_check);
 
   /**
    * @brief Checks if the given move can be delta pruned.

@@ -19,8 +19,6 @@ BoardState::BoardState(const BoardState &other)
       previous_move_stack(other.previous_move_stack),
       zobrist_keys(other.zobrist_keys),
       zobrist_side_to_move(other.zobrist_side_to_move),
-      white_king_is_alive(other.white_king_is_alive),
-      black_king_is_alive(other.black_king_is_alive),
       queens_on_board(other.queens_on_board),
       number_of_main_pieces_left(other.number_of_main_pieces_left),
       is_end_game(other.is_end_game),
@@ -144,8 +142,6 @@ void BoardState::reset_board()
   }
 
   color_to_move = PieceColor::WHITE;
-  white_king_is_alive = true;
-  black_king_is_alive = true;
   queens_on_board = INITIAL_QUEENS_COUNT;
   number_of_main_pieces_left = INITIAL_MAIN_PIECES_COUNT;
   white_king_y_rank = Y1_RANK;
@@ -446,8 +442,6 @@ void BoardState::clear_chess_board()
   }
 
   color_to_move = PieceColor::NONE;
-  white_king_is_alive = false;
-  black_king_is_alive = false;
   queens_on_board = 0;
   number_of_main_pieces_left = 0;
   white_king_y_rank = -1;
@@ -634,14 +628,6 @@ void BoardState::manage_piece_counts_on_apply(Move &move)
   case PieceType::PAWN:
     break;
   case PieceType::KING:
-    if (move.captured_piece->piece_color == PieceColor::WHITE)
-    {
-      white_king_is_alive = false;
-    }
-    else
-    {
-      black_king_is_alive = false;
-    }
     break;
   case PieceType::QUEEN:
     --queens_on_board;
@@ -684,14 +670,6 @@ void BoardState::manage_piece_counts_on_undo(Move &move)
   case PieceType::PAWN:
     break;
   case PieceType::KING:
-    if (move.captured_piece->piece_color == PieceColor::WHITE)
-    {
-      white_king_is_alive = true;
-    }
-    else
-    {
-      black_king_is_alive = true;
-    }
     break;
   case PieceType::QUEEN:
     ++queens_on_board;

@@ -664,14 +664,14 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
 
   // LATE MOVE REDUCTION HEURISTIC
 
-  bool make_late_move_reduction_line = false;
+  bool lmr_line = is_forward_pruning_line;
   if (quiet_move_index > LMR_THRESHOLD && !color_to_move_is_in_check &&
       !is_capture_move && !is_forward_pruning_line &&
       (depth + ply) > MIN_LMR_ITERATION_DEPTH && ply >= MIN_LMR_DEPTH &&
       board_state.previous_move_stack.top().promotion_piece_type ==
           PieceType::EMPTY)
   {
-    make_late_move_reduction_line = true;
+    lmr_line = true;
     new_search_depth -= LATE_MOVE_REDUCTION;
 
     if (quiet_move_index > EXTREME_LMR_THRESHOLD)
@@ -683,15 +683,12 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
     }
   }
 
-  make_late_move_reduction_line =
-      (make_late_move_reduction_line || is_forward_pruning_line);
-
   // Do a null window search around alpha. We just want to know
   // if there is an eval that is greater than alpha. If there is, we do a full
   // search.
-  eval = -negamax_alpha_beta_search(
-      board_state, -alpha - 1, -alpha, new_search_depth,
-      make_late_move_reduction_line, move_index == 0, ply + 1, thread_index);
+  eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
+                                    new_search_depth, lmr_line, move_index == 0,
+                                    ply + 1, thread_index);
 
   if (eval > alpha && depth - 1 > new_search_depth)
   {
@@ -931,15 +928,21 @@ auto SearchEngine::quiescence_search(int alpha,
 
   // CHECKMATE DETECTION
 
-  // If the king is no longer in the board, checkmate has occurred.
-  // Return -INF evaluation for the side that has lost its king.
-  if ((board_state.color_to_move == PieceColor::WHITE &&
-       !board_state.white_king_is_alive) ||
-      (board_state.color_to_move == PieceColor::BLACK &&
-       !board_state.black_king_is_alive))
+  // CHECK WHICH SIDE IS IN CHECK
+  bool other_color_is_in_check =
+      (board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(board_state, PieceColor::BLACK)
+          : attack_check::king_is_checked(board_state, PieceColor::WHITE);
+
+  if (other_color_is_in_check)
   {
-    return -INF;
+    return INF;
   }
+
+  bool color_to_move_is_in_check =
+      (board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
+          : attack_check::king_is_checked(board_state, PieceColor::BLACK);
 
   int original_alpha = alpha;
 
@@ -993,7 +996,8 @@ auto SearchEngine::quiescence_search(int alpha,
   // PRINCIPAL VARIATION HEURISTIC
 
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
-      board_state, true, &history_tables[thread_index], true);
+      board_state, true, &history_tables[thread_index],
+      !color_to_move_is_in_check);
 
   put_best_move_at_front(possible_moves, tt_best_move_index);
 
@@ -1001,9 +1005,9 @@ auto SearchEngine::quiescence_search(int alpha,
 
   int best_eval = current_eval;
 
-  run_quiescence_search_procedure(board_state, alpha, beta, best_eval,
-                                  tt_best_move_index, current_eval,
-                                  possible_moves, thread_index);
+  run_quiescence_search_procedure(
+      board_state, alpha, beta, best_eval, tt_best_move_index, current_eval,
+      possible_moves, thread_index, color_to_move_is_in_check);
 
   // AFTER SEARCH PROCEDURE
 
@@ -1031,12 +1035,14 @@ void SearchEngine::run_quiescence_search_procedure(
     int &best_move_index,
     int &current_eval,
     std::vector<Move> &possible_moves,
-    int thread_index)
+    int thread_index,
+    bool color_to_move_is_in_check)
 {
   for (auto move : possible_moves)
   {
     // Check if the move can be delta pruned.
-    if (delta_prune_move(board_state, move, current_eval, alpha))
+    if (!color_to_move_is_in_check &&
+        delta_prune_move(board_state, move, current_eval, alpha))
     {
       continue;
     }
