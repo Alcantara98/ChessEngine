@@ -29,7 +29,7 @@ public:
   // CONSTANTS
   // TODO: Make this a runtime configurable constant - number of cores on the
   // machine.
-  static constexpr int MAX_SEARCH_THREADS = 1;
+  static constexpr int MAX_SEARCH_THREADS = 14;
 
   // PROPERTIES
 
@@ -164,7 +164,7 @@ private:
       running_search_flag, [this]() { this->run_lazy_smp_search(); });
 
   /// @brief One History Heuristic Table for each search thread.
-  std::array<history_table_type, MAX_SEARCH_THREADS> history_tables;
+  std::array<history_table_type, MAX_SEARCH_THREADS> history_tables{};
 
   /// @brief Best move found by the search.
   std::string best_move;
