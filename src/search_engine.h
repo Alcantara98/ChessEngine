@@ -2,13 +2,13 @@
 #define SEARCH_ENGINE_H
 
 #include "board_state.h"
+#include "node_context.h"
 #include "thread_handler.h"
 #include "transposition_table.h"
 
 #include <atomic>
 #include <chrono>
 #include <cstddef>
-#include <future>
 
 namespace engine::parts
 {
@@ -29,7 +29,7 @@ public:
   // CONSTANTS
   // TODO: Make this a runtime configurable constant - number of cores on the
   // machine.
-  static constexpr int MAX_SEARCH_THREADS = 14;
+  static constexpr int MAX_SEARCH_THREADS = 1;
 
   // PROPERTIES
 
@@ -235,48 +235,11 @@ private:
    * node is essentially the same as a maximizing node, but with the scores and
    * bounds negated.
    *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
-   * @param is_forward_pruning_line Flag to indicate if the search line is from
-   * a null move, late move reduction, or probability cut line.
-   * @param is_pvs_line Flag to indicate if the node is a PVS node.
-   * @param ply Current ply of the search.
-   * @param thread_index Thread index of the search thread.
+   * @param context Node context.
    *
    * @return Evaluation score from search branch.
    */
-  auto negamax_alpha_beta_search(BoardState &board_state,
-                                 int alpha,
-                                 int beta,
-                                 int depth,
-                                 bool is_forward_pruning_line,
-                                 bool is_pvs_line,
-                                 int ply,
-                                 int thread_index) -> int;
-
-  /**
-   * @brief Handles the leaf node of the search tree.
-   *
-   * @note Handles the evaluation of the leaf node of the search tree. This is
-   * where the search tree ends and the evaluation of the board state is
-   * performed.
-   *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param color_to_move_is_in_check Flag to indicate if the color to move is
-   * in check.
-   * @param thread_index Thread index of the search thread.
-   *
-   * @return Evaluation score of the leaf node.
-   */
-  auto evaluate_leaf_node(BoardState &board_state,
-                          int alpha,
-                          int beta,
-                          bool color_to_move_is_in_check,
-                          int thread_index) -> int;
+  auto negamax_alpha_beta_search(NodeContext context) -> int;
 
   /**
    * @brief Sorts the moves based on their scores.
@@ -288,35 +251,9 @@ private:
   /**
    * @brief Searches all possible moves.
    *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param max_eval Current maximum evaluation score.
-   * @param eval Evaluation score from search branch.
-   * @param depth Current depth of search.
-   * @param best_move_index Index of best move.
-   * @param possible_moves Vector of possible moves.
-   * @param is_forward_pruning_line Flag to indicate if the search line is from
-   * a null move, late move reduction, or probability cut line.
-   * @param is_pvs_line Flag to indicate if the node is a PVS node.
-   * @param color_to_move_is_in_check Flag to indicate if the color to move is
-   * in check.
-   * @param ply Current ply of the search.
-   * @param thread_index Thread index of the search thread.
+   * @param context Node context.
    */
-  void run_negamax_procedure(BoardState &board_state,
-                             int &alpha,
-                             int &beta,
-                             int &max_eval,
-                             int &eval,
-                             int &depth,
-                             int &best_move_index,
-                             std::vector<Move> &possible_moves,
-                             bool &is_forward_pruning_line,
-                             bool &is_pvs_line,
-                             const bool &color_to_move_is_in_check,
-                             int &ply,
-                             int thread_index);
+  void run_negamax_procedure(NodeContext &context);
 
   /**
    * @brief Runs the Principal Variation Search (PVS) algorithm.
@@ -338,70 +275,30 @@ private:
    * to be at the end of the list. We reduce the depth of the search for moves
    * that are 'late' in the list of moves.
    *
-   * @param board_state BoardState object to search.
+   * @param context Node context.
    * @param move_index Index of the move to search.
    * @param quiet_move_index Index of the quiet move in the possible moves
    * vector.
-   * @param late_move_threshold Threshold to determine if a move is late.
-   * @param eval Evaluation score from search branch.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
-   * @param is_forward_pruning_line Flag to indicate if the search line is from
-   * a null move, late move reduction, or probability cut line.
-   * @param is_pvs_line Flag to indicate if the node is a PVS node.
-   * @param color_to_move_is_in_check Flag to indicate if the color to move is
-   * in check.
    * @param is_capture_move Flag to indicate if the move is a capture move.
-   * @param ply Current ply of the search.
-   * @param thread_index Thread index of the search thread.
    */
-  void run_pvs_search(BoardState &board_state,
-                      int &move_index,
-                      int &quiet_move_index,
-                      int &late_move_threshold,
-                      int &eval,
-                      int &alpha,
-                      int &beta,
-                      int depth,
-                      bool &is_forward_pruning_line,
-                      bool &is_pvs_line,
-                      const bool &color_to_move_is_in_check,
-                      bool is_capture_move,
-                      int &ply,
-                      int thread_index);
+  void run_pvs_search(NodeContext &context,
+                      int move_index,
+                      int quiet_move_index,
+                      bool is_capture_move);
 
   /**
    * @brief Handles the transposition table entry.
    *
    * @details Checks if the transposition table entry is valid and updates
-   * the alpha and beta values based on the entry.
+   * the node context TT properties based on the entry.
    *
-   * @param board_state BoardState object to search.
-   * @param depth Current depth of search.
-   * @param tt_entry_search_depth Depth of the transposition table entry.
-   * @param tt_flag Flag of the transposition table entry.
-   * @param tt_eval Evaluation score of the transposition table entry.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param is_pvs_line Flag to indicate if the node is a PVS node.
-   * @param hash Hash of the board state.
-   * @param tt_best_move_index Index of the best move in the transposition table
-   * entry.
+   * @param context Node context.
+   *
    * @return If the entry is valid, it returns true and the search can be
    * skipped. If the entry is not valid, it returns false and the search
    * continues.
    */
-  auto handle_tt_entry(BoardState &board_state,
-                       int &depth,
-                       int &tt_entry_search_depth,
-                       int &tt_flag,
-                       int &tt_eval,
-                       int &alpha,
-                       int &beta,
-                       bool &is_pvs_line,
-                       uint64_t &hash,
-                       int &tt_best_move_index) -> bool;
+  auto handle_tt_entry(NodeContext &context) -> bool;
 
   /**
    * @brief Min search procedure for each possible move.
@@ -414,28 +311,13 @@ private:
    * of the search by 1 making the search faster.
    *
    * @note We currently only allow one null move per search line. Too many
-   * null moves can make the search too shallow and return bull shit
-   * evaluations.
+   * null moves can make the search too shallow and return bad evaluations.
    *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
-   * @param eval Evaluation score to be updated.
-   * @param ply Current ply of the search.
-   * @param is_pvs_line Flag to indicate if the node is a PVS node.
-   * @param thread_index Thread index of the search thread.
+   * @param context Node context.
    *
    * @return True if eval failed high.
    */
-  auto do_null_move_search(BoardState &board_state,
-                           int &alpha,
-                           int &beta,
-                           int &depth,
-                           int &eval,
-                           int &ply,
-                           bool &is_pvs_line,
-                           int thread_index) -> bool;
+  auto do_null_move_search(NodeContext &context) -> bool;
 
   /**
    * @brief Handles necessary eval adjustments to prevent stalemates and loops.
@@ -466,21 +348,9 @@ private:
   /**
    * @brief Stores the state in the transposition table.
    *
-   * @param hash Hash of the board state.
-   * @param depth Depth of the search.
-   * @param max_eval Maximum evaluation score.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param best_move_index Index of best move.
-   * @param is_quiescence Flag to check if the entry is a quiescence search.
+   * @param context Node context.
    */
-  void store_state_in_transposition_table(uint64_t &hash,
-                                          int &depth,
-                                          int &max_eval,
-                                          int &alpha,
-                                          int &beta,
-                                          int &best_move_index,
-                                          bool is_quiescence = false);
+  void store_state_in_transposition_table(NodeContext &context);
 
   /**
    * @brief Resets and prints the performance matrix.
@@ -501,41 +371,18 @@ private:
    * engine may think it has a good position, but if explored further, it is
    * actually in a bad position.
    *
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param board_state BoardState object to search.
-   * @param thread_index Thread index of the search thread.
+   * @param context Node context.
    *
    * @return Evaluation score from quiescence search.
    */
-  auto quiescence_search(int alpha,
-                         int beta,
-                         BoardState &board_state,
-                         int thread_index) -> int;
+  auto quiescence_search(NodeContext context) -> int;
 
   /**
    * @brief Runs the quiescence search procedure.
    *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param best_eval Current best evaluation score.
-   * @param best_move_index Index of the best move.
-   * @param current_eval Current evaluation score.
-   * @param possible_moves Vector of possible moves.
-   * @param thread_index Thread index of the search thread.
-   * @param color_to_move_is_in_check Flag to indicate if the color to move is
-   * in check.
+   * @param context Node context.
    */
-  void run_quiescence_search_procedure(BoardState &board_state,
-                                       int &alpha,
-                                       int &beta,
-                                       int &best_eval,
-                                       int &best_move_index,
-                                       int &current_eval,
-                                       std::vector<Move> &possible_moves,
-                                       int thread_index,
-                                       bool color_to_move_is_in_check);
+  void run_quiescence_search_procedure(NodeContext &context);
 
   /**
    * @brief Checks if the given move can be delta pruned.
@@ -548,16 +395,10 @@ private:
    * @note Don't do it in the end game since it is more likely
    * that bad moves are the best a player could do.
    *
-   * @param board_state BoardState object to search.
+   * @param context Node context.
    * @param move Move to check.
-   * @param current_eval Current evaluation score.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param thread_index Thread index of the search thread.
    */
-  static auto delta_prune_move(const BoardState &board_state,
-                               const Move &move,
-                               const int &current_eval,
-                               const int &alpha) -> bool;
+  static auto delta_prune_move(NodeContext &context, const Move &move) -> bool;
 
   /**
    * @brief Checks if the given move can be futility pruned.
@@ -571,30 +412,18 @@ private:
    * main search and for non-capture moves. Delta pruning is used during
    * quiescence search and for capture moves.
    *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
-   * @param eval Evaluation score of the move.
+   * @param context Node context.
    * @param quiet_move_index Index of the quiet move in the possible moves
    * vector.
    * @param move Move to check.
-   * @param ply Current ply of the search.
    * @param is_capture_move Flag to indicate if the move is a capture move.
-   * @param thread_index Thread index of the search thread.
    *
    * @return True if the move can be futility pruned, false otherwise.
    */
-  static auto futility_prune_move(BoardState &board_state,
-                                  const int &alpha,
-                                  const int &beta,
-                                  const int &depth,
-                                  int &eval,
-                                  int &quiet_move_index,
+  static auto futility_prune_move(NodeContext &context,
+                                  int quiet_move_index,
                                   Move &move,
-                                  int &ply,
-                                  bool &is_capture_move,
-                                  int thread_index) -> bool;
+                                  bool is_capture_move) -> bool;
 
   /**
    * @brief Updates the history table.
