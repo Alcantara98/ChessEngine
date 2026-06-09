@@ -13,27 +13,16 @@ auto new_context(BoardState &board_state,
                  int thread_index,
                  bool is_quiescence) -> NodeContext
 {
-  return NodeContext{
-      board_state,
-      alpha,
-      beta,
-      depth,
-      is_forward_pruning_line,
-      is_pvs_line,
-      ply,
-      thread_index,
-      alpha,
-      0,
-      0,
-      -INF,
-      {},
-      is_quiescence,
-      0,
-      0,
-      0,
-      -1,
-      board_state.get_current_state_hash(),
-      false,
-  };
+  return NodeContext{board_state,
+                     alpha,
+                     beta,
+                     depth,
+                     is_forward_pruning_line,
+                     is_pvs_line,
+                     ply,
+                     thread_index,
+                     alpha,
+                     is_quiescence,
+                     board_state.get_current_state_hash()};
 }
 } // namespace engine::parts

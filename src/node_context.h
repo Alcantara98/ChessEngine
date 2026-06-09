@@ -11,7 +11,7 @@ namespace engine::parts
 
 struct NodeContext
 {
-  // SEARCH TREE PROPERTIES
+  // REQUIRED
   BoardState &board_state;
   int alpha;
   int beta;
@@ -20,24 +20,20 @@ struct NodeContext
   bool is_pvs_line;
   int ply;
   int thread_index;
-
-  // EVALUATION PROPERTIES
   int original_alpha;
-  int eval;
-  int static_eval;
-  int max_eval;
-  std::vector<Move> possible_moves;
   bool is_quiescence;
-
-  // TRANSPOSITION TABLE PROPERTIES
-  int tt_eval;
-  int tt_flag;
-  int tt_entry_search_depth;
-  int tt_best_move_index;
   uint64_t hash;
 
-  // CHECK PROPERTIES
-  bool color_to_move_is_in_check;
+  // DEFAULTS
+  int eval = 0;
+  int static_eval = 0;
+  int max_eval = 0;
+  std::vector<Move> possible_moves;
+  int tt_eval = 0;
+  int tt_flag = 0;
+  int tt_entry_search_depth = 0;
+  int tt_best_move_index = -1;
+  bool color_to_move_is_in_check = false; // TODO: Move this to board state.
 };
 
 /**
