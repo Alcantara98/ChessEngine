@@ -4,6 +4,7 @@
 #include "engine_constants.h"
 #include "move_generator.h"
 #include "move_interface.h"
+#include "node_context.h"
 #include "position_evaluator.h"
 
 #include <algorithm>
@@ -356,15 +357,15 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     // if there is an eval that is greater than alpha. If there is, we do a full
     // search.
     int beta_search = alpha_search + 1;
-    eval = -negamax_alpha_beta_search(board_state, -beta_search, -alpha_search,
-                                      search_depth - 1, is_forward_pruning_line,
-                                      move_index == 0, ply + 1, thread_index);
+    eval = -negamax_alpha_beta_search(new_context(
+        board_state, -beta_search, -alpha_search, search_depth - 1,
+        is_forward_pruning_line, move_index == 0, ply + 1, thread_index));
 
     if (eval > alpha_search)
     {
-      eval = -negamax_alpha_beta_search(
+      eval = -negamax_alpha_beta_search(new_context(
           board_state, -INF, -alpha_search, search_depth - 1,
-          is_forward_pruning_line, move_index == 0, ply + 1, thread_index);
+          is_forward_pruning_line, move_index == 0, ply + 1, thread_index));
     }
 
     move_scores.emplace_back(possible_moves[move_index], eval);
@@ -404,78 +405,67 @@ auto SearchEngine::root_negamax_alpha_beta_search(
   // the state into the transposition table.
   handle_eval_adjustments(max_eval, board_state);
 
-  store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
-                                     beta, tt_best_move_index, false);
+  NodeContext store_context =
+      new_context(board_state, original_alpha, beta, depth,
+                  is_forward_pruning_line, false, ply, thread_index);
+  store_context.hash = hash;
+  store_context.max_eval = max_eval;
+  store_context.tt_best_move_index = tt_best_move_index;
+  store_state_in_transposition_table(store_context);
 
   return move_scores;
 }
 
-auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
-                                             int alpha,
-                                             int beta,
-                                             int depth,
-                                             bool is_forward_pruning_line,
-                                             bool is_pvs_line,
-                                             int ply,
-                                             int thread_index) -> int
+auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
 {
-  // Check if the engine wants to stop searching.
-  // Check if the current state has been repeated three times. If it has, the
-  // game is drawn. Evaluation for a draw is 0.
+  // Return if the engine wants to stop searching.
+  // If the current state has been repeated three times, the game is drawn so
+  // return 0.
+  // TODO: Move the draw flag check before calling negamax_alpha_beta_search.
   if (!running_search_flag ||
-      board_state.current_state_has_been_repeated_three_times())
+      context.board_state.current_state_has_been_repeated_three_times())
   {
     return 0;
   }
 
-  depth = std::max(depth, 0);
-
-  // Increment nodes visited.
-  nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
-  // TRANSPOSITION TABLE LOOKUP
-
-  // Save the initial alpha value to later determine the correct evaluation
-  // flag when we save the state in the transposition table.
-  int original_alpha = alpha;
-
-  // These values will be updated by the retrieve function of the
-  // transposition table if the position has been searched before. If
-  // tt_entry_best_move_index is -1, it means there is no best move associated
-  // with the position.
-  int eval;
-  int tt_eval;
-  int tt_flag;
-  int tt_entry_search_depth;
-  int tt_best_move_index = -1;
-  uint64_t hash = board_state.get_current_state_hash();
-
-  if (handle_tt_entry(board_state, depth, tt_entry_search_depth, tt_flag,
-                      tt_eval, alpha, beta, is_pvs_line, hash,
-                      tt_best_move_index))
+  if (context.depth < 0)
   {
-    return tt_eval;
+    context.depth = 0;
+    // printf("BREAKPOINT negamax_alpha_beta_search; depth < 0\n");
   }
 
-  // CHECK WHICH SIDE IS IN CHECK
-  bool other_color_is_in_check =
-      (board_state.color_to_move == PieceColor::WHITE)
-          ? attack_check::king_is_checked(board_state, PieceColor::BLACK)
-          : attack_check::king_is_checked(board_state, PieceColor::WHITE);
+  nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  if (other_color_is_in_check)
+  context.original_alpha = context.alpha;
+  context.hash = context.board_state.get_current_state_hash();
+  context.max_eval = -INF;
+
+  if (handle_tt_entry(context))
+  {
+    return context.tt_eval;
+  }
+
+  // If previous color to move is in check, return INF because they are in
+  // checkmate.
+  if ((context.board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(context.board_state,
+                                          PieceColor::BLACK)
+          : attack_check::king_is_checked(context.board_state,
+                                          PieceColor::WHITE))
   {
     return INF;
   }
 
-  bool color_to_move_is_in_check =
-      (board_state.color_to_move == PieceColor::WHITE)
-          ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
-          : attack_check::king_is_checked(board_state, PieceColor::BLACK);
+  context.color_to_move_is_in_check =
+      (context.board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(context.board_state,
+                                          PieceColor::WHITE)
+          : attack_check::king_is_checked(context.board_state,
+                                          PieceColor::BLACK);
 
-  if (depth == 0 && color_to_move_is_in_check)
+  if (context.depth == 0 && context.color_to_move_is_in_check)
   {
-    depth = 1;
+    ++context.depth;
   }
 
   // HANDLE LEAF NODE
@@ -483,54 +473,36 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
   // There is a scnario where the depth is less than 0. This can happen if the
   // null move heuristic is used when the depth is 1. Null move calls negamax
   // with depth - 2 since it is skipping a turn.
-  if (depth <= 0)
+  if (context.depth <= 0)
   {
-    return evaluate_leaf_node(board_state, alpha, beta,
-                              color_to_move_is_in_check, thread_index);
+    leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+    return quiescence_search(
+        new_context(context.board_state, context.alpha, context.beta, 0,
+                    context.is_forward_pruning_line, context.is_pvs_line,
+                    context.ply, context.thread_index, true));
   }
 
   // NULL MOVE PRUNING HEURISTIC
 
-  // We curently only allow one null move per search line, and only when
-  // MIN_NULL_MOVE_DEPTH depth has been reached. Too many null moves will
-  // make the search too shallow and return BS evals.
-  if (!is_forward_pruning_line &&
-      (depth + ply) > MIN_NULL_MOVE_ITERATION_DEPTH &&
-      ply >= MIN_NULL_MOVE_DEPTH && !board_state.is_end_game &&
-      !color_to_move_is_in_check)
+  if (do_null_move_search(context))
   {
-    if (do_null_move_search(board_state, alpha, beta, depth, eval, ply,
-                            is_pvs_line, thread_index))
-    {
-      // If we played a null move (which is theoretically a losing move) and
-      // get an eval still greater than beta, then there is no need to search
-      // further. If we play an actual move, our eval will most likely be
-      // higher and we'd fail high (eval >= beta).
-      return eval;
-    }
+    return context.eval;
   }
 
   // PRINCIPAL VARIATION HEURISTIC
 
-  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
-      board_state, true, &history_tables[thread_index], false);
+  context.possible_moves = move_generator::calculate_possible_moves(
+      context.board_state, true, &history_tables[context.thread_index], false);
 
-  put_best_move_at_front(possible_moves, tt_best_move_index);
+  put_best_move_at_front(context.possible_moves, context.tt_best_move_index);
 
   // NEGAMAX SEARCH
 
-  int max_eval = -INF;
-
   // Search and evaluate each move.
-  run_negamax_procedure(board_state, alpha, beta, max_eval, eval, depth,
-                        tt_best_move_index, possible_moves,
-                        is_forward_pruning_line, is_pvs_line,
-                        color_to_move_is_in_check, ply, thread_index);
+  run_negamax_procedure(context);
 
-  // If search has stopped, don't save the states in the transposition
-  // table. This will cause invalid states to be stored with eval scores of 0.
-  // This may be saved as exact values in the transposition table, causing
-  // incorrect cutoffs in future searches.
+  // NOTE: If search has stopped, don't save the states in the transposition
+  // table as they are likely invalid.
   if (!running_search_flag)
   {
     return 0;
@@ -540,24 +512,11 @@ auto SearchEngine::negamax_alpha_beta_search(BoardState &board_state,
 
   // Handle checkmate evals and correct stalemate evals before saving
   // the state into the transposition table.
-  handle_eval_adjustments(max_eval, board_state);
+  handle_eval_adjustments(context.max_eval, context.board_state);
 
-  store_state_in_transposition_table(hash, depth, max_eval, original_alpha,
-                                     beta, tt_best_move_index, false);
+  store_state_in_transposition_table(context);
 
-  return max_eval;
-}
-
-auto SearchEngine::evaluate_leaf_node(BoardState &board_state,
-                                      int alpha,
-                                      int beta,
-                                      bool color_to_move_is_in_check,
-                                      int thread_index) -> int
-{
-  // Increment leaf nodes visited.
-  leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
-
-  return quiescence_search(alpha, beta, board_state, thread_index);
+  return context.max_eval;
 }
 
 void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
@@ -568,26 +527,14 @@ void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
       { return move_a.second > move_b.second; });
 }
 
-void SearchEngine::run_negamax_procedure(BoardState &board_state,
-                                         int &alpha,
-                                         int &beta,
-                                         int &max_eval,
-                                         int &eval,
-                                         int &depth,
-                                         int &best_move_index,
-                                         std::vector<Move> &possible_moves,
-                                         bool &is_forward_pruning_line,
-                                         bool &is_pvs_line,
-                                         const bool &color_to_move_is_in_check,
-                                         int &ply,
-                                         int thread_index)
+void SearchEngine::run_negamax_procedure(NodeContext &context)
 {
   int quiet_move_index = 0;
   bool is_capture_move = false;
-  int late_move_threshold = possible_moves.size() / 3;
-  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
+  for (int move_index = 0; move_index < context.possible_moves.size();
+       ++move_index)
   {
-    if (possible_moves[move_index].captured_piece != nullptr)
+    if (context.possible_moves[move_index].captured_piece != nullptr)
     {
       is_capture_move = true;
     }
@@ -603,72 +550,62 @@ void SearchEngine::run_negamax_procedure(BoardState &board_state,
       return;
     }
 
-    board_state.apply_move(possible_moves[move_index]);
+    context.board_state.apply_move(context.possible_moves[move_index]);
 
     // FUTILITY PRUNING HEURISTIC
 
     bool futile_move = false;
 
-    if (!color_to_move_is_in_check && move_index != 0)
+    if (!context.color_to_move_is_in_check && move_index != 0)
     {
-      futile_move = futility_prune_move(board_state, alpha, beta, depth, eval,
-                                        move_index, possible_moves[move_index],
-                                        ply, is_capture_move, thread_index);
+      futile_move = futility_prune_move(context, quiet_move_index,
+                                        context.possible_moves[move_index],
+                                        is_capture_move);
     }
 
     if (!futile_move)
     {
-      run_pvs_search(
-          board_state, move_index, quiet_move_index, late_move_threshold, eval,
-          alpha, beta, depth, is_forward_pruning_line, is_pvs_line,
-          color_to_move_is_in_check, is_capture_move, ply, thread_index);
+      run_pvs_search(context, move_index, quiet_move_index, is_capture_move);
     }
 
-    board_state.undo_move();
+    context.board_state.undo_move();
 
-    if (eval > max_eval)
+    if (context.eval > context.max_eval)
     {
-      max_eval = eval;
-      best_move_index = possible_moves[move_index].list_index;
+      context.max_eval = context.eval;
+      context.tt_best_move_index =
+          context.possible_moves[move_index].list_index;
     }
 
-    max_eval = std::max(eval, max_eval);
-    alpha = std::max(eval, alpha);
+    context.max_eval = std::max(context.eval, context.max_eval);
+    context.alpha = std::max(context.eval, context.alpha);
 
-    update_history_table(possible_moves[move_index], eval, depth, move_index,
-                         alpha, beta, history_tables[thread_index]);
+    update_history_table(context.possible_moves[move_index], context.eval,
+                         context.depth, move_index, context.alpha, context.beta,
+                         history_tables[context.thread_index]);
 
-    if (alpha >= beta)
+    if (context.alpha >= context.beta)
     {
       break;
     }
   }
 }
 
-void SearchEngine::run_pvs_search(BoardState &board_state,
-                                  int &move_index,
-                                  int &quiet_move_index,
-                                  int &late_move_threshold,
-                                  int &eval,
-                                  int &alpha,
-                                  int &beta,
-                                  int depth,
-                                  bool &is_forward_pruning_line,
-                                  bool &is_pvs_line,
-                                  const bool &color_to_move_is_in_check,
-                                  bool is_capture_move,
-                                  int &ply,
-                                  int thread_index)
+void SearchEngine::run_pvs_search(NodeContext &context,
+                                  int move_index,
+                                  int quiet_move_index,
+                                  bool is_capture_move)
 {
-  int new_search_depth = depth - 1;
+  int new_search_depth = context.depth - 1;
 
   // LATE MOVE REDUCTION HEURISTIC
 
-  bool lmr_line = is_forward_pruning_line;
-  if (quiet_move_index > LMR_THRESHOLD && !color_to_move_is_in_check &&
-      !is_capture_move && !is_forward_pruning_line &&
-      (depth + ply) > MIN_LMR_ITERATION_DEPTH && ply >= MIN_LMR_DEPTH &&
-      board_state.previous_move_stack.top().promotion_piece_type ==
+  bool lmr_line = context.is_forward_pruning_line;
+  if (quiet_move_index > LMR_THRESHOLD && !context.color_to_move_is_in_check &&
+      !is_capture_move && !context.is_forward_pruning_line &&
+      (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
+      context.ply >= MIN_LMR_DEPTH &&
+      context.board_state.previous_move_stack.top().promotion_piece_type ==
           PieceType::EMPTY)
   {
     lmr_line = true;
@@ -686,81 +623,77 @@ void SearchEngine::run_pvs_search(BoardState &board_state,
   // Do a null window search around alpha. We just want to know
   // if there is an eval that is greater than alpha. If there is, we do a full
   // search.
-  eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
-                                    new_search_depth, lmr_line, move_index == 0,
-                                    ply + 1, thread_index);
+  context.eval = -negamax_alpha_beta_search(new_context(
+      context.board_state, -context.alpha - 1, -context.alpha, new_search_depth,
+      lmr_line, move_index == 0, context.ply + 1, context.thread_index));
 
-  if (eval > alpha && depth - 1 > new_search_depth)
+  if (context.eval > context.alpha && context.depth - 1 > new_search_depth)
   {
-    eval = -negamax_alpha_beta_search(board_state, -alpha - 1, -alpha,
-                                      depth - 1, is_forward_pruning_line,
-                                      move_index == 0, ply + 1, thread_index);
+    context.eval = -negamax_alpha_beta_search(
+        new_context(context.board_state, -context.alpha - 1, -context.alpha,
+                    context.depth - 1, context.is_forward_pruning_line,
+                    move_index == 0, context.ply + 1, context.thread_index));
   }
 
   // Check if eval is greater than alpha. If it is, do a full search.
   // If window is already null, don't do a redundant search. This means parent
   // nodes are doing a null window search, and we just did a null window
   // search above.
-  if (eval > alpha && beta - alpha > 1)
+  if (context.eval > context.alpha && context.beta - context.alpha > 1)
   {
-    eval = -negamax_alpha_beta_search(board_state, -beta, -alpha, depth - 1,
-                                      is_forward_pruning_line, move_index == 0,
-                                      ply + 1, thread_index);
+    context.eval = -negamax_alpha_beta_search(
+        new_context(context.board_state, -context.beta, -context.alpha,
+                    context.depth - 1, context.is_forward_pruning_line,
+                    move_index == 0, context.ply + 1, context.thread_index));
   }
 }
 
-auto SearchEngine::handle_tt_entry(BoardState &board_state,
-                                   int &depth,
-                                   int &tt_entry_search_depth,
-                                   int &tt_flag,
-                                   int &tt_eval,
-                                   int &alpha,
-                                   int &beta,
-                                   bool &is_pvs_line,
-                                   uint64_t &hash,
-                                   int &tt_best_move_index) -> bool
+auto SearchEngine::handle_tt_entry(NodeContext &context) -> bool
 {
   // Check transposition table if position has been searched before.
-  if (transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval,
-                                   tt_flag, tt_best_move_index) &&
-      !(board_state.is_end_game &&
-        board_state.current_state_has_been_visited()))
+  if (transposition_table.retrieve(context.hash, context.tt_entry_search_depth,
+                                   context.tt_eval, context.tt_flag,
+                                   context.tt_best_move_index) &&
+      !(context.board_state.is_end_game &&
+        context.board_state.current_state_has_been_visited()))
   {
     // Check if tt_value can be used.
     // If the depth of the stored position is greater than or equal to the
     // current depth, then the stored value is reliable. The higher the stored
     // depth, the deeper the node has been searched.
-    if (depth <= tt_entry_search_depth)
+    if (context.depth <= context.tt_entry_search_depth)
     {
-      switch (tt_flag)
+      switch (context.tt_flag)
       {
       case EXACT: // alpha < eval < beta
         return true;
 
       case FAILED_HIGH: // eval >= beta
-        alpha = std::max(alpha, tt_eval);
+        context.alpha = std::max(context.alpha, context.tt_eval);
         break;
 
       case FAILED_LOW: // eval <= alpha
-        beta = std::min(beta, tt_eval);
+        context.beta = std::min(context.beta, context.tt_eval);
         break;
 
       default:
         // Handle unexpected tt_flag value.
-        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+        printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d",
+               context.tt_flag);
       }
 
       // Check if we still fail high or low with the current alpha and beta.
       // If flag is FAILED_HIGH, (tt_value >= beta)
       // If flag is FAILED_LOW, (tt_value <= alpha)
-      if (alpha >= beta)
+      if (context.alpha >= context.beta)
       {
         return true;
       }
     }
 
-    if (!is_pvs_line && tt_flag == EXACT &&
-        tt_eval + ((QUEEN_VALUE * 2) / tt_entry_search_depth) < alpha)
+    if (!context.is_pvs_line && context.tt_flag == EXACT &&
+        context.tt_eval + ((QUEEN_VALUE * 2) / context.tt_entry_search_depth) <
+            context.alpha)
     {
       return true;
     }
@@ -769,32 +702,32 @@ auto SearchEngine::handle_tt_entry(BoardState &board_state,
   return false;
 }
 
-auto SearchEngine::do_null_move_search(BoardState &board_state,
-                                       int &alpha,
-                                       int &beta,
-                                       int &depth,
-                                       int &eval,
-                                       int &ply,
-                                       bool &is_pvs_line,
-                                       int thread_index) -> bool
+auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
 {
-  board_state.apply_null_move();
-
-  // We search with a null window around beta (beta to beta + 1). We just need
-  // to find out if there is an eval greater than beta. If there is, we don't
-  // need to search further.
-  int reduction = NULL_MOVE_REDUCTION;
-  if (!is_pvs_line)
+  if (context.is_forward_pruning_line ||
+      (context.depth + context.ply) <= MIN_NULL_MOVE_ITERATION_DEPTH ||
+      context.ply < MIN_NULL_MOVE_DEPTH || context.board_state.is_end_game ||
+      context.color_to_move_is_in_check)
   {
-    reduction += depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
+    return false;
   }
 
-  eval = -negamax_alpha_beta_search(board_state, -beta, -(beta - 1),
-                                    depth - reduction, true, false, ply + 1,
-                                    thread_index);
-  board_state.undo_null_move();
+  context.board_state.apply_null_move();
 
-  return eval >= beta;
+  int reduction = NULL_MOVE_REDUCTION;
+  if (!context.is_pvs_line)
+  {
+    reduction += context.depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
+  }
+
+  context.eval = -negamax_alpha_beta_search(
+      new_context(context.board_state, -context.beta, -(context.beta - 1),
+                  context.depth - reduction, true, false, context.ply + 1,
+                  context.thread_index));
+
+  context.board_state.undo_null_move();
+
+  return context.eval >= context.beta;
 }
 
 void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
@@ -824,21 +757,15 @@ void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
   }
 }
 
-void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
-                                                      int &depth,
-                                                      int &max_eval,
-                                                      int &alpha,
-                                                      int &beta,
-                                                      int &best_move_index,
-                                                      bool is_quiescence)
+void SearchEngine::store_state_in_transposition_table(NodeContext &context)
 {
   // Store in transposition table.
   int tt_flag_to_store;
-  if (max_eval >= beta)
+  if (context.max_eval >= context.beta)
   {
     tt_flag_to_store = FAILED_HIGH;
   }
-  else if (max_eval <= alpha)
+  else if (context.max_eval <= context.original_alpha)
   {
     tt_flag_to_store = FAILED_LOW;
   }
@@ -846,8 +773,9 @@ void SearchEngine::store_state_in_transposition_table(uint64_t &hash,
   {
     tt_flag_to_store = EXACT;
   }
-  transposition_table.store(hash, depth, max_eval, tt_flag_to_store,
-                            best_move_index, is_quiescence);
+  transposition_table.store(context.hash, context.depth, context.max_eval,
+                            tt_flag_to_store, context.tt_best_move_index,
+                            context.is_quiescence);
 }
 
 void SearchEngine::reset_and_print_performance_matrix(
@@ -904,10 +832,7 @@ void SearchEngine::reset_and_print_performance_matrix(
   quiescence_nodes_visited = 0;
 }
 
-auto SearchEngine::quiescence_search(int alpha,
-                                     int beta,
-                                     BoardState &board_state,
-                                     int thread_index) -> int
+auto SearchEngine::quiescence_search(NodeContext context) -> int
 {
   // Check if the engine wants to stop searching.
   if (!running_search_flag)
@@ -917,7 +842,7 @@ auto SearchEngine::quiescence_search(int alpha,
 
   // Check if the current state has been repeated three times. If it has, the
   // game is drawn. Evaluation for a draw is 0.
-  if (board_state.current_state_has_been_repeated_three_times())
+  if (context.board_state.current_state_has_been_repeated_three_times())
   {
     return 0;
   }
@@ -926,88 +851,87 @@ auto SearchEngine::quiescence_search(int alpha,
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
   quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
+  context.is_quiescence = true;
+  context.original_alpha = context.alpha;
+  context.hash = context.board_state.get_current_state_hash();
+
   // CHECKMATE DETECTION
 
   // CHECK WHICH SIDE IS IN CHECK
-  bool other_color_is_in_check =
-      (board_state.color_to_move == PieceColor::WHITE)
-          ? attack_check::king_is_checked(board_state, PieceColor::BLACK)
-          : attack_check::king_is_checked(board_state, PieceColor::WHITE);
-
-  if (other_color_is_in_check)
+  if ((context.board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(context.board_state,
+                                          PieceColor::BLACK)
+          : attack_check::king_is_checked(context.board_state,
+                                          PieceColor::WHITE))
   {
     return INF;
   }
 
-  bool color_to_move_is_in_check =
-      (board_state.color_to_move == PieceColor::WHITE)
-          ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
-          : attack_check::king_is_checked(board_state, PieceColor::BLACK);
-
-  int original_alpha = alpha;
+  context.color_to_move_is_in_check =
+      (context.board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(context.board_state,
+                                          PieceColor::WHITE)
+          : attack_check::king_is_checked(context.board_state,
+                                          PieceColor::BLACK);
 
   // TRANSPOSITION TABLE LOOKUP
 
-  uint64_t hash = board_state.get_current_state_hash();
-  int tt_eval;
-  int tt_search_depth;
-  int tt_flag;
-  int tt_best_move_index = -1;
-  if (transposition_table.retrieve(hash, tt_search_depth, tt_eval, tt_flag,
-                                   tt_best_move_index, true))
+  if (transposition_table.retrieve(context.hash, context.tt_entry_search_depth,
+                                   context.tt_eval, context.tt_flag,
+                                   context.tt_best_move_index, true))
   {
-    switch (tt_flag)
+    switch (context.tt_flag)
     {
     case EXACT: // alpha < eval < beta
-      return tt_eval;
+      return context.tt_eval;
 
     case FAILED_HIGH: // eval >= beta
-      alpha = std::max(alpha, tt_eval);
+      context.alpha = std::max(context.alpha, context.tt_eval);
       break;
 
     case FAILED_LOW: // eval <= alpha
-      beta = std::min(beta, tt_eval);
+      context.beta = std::min(context.beta, context.tt_eval);
       break;
 
     default:
       // Handle unexpected tt_flag value.
-      printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d", tt_flag);
+      printf("BREAKPOINT minimax_alpha_beta_search; tt_flag: %d",
+             context.tt_flag);
     }
 
-    if (alpha >= beta)
+    if (context.alpha >= context.beta)
     {
-      return tt_eval;
+      return context.tt_eval;
     }
   }
 
   // QUIESCENCE SEARCH PRE-PROCEDURE
 
-  int current_eval = position_evaluator::evaluate_position(board_state);
+  context.static_eval =
+      position_evaluator::evaluate_position(context.board_state);
 
   // If the eval is not within the alpha beta window, return the eval.
   // Otherwise, we will do too many unnecessary quiescence searches.
-  if (current_eval >= beta)
+  if (context.static_eval >= context.beta)
   {
-    return current_eval;
+    return context.static_eval;
   }
 
-  alpha = std::max(alpha, current_eval);
+  context.alpha = std::max(context.alpha, context.static_eval);
 
   // PRINCIPAL VARIATION HEURISTIC
 
-  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
-      board_state, true, &history_tables[thread_index],
-      !color_to_move_is_in_check);
+  context.possible_moves = move_generator::calculate_possible_moves(
+      context.board_state, true, &history_tables[context.thread_index],
+      !context.color_to_move_is_in_check);
 
-  put_best_move_at_front(possible_moves, tt_best_move_index);
+  put_best_move_at_front(context.possible_moves, context.tt_best_move_index);
 
   // QUIESCENCE SEARCH
 
-  int best_eval = current_eval;
+  context.max_eval = context.static_eval;
 
-  run_quiescence_search_procedure(
-      board_state, alpha, beta, best_eval, tt_best_move_index, current_eval,
-      possible_moves, thread_index, color_to_move_is_in_check);
+  run_quiescence_search_procedure(context);
 
   // AFTER SEARCH PROCEDURE
 
@@ -1020,88 +944,71 @@ auto SearchEngine::quiescence_search(int alpha,
     return 0;
   }
 
-  // Store in transposition table with quiescence flag set to true.
-  int tt_depth = 0;
-  store_state_in_transposition_table(hash, tt_depth, best_eval, original_alpha,
-                                     beta, tt_best_move_index, true);
-  return best_eval;
+  context.depth = 0;
+  store_state_in_transposition_table(context);
+  return context.max_eval;
 }
 
-void SearchEngine::run_quiescence_search_procedure(
-    BoardState &board_state,
-    int &alpha,
-    int &beta,
-    int &best_eval,
-    int &best_move_index,
-    int &current_eval,
-    std::vector<Move> &possible_moves,
-    int thread_index,
-    bool color_to_move_is_in_check)
+void SearchEngine::run_quiescence_search_procedure(NodeContext &context)
 {
-  for (auto move : possible_moves)
+  for (auto &move : context.possible_moves)
   {
     // Check if the move can be delta pruned.
-    if (!color_to_move_is_in_check &&
-        delta_prune_move(board_state, move, current_eval, alpha))
+    if (!context.color_to_move_is_in_check && delta_prune_move(context, move))
     {
       continue;
     }
 
-    board_state.apply_move(move);
+    context.board_state.apply_move(move);
 
-    int eval = -quiescence_search(-beta, -alpha, board_state, thread_index);
+    int eval = -quiescence_search(
+        new_context(context.board_state, -context.beta, -context.alpha, 0,
+                    false, false, context.ply, context.thread_index, true));
 
-    board_state.undo_move();
+    context.board_state.undo_move();
 
-    if (eval > best_eval)
+    if (eval > context.max_eval)
     {
-      best_eval = eval;
-      best_move_index = move.list_index;
+      context.max_eval = eval;
+      context.tt_best_move_index = move.list_index;
 
-      if (eval >= beta)
+      if (eval >= context.beta)
       {
         break;
       }
 
-      alpha = std::max(eval, alpha);
+      context.alpha = std::max(eval, context.alpha);
     }
   }
 }
 
-auto SearchEngine::delta_prune_move(const BoardState &board_state,
-                                    const Move &move,
-                                    const int &current_eval,
-                                    const int &alpha) -> bool
+auto SearchEngine::delta_prune_move(NodeContext &context,
+                                    const Move &move) -> bool
 {
-  // If the current_eval is so low that the score gained from capturing the
+  // If the static_eval is so low that the score gained from capturing the
   // piece in the move + 2 pawn values (100) will not bring it back up to
   // alpha, then it is most likely not worth searching the move.
   // Don't do it in the end game since it is more likely that bad moves are
   // the best a player could do.
 
   return (
-      !board_state.is_end_game &&
-      (current_eval + (PAWN_VALUE * 2) +
+      !context.board_state.is_end_game &&
+      (context.static_eval + (PAWN_VALUE * 2) +
        PIECE_VALUES[static_cast<uint8_t>(move.captured_piece->piece_type)]) <
-          alpha);
+          context.alpha);
 }
 
-auto SearchEngine::futility_prune_move(BoardState &board_state,
-                                       const int &alpha,
-                                       const int &beta,
-                                       const int &depth,
-                                       int &eval,
-                                       int &quiet_move_index,
+auto SearchEngine::futility_prune_move(NodeContext &context,
+                                       int quiet_move_index,
                                        Move &move,
-                                       int &ply,
-                                       bool &is_capture_move,
-                                       int thread_index) -> bool
+                                       bool is_capture_move) -> bool
 {
-  if (alpha < -INF_MINUS_1000 ||
+  if (context.alpha < -INF_MINUS_1000 ||
       move.promotion_piece_type != PieceType::EMPTY ||
-      attack_check::king_is_checked(board_state, board_state.color_to_move) ||
-      is_capture_move || ply < MIN_FUTILITY_PRUNING_PLY ||
-      depth > TT_FUTILITY_PRUNING_MIN_DEPTH)
+      attack_check::king_is_checked(context.board_state,
+                                    context.board_state.color_to_move) ||
+      is_capture_move || context.ply < MIN_FUTILITY_PRUNING_PLY ||
+      context.depth > TT_FUTILITY_PRUNING_MIN_DEPTH)
   {
     return false;
   }
@@ -1109,17 +1016,18 @@ auto SearchEngine::futility_prune_move(BoardState &board_state,
   // Get static evaluation of the board state.
   // Eval has to be negated because we are still in the perspective of the
   // parent node.
-  eval = -position_evaluator::evaluate_position(board_state);
+  context.eval = -position_evaluator::evaluate_position(context.board_state);
 
-  int futility_cutoff_index = 3 + ((depth * depth) / 2);
+  int futility_cutoff_index = 3 + ((context.depth * context.depth) / 2);
 
   int futility_margin = 0;
   if (quiet_move_index < futility_cutoff_index)
   {
-    futility_margin += (PAWN_VALUE * depth * depth) - (quiet_move_index * 2);
+    futility_margin +=
+        (PAWN_VALUE * context.depth * context.depth) - (quiet_move_index * 2);
   }
 
-  if (eval + futility_margin < alpha)
+  if (context.eval + futility_margin < context.alpha)
   {
     return true;
   }
