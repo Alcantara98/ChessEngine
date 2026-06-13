@@ -377,10 +377,10 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     // Do a null window search around alpha. We just want to know
     // if there is an eval that is greater than alpha. If there is, we do a
     // full search.
-    alpha_search = alpha - 2;
-    if (thread_index > 0 || alpha < -INF_MINUS_1000)
+    alpha_search = alpha;
+    if (thread_index == 0)
     {
-      alpha_search = alpha;
+      alpha_search = alpha - 2;
     }
     // Do a null window search around alpha. We just want to know
     // if there is an eval that is greater than alpha. If there is, we do a full
@@ -393,7 +393,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     if (eval > alpha_search)
     {
       eval = -negamax_alpha_beta_search(new_context(
-          board_state, -INF, -alpha_search, search_depth - 1,
+          board_state, -beta, -alpha_search, search_depth - 1,
           is_forward_pruning_line, move_index == 0, ply + 1, thread_index));
     }
 
@@ -435,8 +435,9 @@ auto SearchEngine::root_negamax_alpha_beta_search(
   handle_eval_adjustments(max_eval, board_state);
 
   NodeContext store_context =
-      new_context(board_state, original_alpha, beta, depth,
-                  is_forward_pruning_line, false, ply, thread_index);
+      new_context(board_state, alpha, beta, depth, is_forward_pruning_line,
+                  false, ply, thread_index);
+  store_context.original_alpha = original_alpha;
   store_context.hash = hash;
   store_context.max_eval = max_eval;
   store_context.tt_best_move_index = tt_best_move_index;
@@ -465,7 +466,6 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
 
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
-  context.original_alpha = context.alpha;
   context.hash = context.board_state.get_current_state_hash();
   context.max_eval = -INF;
 
