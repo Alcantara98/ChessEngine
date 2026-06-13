@@ -46,7 +46,7 @@ const int FIRST_MOVES_STACK_SIZE = 4;
 const int OPENING_MOVE_STACK_SIZE = 10;
 const int OPENING_MOVE_STACK_TIME_FACTOR = 35;
 const int MIDDLE_GAME_MOVE_STACK_TIME_FACTOR = 30;
-const int END_GAME_MOVE_STACK_TIME_FACTOR = 25;
+const int END_GAME_MOVE_STACK_TIME_FACTOR = 30;
 
 /**
  * @brief Class to handle the UCI interface.

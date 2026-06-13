@@ -28,7 +28,6 @@ struct NodeContext
   int eval = 0;
   int static_eval = 0;
   int max_eval = 0;
-  std::vector<Move> possible_moves;
   int tt_eval = 0;
   int tt_flag = 0;
   int tt_entry_search_depth = 0;
@@ -44,7 +43,7 @@ struct NodeContext
  * @param beta Lowest score to be picked by minimizing node.
  * @param depth Current depth of search.
  * @param is_forward_pruning_line Flag to indicate if the search line is from
- * a null move, late move reduction, or probability cut line.
+ * a null move, late move reduction.
  * @param is_pvs_line Flag to indicate if the node is a PVS node.
  * @param ply Current ply of the search.
  * @param thread_index Thread index of the search thread.
