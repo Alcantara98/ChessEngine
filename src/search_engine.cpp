@@ -683,6 +683,8 @@ auto SearchEngine::handle_tt_entry(NodeContext &context) -> bool
     // If the depth of the stored position is greater than or equal to the
     // current depth, then the stored value is reliable. The higher the stored
     // depth, the deeper the node has been searched.
+    int tt_alpha = context.alpha;
+    int tt_beta = context.beta;
     if (context.depth <= context.tt_entry_search_depth)
     {
       switch (context.tt_flag)
@@ -691,11 +693,11 @@ auto SearchEngine::handle_tt_entry(NodeContext &context) -> bool
         return true;
 
       case FAILED_HIGH: // eval >= beta
-        context.alpha = std::max(context.alpha, context.tt_eval);
+        tt_alpha = std::max(context.alpha, context.tt_eval);
         break;
 
       case FAILED_LOW: // eval <= alpha
-        context.beta = std::min(context.beta, context.tt_eval);
+        tt_beta = std::min(context.beta, context.tt_eval);
         break;
 
       default:
@@ -707,7 +709,7 @@ auto SearchEngine::handle_tt_entry(NodeContext &context) -> bool
       // Check if we still fail high or low with the current alpha and beta.
       // If flag is FAILED_HIGH, (tt_value >= beta)
       // If flag is FAILED_LOW, (tt_value <= alpha)
-      if (context.alpha >= context.beta)
+      if (tt_alpha > tt_beta)
       {
         return true;
       }
@@ -901,17 +903,19 @@ auto SearchEngine::quiescence_search(NodeContext context) -> int
                                    context.tt_eval, context.tt_flag,
                                    context.tt_best_move_index, true))
   {
+    int tt_alpha = context.alpha;
+    int tt_beta = context.beta;
     switch (context.tt_flag)
     {
     case EXACT: // alpha < eval < beta
       return context.tt_eval;
 
     case FAILED_HIGH: // eval >= beta
-      context.alpha = std::max(context.alpha, context.tt_eval);
+      tt_alpha = std::max(context.alpha, context.tt_eval);
       break;
 
     case FAILED_LOW: // eval <= alpha
-      context.beta = std::min(context.beta, context.tt_eval);
+      tt_beta = std::min(context.beta, context.tt_eval);
       break;
 
     default:
@@ -920,7 +924,7 @@ auto SearchEngine::quiescence_search(NodeContext context) -> int
              context.tt_flag);
     }
 
-    if (context.alpha >= context.beta)
+    if (tt_alpha > tt_beta)
     {
       return context.tt_eval;
     }
