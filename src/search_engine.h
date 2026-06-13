@@ -29,7 +29,12 @@ public:
   // CONSTANTS
   // TODO: Make this a runtime configurable constant - number of cores on the
   // machine.
+  /// @brief Maximum number of search threads.
   static constexpr int MAX_SEARCH_THREADS = 14;
+
+  /// @brief Aspiration windows for the search.
+  static constexpr std::array<int, 3> ASPIRATION_WINDOWS = {
+      PAWN_VALUE / 2, PAWN_VALUE * 2, INF / 2};
 
   // PROPERTIES
 
@@ -210,6 +215,22 @@ private:
    * @return Vector of pairs of moves and their scores.
    */
   auto run_iterative_deepening_search(int thread_index, BoardState &board_state)
+      -> std::vector<std::pair<Move, int>>;
+
+  /**
+   * @brief Runs the search with aspiration window.
+   *
+   * @param thread_index Thread index of the search thread.
+   * @param previous_eval Previous evaluation of the best move.
+   * @param depth Current depth of search.
+   * @param board_state BoardState object to search.
+   *
+   * @return Vector of pairs of moves and their scores.
+   */
+  auto run_search_with_aspiration_window(int thread_index,
+                                         int previous_eval,
+                                         int depth,
+                                         BoardState &board_state)
       -> std::vector<std::pair<Move, int>>;
 
   /**
