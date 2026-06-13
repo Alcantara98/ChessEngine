@@ -221,8 +221,14 @@ auto SearchEngine::run_iterative_deepening_search(int thread_index,
 
     auto search_start_time = std::chrono::steady_clock::now();
 
-    move_scores = root_negamax_alpha_beta_search(board_state, -INF, INF,
-                                                 iterative_depth, thread_index);
+    int previous_eval = 0;
+    if (!final_move_scores.empty())
+    {
+      previous_eval = final_move_scores[0].second;
+    }
+
+    move_scores = run_search_with_aspiration_window(
+        thread_index, previous_eval, iterative_depth, board_state);
 
     if (running_search_flag)
     {
@@ -243,6 +249,29 @@ auto SearchEngine::run_iterative_deepening_search(int thread_index,
   }
 
   return final_move_scores;
+}
+
+auto SearchEngine::run_search_with_aspiration_window(int thread_index,
+                                                     int previous_eval,
+                                                     int depth,
+                                                     BoardState &board_state)
+    -> std::vector<std::pair<Move, int>>
+{
+  std::vector<std::pair<Move, int>> move_scores;
+
+  for (int aspiration_window : ASPIRATION_WINDOWS)
+  {
+    int alpha = previous_eval - aspiration_window;
+    int beta = previous_eval + aspiration_window;
+    move_scores = root_negamax_alpha_beta_search(board_state, alpha, beta,
+                                                 depth, thread_index);
+    if (!running_search_flag || move_scores.empty() ||
+        (move_scores[0].second > alpha && move_scores[0].second < beta))
+    {
+      break;
+    }
+  }
+  return move_scores;
 }
 
 auto SearchEngine::root_negamax_alpha_beta_search(
