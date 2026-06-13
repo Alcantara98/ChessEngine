@@ -34,7 +34,7 @@ public:
 
   /// @brief Aspiration windows for the search.
   static constexpr std::array<int, 3> ASPIRATION_WINDOWS = {
-      PAWN_VALUE / 2, PAWN_VALUE * 2, INF / 2};
+      PAWN_VALUE / 4, PAWN_VALUE, INF / 2};
 
   // PROPERTIES
 
