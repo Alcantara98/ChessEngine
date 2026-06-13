@@ -484,22 +484,10 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
 
   // NULL MOVE PRUNING HEURISTIC
 
-  if (do_null_move_search(context))
+  if (!do_null_move_search(context))
   {
-    return context.eval;
-  }
-
-  // PRINCIPAL VARIATION HEURISTIC
-
-  context.possible_moves = move_generator::calculate_possible_moves(
-      context.board_state, true, &history_tables[context.thread_index], false);
-
-  put_best_move_at_front(context.possible_moves, context.tt_best_move_index);
-
-  // NEGAMAX SEARCH
-
-  // Search and evaluate each move.
   run_negamax_procedure(context);
+  }
 
   // NOTE: If search has stopped, don't save the states in the transposition
   // table as they are likely invalid.
@@ -529,12 +517,15 @@ void SearchEngine::sort_moves(std::vector<std::pair<Move, int>> &move_scores)
 
 void SearchEngine::run_negamax_procedure(NodeContext &context)
 {
+  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
+      context.board_state, true, &history_tables[context.thread_index], false);
+  put_best_move_at_front(possible_moves, context.tt_best_move_index);
+
   int quiet_move_index = 0;
   bool is_capture_move = false;
-  for (int move_index = 0; move_index < context.possible_moves.size();
-       ++move_index)
+  for (int move_index = 0; move_index < possible_moves.size(); ++move_index)
   {
-    if (context.possible_moves[move_index].captured_piece != nullptr)
+    if (possible_moves[move_index].captured_piece != nullptr)
     {
       is_capture_move = true;
     }
@@ -550,7 +541,7 @@ void SearchEngine::run_negamax_procedure(NodeContext &context)
       return;
     }
 
-    context.board_state.apply_move(context.possible_moves[move_index]);
+    context.board_state.apply_move(possible_moves[move_index]);
 
     // FUTILITY PRUNING HEURISTIC
 
@@ -558,9 +549,9 @@ void SearchEngine::run_negamax_procedure(NodeContext &context)
 
     if (!context.color_to_move_is_in_check && move_index != 0)
     {
-      futile_move = futility_prune_move(context, quiet_move_index,
-                                        context.possible_moves[move_index],
-                                        is_capture_move);
+      futile_move =
+          futility_prune_move(context, quiet_move_index,
+                              possible_moves[move_index], is_capture_move);
     }
 
     if (!futile_move)
@@ -573,14 +564,13 @@ void SearchEngine::run_negamax_procedure(NodeContext &context)
     if (context.eval > context.max_eval)
     {
       context.max_eval = context.eval;
-      context.tt_best_move_index =
-          context.possible_moves[move_index].list_index;
+      context.tt_best_move_index = possible_moves[move_index].list_index;
     }
 
     context.max_eval = std::max(context.eval, context.max_eval);
     context.alpha = std::max(context.eval, context.alpha);
 
-    update_history_table(context.possible_moves[move_index], context.eval,
+    update_history_table(possible_moves[move_index], context.eval,
                          context.depth, move_index, context.alpha, context.beta,
                          history_tables[context.thread_index]);
 
@@ -689,13 +679,6 @@ auto SearchEngine::handle_tt_entry(NodeContext &context) -> bool
       {
         return true;
       }
-    }
-
-    if (!context.is_pvs_line && context.tt_flag == EXACT &&
-        context.tt_eval + ((QUEEN_VALUE * 2) / context.tt_entry_search_depth) <
-            context.alpha)
-    {
-      return true;
     }
   }
 
@@ -921,15 +904,7 @@ auto SearchEngine::quiescence_search(NodeContext context) -> int
 
   // PRINCIPAL VARIATION HEURISTIC
 
-  context.possible_moves = move_generator::calculate_possible_moves(
-      context.board_state, true, &history_tables[context.thread_index],
-      !context.color_to_move_is_in_check);
-
-  put_best_move_at_front(context.possible_moves, context.tt_best_move_index);
-
   // QUIESCENCE SEARCH
-
-  context.max_eval = context.static_eval;
 
   run_quiescence_search_procedure(context);
 
@@ -951,7 +926,13 @@ auto SearchEngine::quiescence_search(NodeContext context) -> int
 
 void SearchEngine::run_quiescence_search_procedure(NodeContext &context)
 {
-  for (auto &move : context.possible_moves)
+  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
+      context.board_state, true, &history_tables[context.thread_index],
+      !context.color_to_move_is_in_check);
+  put_best_move_at_front(possible_moves, context.tt_best_move_index);
+
+  context.max_eval = context.static_eval;
+  for (auto &move : possible_moves)
   {
     // Check if the move can be delta pruned.
     if (!context.color_to_move_is_in_check && delta_prune_move(context, move))
