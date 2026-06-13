@@ -244,7 +244,7 @@ auto SearchEngine::run_iterative_deepening_search(int thread_index,
     {
       // NOTE: Only the main thread should print the performance matrix.
       reset_and_print_performance_matrix(iterative_depth, search_start_time,
-                                         search_end_time);
+                                         search_end_time, move_scores);
     }
   }
 
@@ -460,7 +460,7 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
   if (context.depth < 0)
   {
     context.depth = 0;
-    // printf("BREAKPOINT negamax_alpha_beta_search; depth < 0\n");
+    printf("BREAKPOINT negamax_alpha_beta_search; depth < 0\n");
   }
 
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
@@ -515,7 +515,7 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
 
   if (!do_null_move_search(context))
   {
-  run_negamax_procedure(context);
+    run_negamax_procedure(context);
   }
 
   // NOTE: If search has stopped, don't save the states in the transposition
@@ -803,8 +803,9 @@ void SearchEngine::store_state_in_transposition_table(NodeContext &context)
 
 void SearchEngine::reset_and_print_performance_matrix(
     int iterative_depth,
-    std::chrono::time_point<std::chrono::steady_clock> search_start_time,
-    std::chrono::time_point<std::chrono::steady_clock> search_end_time)
+    const std::chrono::time_point<std::chrono::steady_clock> &search_start_time,
+    const std::chrono::time_point<std::chrono::steady_clock> &search_end_time,
+    const std::vector<std::pair<Move, int>> &move_scores)
 {
   // Print performance metrics to user.
   if (!is_uci && ((show_performance && !engine_is_pondering) ||
@@ -841,6 +842,9 @@ void SearchEngine::reset_and_print_performance_matrix(
 
     printf("Depth: %d, Time: %ldms\n", iterative_depth,
            duration / NANOSECONDS_IN_MILLISECOND);
+    printf("Current Best Move: %s, Eval: %d\n",
+           move_interface::move_to_string(move_scores[0].first).c_str(),
+           move_scores[0].second);
     printf("Leaf Nodes Visited %zu\n", leaf_nodes_visited.load());
     printf("Quiessence Nodes Visited: %zu\n", quiescence_nodes_visited.load());
     printf("Nodes Visited: %zu\n", nodes_visited.load());
