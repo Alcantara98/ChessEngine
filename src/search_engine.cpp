@@ -337,8 +337,8 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     int search_depth = depth;
 
     // LMR HEURISTIC
-    if (quiet_move_index > LMR_THRESHOLD * 3 && !color_to_move_is_in_check &&
-        (depth + ply) > MIN_LMR_ITERATION_DEPTH &&
+    if (quiet_move_index > LMR_THRESHOLD * 3 && depth >= MIN_LMR_DEPTH &&
+        !color_to_move_is_in_check && (depth + ply) > MIN_LMR_ITERATION_DEPTH &&
         board_state.previous_move_stack.top().promotion_piece_type ==
             PieceType::EMPTY)
     {
@@ -591,10 +591,11 @@ void SearchEngine::run_pvs_search(NodeContext &context,
   // LATE MOVE REDUCTION HEURISTIC
 
   bool lmr_line = context.is_forward_pruning_line;
-  if (quiet_move_index > LMR_THRESHOLD && !context.color_to_move_is_in_check &&
-      !is_capture_move && !context.is_forward_pruning_line &&
+  if (quiet_move_index > LMR_THRESHOLD && context.depth >= MIN_LMR_DEPTH &&
+      !context.color_to_move_is_in_check && !is_capture_move &&
+      !context.is_forward_pruning_line &&
       (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
-      context.ply >= MIN_LMR_DEPTH &&
+      context.ply >= MIN_LMR_PLY &&
       context.board_state.previous_move_stack.top().promotion_piece_type ==
           PieceType::EMPTY)
   {
@@ -608,6 +609,8 @@ void SearchEngine::run_pvs_search(NodeContext &context,
       new_search_depth -=
           (quiet_move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
     }
+
+    new_search_depth = std::max(new_search_depth, context.depth / 2);
   }
 
   // Do a null window search around alpha. We just want to know
@@ -689,15 +692,15 @@ auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
 {
   if (context.is_forward_pruning_line ||
       (context.depth + context.ply) <= MIN_NULL_MOVE_ITERATION_DEPTH ||
-      context.ply < MIN_NULL_MOVE_DEPTH || context.board_state.is_end_game ||
-      context.color_to_move_is_in_check)
+      context.ply < MIN_NULL_MOVE_PLY || context.board_state.is_end_game ||
+      context.color_to_move_is_in_check || context.depth < MIN_NULL_MOVE_DEPTH)
   {
     return false;
   }
 
   context.board_state.apply_null_move();
 
-  int reduction = NULL_MOVE_REDUCTION;
+  int reduction = 0;
   if (!context.is_pvs_line)
   {
     reduction += context.depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
@@ -710,7 +713,13 @@ auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
 
   context.board_state.undo_null_move();
 
-  return context.eval >= context.beta;
+  if (context.eval >= context.beta)
+  {
+    context.max_eval = context.eval;
+    return true;
+  }
+
+  return false;
 }
 
 void SearchEngine::handle_eval_adjustments(int &eval, BoardState &board_state)
