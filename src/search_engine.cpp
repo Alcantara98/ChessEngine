@@ -364,13 +364,15 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     // Do a null window search around alpha. We just want to know
     // if there is an eval that is greater than alpha. If there is, we do a full
     // search.
-    int beta_search = alpha_search + 1;
-    context.eval = -negamax_alpha_beta_search(
-        new_context(board_state, -beta_search, -alpha_search, search_depth - 1,
-                    context.is_forward_pruning_line, move_index == 0,
-                    context.ply + 1, context.thread_index));
-
-    if (context.eval > alpha_search)
+    if (move_index != 0)
+    {
+      int beta_search = alpha_search + 1;
+      context.eval = -negamax_alpha_beta_search(
+          new_context(board_state, -beta_search, -alpha_search,
+                      search_depth - 1, context.is_forward_pruning_line,
+                      move_index == 0, context.ply + 1, context.thread_index));
+    }
+    if (move_index == 0 || context.eval > alpha_search)
     {
       context.eval = -negamax_alpha_beta_search(
           new_context(board_state, -context.beta, -alpha_search,
