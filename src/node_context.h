@@ -2,9 +2,6 @@
 #define NODE_CONTEXT_H
 
 #include "board_state.h"
-#include "move.h"
-
-#include <vector>
 
 namespace engine::parts
 {
@@ -32,7 +29,7 @@ struct NodeContext
   int tt_flag = 0;
   int tt_entry_search_depth = 0;
   int tt_best_move_index = -1;
-  bool color_to_move_is_in_check = false; // TODO: Move this to board state.
+  bool king_in_check = false; // TODO: Move this to board state.
 };
 
 /**
