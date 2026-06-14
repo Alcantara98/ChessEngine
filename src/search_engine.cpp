@@ -311,7 +311,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     return move_scores;
   }
 
-  context.color_to_move_is_in_check =
+  context.king_in_check =
       (board_state.color_to_move == PieceColor::WHITE)
           ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
           : attack_check::king_is_checked(board_state, PieceColor::BLACK);
@@ -348,7 +348,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
 
     // LMR HEURISTIC
     if (quiet_move_index > LMR_THRESHOLD * 3 &&
-        context.depth >= MIN_LMR_DEPTH && !context.color_to_move_is_in_check &&
+        context.depth >= MIN_LMR_DEPTH && !context.king_in_check &&
         (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
         board_state.previous_move_stack.top().promotion_piece_type ==
             PieceType::EMPTY)
@@ -462,14 +462,14 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
     return INF;
   }
 
-  context.color_to_move_is_in_check =
+  context.king_in_check =
       (context.board_state.color_to_move == PieceColor::WHITE)
           ? attack_check::king_is_checked(context.board_state,
                                           PieceColor::WHITE)
           : attack_check::king_is_checked(context.board_state,
                                           PieceColor::BLACK);
 
-  if (context.depth == 0 && context.color_to_move_is_in_check)
+  if (context.depth == 0 && context.king_in_check)
   {
     ++context.depth;
   }
@@ -525,6 +525,8 @@ void SearchEngine::run_negamax_procedure(NodeContext &context)
 {
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
       context.board_state, true, &history_tables[context.thread_index], false);
+  context.static_eval =
+      position_evaluator::evaluate_position(context.board_state);
   put_best_move_at_front(possible_moves, context.tt_best_move_index);
 
   int quiet_move_index = 0;
@@ -551,16 +553,8 @@ void SearchEngine::run_negamax_procedure(NodeContext &context)
 
     // FUTILITY PRUNING HEURISTIC
 
-    bool futile_move = false;
-
-    if (!context.color_to_move_is_in_check && move_index != 0)
-    {
-      futile_move =
-          futility_prune_move(context, quiet_move_index,
-                              possible_moves[move_index], is_capture_move);
-    }
-
-    if (!futile_move)
+    if (!futility_prune_move(context, quiet_move_index,
+                             possible_moves[move_index], is_capture_move))
     {
       run_pvs_search(context, move_index, quiet_move_index, is_capture_move);
     }
@@ -598,7 +592,7 @@ void SearchEngine::run_pvs_search(NodeContext &context,
 
   bool lmr_line = context.is_forward_pruning_line;
   if (quiet_move_index > LMR_THRESHOLD && context.depth >= MIN_LMR_DEPTH &&
-      !context.color_to_move_is_in_check && !is_capture_move &&
+      !context.king_in_check && !is_capture_move &&
       !context.is_forward_pruning_line &&
       (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
       context.ply >= MIN_LMR_PLY &&
@@ -701,7 +695,7 @@ auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
   if (context.is_forward_pruning_line ||
       (context.depth + context.ply) <= MIN_NULL_MOVE_ITERATION_DEPTH ||
       context.ply < MIN_NULL_MOVE_PLY || context.board_state.is_end_game ||
-      context.color_to_move_is_in_check || context.depth < MIN_NULL_MOVE_DEPTH)
+      context.king_in_check || context.depth < MIN_NULL_MOVE_DEPTH)
   {
     return false;
   }
@@ -871,7 +865,7 @@ auto SearchEngine::quiescence_search(NodeContext context) -> int
     return INF;
   }
 
-  context.color_to_move_is_in_check =
+  context.king_in_check =
       (context.board_state.color_to_move == PieceColor::WHITE)
           ? attack_check::king_is_checked(context.board_state,
                                           PieceColor::WHITE)
@@ -951,14 +945,14 @@ void SearchEngine::run_quiescence_search_procedure(NodeContext &context)
 {
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
       context.board_state, true, &history_tables[context.thread_index],
-      !context.color_to_move_is_in_check);
+      !context.king_in_check);
   put_best_move_at_front(possible_moves, context.tt_best_move_index);
 
   context.max_eval = context.static_eval;
   for (auto &move : possible_moves)
   {
     // Check if the move can be delta pruned.
-    if (!context.color_to_move_is_in_check && delta_prune_move(context, move))
+    if (!context.king_in_check && delta_prune_move(context, move))
     {
       continue;
     }
@@ -1007,36 +1001,19 @@ auto SearchEngine::futility_prune_move(NodeContext &context,
                                        Move &move,
                                        bool is_capture_move) -> bool
 {
-  if (context.alpha < -INF_MINUS_1000 ||
-      move.promotion_piece_type != PieceType::EMPTY ||
+  if (quiet_move_index < MIN_FP_QUIET_MOVE_INDEX ||
+      context.alpha < -INF_MINUS_1000 ||
+      move.promotion_piece_type != PieceType::EMPTY || context.king_in_check ||
       attack_check::king_is_checked(context.board_state,
                                     context.board_state.color_to_move) ||
-      is_capture_move || context.ply < MIN_FUTILITY_PRUNING_PLY ||
-      context.depth > TT_FUTILITY_PRUNING_MIN_DEPTH)
+      is_capture_move || context.ply < MIN_FUTILITY_PRUNING_PLY)
   {
     return false;
   }
 
-  // Get static evaluation of the board state.
-  // Eval has to be negated because we are still in the perspective of the
-  // parent node.
-  context.eval = -position_evaluator::evaluate_position(context.board_state);
+  int futility_margin = (PAWN_VALUE * context.depth) - (quiet_move_index * 2);
 
-  int futility_cutoff_index = 3 + ((context.depth * context.depth) / 2);
-
-  int futility_margin = 0;
-  if (quiet_move_index < futility_cutoff_index)
-  {
-    futility_margin +=
-        (PAWN_VALUE * context.depth * context.depth) - (quiet_move_index * 2);
-  }
-
-  if (context.eval + futility_margin < context.alpha)
-  {
-    return true;
-  }
-
-  return false;
+  return context.static_eval + futility_margin < context.alpha;
 }
 
 void SearchEngine::update_history_table(const Move &move,
