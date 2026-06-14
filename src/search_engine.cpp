@@ -279,10 +279,6 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     -> std::vector<std::pair<Move, int>>
 {
   std::vector<std::pair<Move, int>> move_scores;
-  bool is_pvs_line = false;
-  bool is_forward_pruning_line = false;
-  int ply = 0;
-  int alpha_search = alpha;
 
   // Check if the engine wants to stop searching.
   // Check if the current state has been repeated three times. If it has, the
@@ -293,30 +289,16 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     return move_scores;
   }
 
-  depth = std::max(depth, 0);
+  NodeContext context = new_context(board_state, alpha, beta, depth, false,
+                                    false, 0, thread_index);
 
-  // Increment nodes visited.
   nodes_visited.fetch_add(1, std::memory_order_relaxed);
 
   // TRANSPOSITION TABLE LOOKUP
 
-  // Save the initial alpha value to later determine the correct evaluation
-  // flag when we save the state in the transposition table.
-  int original_alpha = alpha;
-
-  // These values will be updated by the retrieve function of the
-  // transposition table if the position has been searched before. If
-  // tt_entry_best_move_index is -1, it means there is no best move associated
-  // with the position.
-  int eval;
-  int tt_eval;
-  int tt_flag;
-  int tt_entry_search_depth;
-  int tt_best_move_index = -1;
-  uint64_t hash = board_state.get_current_state_hash();
-
-  transposition_table.retrieve(hash, tt_entry_search_depth, tt_eval, tt_flag,
-                               tt_best_move_index);
+  transposition_table.retrieve(context.hash, context.tt_entry_search_depth,
+                               context.tt_eval, context.tt_flag,
+                               context.tt_best_move_index);
 
   // CHECK WHICH SIDE IS IN CHECK
   bool other_color_is_in_check =
@@ -329,7 +311,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     return move_scores;
   }
 
-  bool color_to_move_is_in_check =
+  context.color_to_move_is_in_check =
       (board_state.color_to_move == PieceColor::WHITE)
           ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
           : attack_check::king_is_checked(board_state, PieceColor::BLACK);
@@ -337,14 +319,13 @@ auto SearchEngine::root_negamax_alpha_beta_search(
   // PRINCIPAL VARIATION HEURISTIC
 
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
-      board_state, true, &history_tables[thread_index], false);
+      board_state, true, &history_tables[context.thread_index], false);
 
-  put_best_move_at_front(possible_moves, tt_best_move_index);
+  put_best_move_at_front(possible_moves, context.tt_best_move_index);
 
   // NEGAMAX SEARCH
 
-  int max_eval = -INF;
-  max_eval = -INF;
+  context.max_eval = -INF;
 
   // SEARCH
   int quiet_move_index = 0;
@@ -363,57 +344,58 @@ auto SearchEngine::root_negamax_alpha_beta_search(
 
     board_state.apply_move(possible_moves[move_index]);
 
-    int search_depth = depth;
+    int search_depth = context.depth;
 
     // LMR HEURISTIC
-    if (quiet_move_index > LMR_THRESHOLD * 3 && depth >= MIN_LMR_DEPTH &&
-        !color_to_move_is_in_check && (depth + ply) > MIN_LMR_ITERATION_DEPTH &&
+    if (quiet_move_index > LMR_THRESHOLD * 3 &&
+        context.depth >= MIN_LMR_DEPTH && !context.color_to_move_is_in_check &&
+        (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
         board_state.previous_move_stack.top().promotion_piece_type ==
             PieceType::EMPTY)
     {
       search_depth -= LATE_MOVE_REDUCTION - 1;
     }
 
-    // Do a null window search around alpha. We just want to know
-    // if there is an eval that is greater than alpha. If there is, we do a
-    // full search.
-    alpha_search = alpha;
-    if (thread_index == 0)
+    int alpha_search = context.alpha;
+    if (context.thread_index == 0)
     {
-      alpha_search = alpha - 2;
+      alpha_search = context.alpha - 2;
     }
     // Do a null window search around alpha. We just want to know
     // if there is an eval that is greater than alpha. If there is, we do a full
     // search.
     int beta_search = alpha_search + 1;
-    eval = -negamax_alpha_beta_search(new_context(
-        board_state, -beta_search, -alpha_search, search_depth - 1,
-        is_forward_pruning_line, move_index == 0, ply + 1, thread_index));
+    context.eval = -negamax_alpha_beta_search(
+        new_context(board_state, -beta_search, -alpha_search, search_depth - 1,
+                    context.is_forward_pruning_line, move_index == 0,
+                    context.ply + 1, context.thread_index));
 
-    if (eval > alpha_search)
+    if (context.eval > alpha_search)
     {
-      eval = -negamax_alpha_beta_search(new_context(
-          board_state, -beta, -alpha_search, search_depth - 1,
-          is_forward_pruning_line, move_index == 0, ply + 1, thread_index));
+      context.eval = -negamax_alpha_beta_search(
+          new_context(board_state, -context.beta, -alpha_search,
+                      search_depth - 1, context.is_forward_pruning_line,
+                      move_index == 0, context.ply + 1, context.thread_index));
     }
 
-    move_scores.emplace_back(possible_moves[move_index], eval);
+    move_scores.emplace_back(possible_moves[move_index], context.eval);
 
     board_state.undo_move();
 
-    if (eval > max_eval)
+    if (context.eval > context.max_eval)
     {
-      max_eval = eval;
-      tt_best_move_index = possible_moves[move_index].list_index;
+      context.max_eval = context.eval;
+      context.tt_best_move_index = possible_moves[move_index].list_index;
     }
 
-    max_eval = std::max(eval, max_eval);
-    alpha = std::max(eval, alpha);
+    context.max_eval = std::max(context.eval, context.max_eval);
+    context.alpha = std::max(context.eval, context.alpha);
 
-    update_history_table(possible_moves[move_index], eval, search_depth,
-                         move_index, alpha, beta, history_tables[thread_index]);
+    update_history_table(possible_moves[move_index], context.eval, search_depth,
+                         move_index, context.alpha, context.beta,
+                         history_tables[context.thread_index]);
 
-    if (alpha >= beta)
+    if (context.alpha >= context.beta)
     {
       break;
     }
@@ -432,16 +414,9 @@ auto SearchEngine::root_negamax_alpha_beta_search(
 
   // Handle checkmate evals and correct stalemate evals before saving
   // the state into the transposition table.
-  handle_eval_adjustments(max_eval, board_state);
+  handle_eval_adjustments(context.max_eval, context.board_state);
 
-  NodeContext store_context =
-      new_context(board_state, alpha, beta, depth, is_forward_pruning_line,
-                  false, ply, thread_index);
-  store_context.original_alpha = original_alpha;
-  store_context.hash = hash;
-  store_context.max_eval = max_eval;
-  store_context.tt_best_move_index = tt_best_move_index;
-  store_state_in_transposition_table(store_context);
+  store_state_in_transposition_table(context);
 
   return move_scores;
 }
