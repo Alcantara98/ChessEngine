@@ -134,18 +134,6 @@ auto SearchEngine::search_and_execute_best_move() -> bool
     return false;
   }
 
-  // Moves that re-visit a position are penalized, this will make the engine
-  // avoid threefold repetition.
-  for (auto move_score_filtered : move_scores_filtered)
-  {
-    game_board_state.apply_move(move_score_filtered.first);
-    if (game_board_state.current_state_has_been_visited())
-    {
-      move_score_filtered.second -= 1;
-    }
-    game_board_state.undo_move();
-  }
-
   // Sort moves by score so that the best move is first at index 0.
   sort_moves(move_scores_filtered);
 
