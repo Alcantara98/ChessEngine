@@ -92,6 +92,16 @@ void SearchEngine::clear_transposition_table() { transposition_table.clear(); }
 auto SearchEngine::search_and_execute_best_move() -> bool
 {
   std::vector<std::pair<Move, int>> move_scores = run_lazy_smp_search();
+  std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
+      game_board_state, false, nullptr, false);
+
+  // Replace move scores with moves from possible moves.
+  // NOTE: This is necessary because moves contain pointers to actual pieces on
+  // the board.
+  for (auto &move_score : move_scores)
+  {
+    move_score.first = possible_moves[move_score.first.list_index];
+  }
 
   sort_moves(move_scores);
 
@@ -161,18 +171,19 @@ auto SearchEngine::run_lazy_smp_search() -> std::vector<std::pair<Move, int>>
   std::vector<std::pair<Move, int>> move_scores;
 
   std::vector<std::thread> search_threads;
-  std::vector<BoardState> thread_board_states(MAX_SEARCH_THREADS - 1,
+  std::vector<BoardState> thread_board_states(MAX_SEARCH_THREADS,
                                               BoardState(game_board_state));
 
   // Start main thread.
   search_threads.emplace_back(
-      [this, &move_scores]()
-      { move_scores = run_iterative_deepening_search(0, game_board_state); });
+      [this, &move_scores, &thread_board_states]() {
+        move_scores = run_iterative_deepening_search(0, thread_board_states[0]);
+      });
 
   // Start helper threads.
   for (int thread_index = 1; thread_index < MAX_SEARCH_THREADS; ++thread_index)
   {
-    BoardState &thread_board_state = thread_board_states[thread_index - 1];
+    BoardState &thread_board_state = thread_board_states[thread_index];
     {
       search_threads.emplace_back(
           [this, thread_index, &thread_board_state]() {
