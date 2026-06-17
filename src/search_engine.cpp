@@ -8,6 +8,7 @@
 #include "position_evaluator.h"
 
 #include <algorithm>
+#include <cmath>
 #include <thread>
 
 namespace engine::parts
@@ -231,6 +232,7 @@ auto SearchEngine::run_iterative_deepening_search(int thread_index,
 
     if (running_search_flag)
     {
+      sort_moves(move_scores);
       final_move_scores = move_scores;
     }
     else
@@ -291,7 +293,11 @@ auto SearchEngine::root_negamax_alpha_beta_search(
   NodeContext context = new_context(board_state, alpha, beta, depth, false,
                                     false, 0, thread_index);
 
-  nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  if (context.thread_index == 0)
+  {
+    nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  }
+  nodes_visited_all_threads.fetch_add(1, std::memory_order_relaxed);
 
   // TRANSPOSITION TABLE LOOKUP
 
@@ -299,17 +305,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
                                context.tt_eval, context.tt_flag,
                                context.tt_best_move_index);
 
-  // CHECK WHICH SIDE IS IN CHECK
-  bool other_color_is_in_check =
-      (board_state.color_to_move == PieceColor::WHITE)
-          ? attack_check::king_is_checked(board_state, PieceColor::BLACK)
-          : attack_check::king_is_checked(board_state, PieceColor::WHITE);
-
-  if (other_color_is_in_check)
-  {
-    return move_scores;
-  }
-
+  // CHECK IF IN CHECK
   context.king_in_check =
       (board_state.color_to_move == PieceColor::WHITE)
           ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
@@ -440,7 +436,11 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
     printf("BREAKPOINT negamax_alpha_beta_search; depth < 0\n");
   }
 
-  nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  if (context.thread_index == 0)
+  {
+    nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  }
+  nodes_visited_all_threads.fetch_add(1, std::memory_order_relaxed);
 
   context.hash = context.board_state.get_current_state_hash();
   context.max_eval = -INF;
@@ -480,7 +480,10 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
   // with depth - 2 since it is skipping a turn.
   if (context.depth <= 0)
   {
-    leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+    if (context.thread_index == 0)
+    {
+      leaf_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+    }
     return quiescence_search(
         new_context(context.board_state, context.alpha, context.beta, 0,
                     context.is_forward_pruning_line, context.is_pvs_line,
@@ -791,8 +794,12 @@ void SearchEngine::reset_and_print_performance_matrix(
     {
       duration = 1;
     }
-    auto kilo_nodes_per_second = static_cast<size_t>(
-        nodes_visited * NANOSECONDS_IN_MILLISECOND / duration);
+
+    auto kilo_nps = static_cast<size_t>(nodes_visited *
+                                        NANOSECONDS_IN_MILLISECOND / duration);
+
+    auto kilo_nps_all_threads = static_cast<size_t>(
+        nodes_visited_all_threads * NANOSECONDS_IN_MILLISECOND / duration);
 
     int quiescence_node_percentage = 0;
     int normal_node_percentage = 0;
@@ -810,17 +817,25 @@ void SearchEngine::reset_and_print_performance_matrix(
           PERCENTAGE);
     }
 
+    // Branchind Factor
+    auto branching_factor = std::pow(nodes_visited, 1.0 / iterative_depth);
+
     printf("Depth: %d, Time: %ldms\n", iterative_depth,
            duration / NANOSECONDS_IN_MILLISECOND);
-    printf("Current Best Move: %s, Eval: %d\n",
+    printf("Best Move: %s, Eval: %d\n",
            move_interface::move_to_string(move_scores[0].first).c_str(),
            move_scores[0].second);
-    printf("Leaf Nodes Visited %zu\n", leaf_nodes_visited.load());
+    printf("Branching Factor: %.2f\n", branching_factor);
+    printf("Leaf Nodes Visited: %zu\n", leaf_nodes_visited.load());
     printf("Quiessence Nodes Visited: %zu\n", quiescence_nodes_visited.load());
     printf("Nodes Visited: %zu\n", nodes_visited.load());
-    printf("Quiescence Node Percentage: %d%%\n", quiescence_node_percentage);
+    printf("Nodes Visited - All Threads: %zu\n",
+           nodes_visited_all_threads.load());
     printf("Normal Node Percentage: %d%%\n", normal_node_percentage);
-    printf("Nodes per second: %lu kN/s\n\n", kilo_nodes_per_second);
+    printf("Quiescence Node Percentage: %d%%\n", quiescence_node_percentage);
+    printf("Nodes per second: %lu kN/s\n", kilo_nps);
+    printf("Nodes per second - All Threads: %lu kN/s\n\n",
+           kilo_nps_all_threads);
   }
 
   // Reset performance metrics.
@@ -845,8 +860,12 @@ auto SearchEngine::quiescence_search(NodeContext context) -> int
   }
 
   // Increment nodes visited.
-  nodes_visited.fetch_add(1, std::memory_order_relaxed);
-  quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  if (context.thread_index == 0)
+  {
+    nodes_visited.fetch_add(1, std::memory_order_relaxed);
+    quiescence_nodes_visited.fetch_add(1, std::memory_order_relaxed);
+  }
+  nodes_visited_all_threads.fetch_add(1, std::memory_order_relaxed);
 
   context.is_quiescence = true;
   context.original_alpha = context.alpha;
