@@ -136,15 +136,15 @@ private:
   // PROPERTIES
 
   /// @brief Number of leaf nodes visited.
-  /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<size_t> leaf_nodes_visited = 0;
 
   /// @brief Number of nodes visited.
-  /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<size_t> nodes_visited = 0;
 
+  /// @brief Number of nodes visited.
+  std::atomic<size_t> nodes_visited_all_threads = 0;
+
   /// @brief Number of quiescence nodes visited.
-  /// NOTE: Atomic because it is accessed by multiple search threads.
   std::atomic<size_t> quiescence_nodes_visited = 0;
 
   /// @brief See BoardState.
