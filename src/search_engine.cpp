@@ -490,6 +490,9 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
                     context.ply, context.thread_index, true));
   }
 
+  context.static_eval =
+      position_evaluator::evaluate_position(context.board_state);
+
   // NULL MOVE PRUNING HEURISTIC
 
   if (!do_null_move_search(context))
@@ -527,8 +530,7 @@ void SearchEngine::run_negamax_procedure(NodeContext &context)
 {
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
       context.board_state, true, &history_tables[context.thread_index], false);
-  context.static_eval =
-      position_evaluator::evaluate_position(context.board_state);
+
   put_best_move_at_front(possible_moves, context.tt_best_move_index);
 
   int quiet_move_index = 0;
@@ -620,14 +622,16 @@ void SearchEngine::run_pvs_search(NodeContext &context,
   // search.
   context.eval = -negamax_alpha_beta_search(new_context(
       context.board_state, -context.alpha - 1, -context.alpha, new_search_depth,
-      lmr_line, move_index == 0, context.ply + 1, context.thread_index));
+      lmr_line, (move_index == 0 && context.is_pvs_line), context.ply + 1,
+      context.thread_index));
 
   if (context.eval > context.alpha && context.depth - 1 > new_search_depth)
   {
     context.eval = -negamax_alpha_beta_search(
         new_context(context.board_state, -context.alpha - 1, -context.alpha,
                     context.depth - 1, context.is_forward_pruning_line,
-                    move_index == 0, context.ply + 1, context.thread_index));
+                    (move_index == 0 && context.is_pvs_line), context.ply + 1,
+                    context.thread_index));
   }
 
   // Check if eval is greater than alpha. If it is, do a full search.
@@ -639,7 +643,8 @@ void SearchEngine::run_pvs_search(NodeContext &context,
     context.eval = -negamax_alpha_beta_search(
         new_context(context.board_state, -context.beta, -context.alpha,
                     context.depth - 1, context.is_forward_pruning_line,
-                    move_index == 0, context.ply + 1, context.thread_index));
+                    (move_index == 0 && context.is_pvs_line), context.ply + 1,
+                    context.thread_index));
   }
 }
 
@@ -697,18 +702,15 @@ auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
   if (context.is_forward_pruning_line ||
       (context.depth + context.ply) <= MIN_NULL_MOVE_ITERATION_DEPTH ||
       context.ply < MIN_NULL_MOVE_PLY || context.board_state.is_end_game ||
-      context.king_in_check || context.depth < MIN_NULL_MOVE_DEPTH)
+      context.king_in_check || context.depth < MIN_NULL_MOVE_DEPTH ||
+      context.is_pvs_line || context.static_eval + PAWN_VALUE < context.beta)
   {
     return false;
   }
 
   context.board_state.apply_null_move();
 
-  int reduction = 0;
-  if (!context.is_pvs_line)
-  {
-    reduction += context.depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
-  }
+  int reduction = context.depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
 
   context.eval = -negamax_alpha_beta_search(
       new_context(context.board_state, -context.beta, -(context.beta - 1),
@@ -842,6 +844,7 @@ void SearchEngine::reset_and_print_performance_matrix(
   nodes_visited = 0;
   leaf_nodes_visited = 0;
   quiescence_nodes_visited = 0;
+  nodes_visited_all_threads = 0;
 }
 
 auto SearchEngine::quiescence_search(NodeContext context) -> int
