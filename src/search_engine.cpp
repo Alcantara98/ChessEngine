@@ -842,6 +842,7 @@ void SearchEngine::reset_and_print_performance_matrix(
   nodes_visited = 0;
   leaf_nodes_visited = 0;
   quiescence_nodes_visited = 0;
+  nodes_visited_all_threads = 0;
 }
 
 auto SearchEngine::quiescence_search(NodeContext context) -> int
