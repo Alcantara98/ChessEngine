@@ -287,6 +287,7 @@ void UCIEngine::search_for_best_move(int wtime_ms,
   {
     search_engine.max_search_depth = depth;
   }
+
   if (engine_clock > 0)
   {
     // First two moves
@@ -317,16 +318,12 @@ void UCIEngine::search_for_best_move(int wtime_ms,
           (engine_clock / MIDDLE_GAME_MOVE_STACK_TIME_FACTOR);
     }
   }
-  if (winc_ms > 0)
-  {
-    // NOTE: -2 is to account for the time it takes for the move to actually be
-    // played in the server.
-    search_engine.max_search_time_milliseconds += engine_increment - 2;
-  }
+
   if (movetime_ms > 0)
   {
     search_engine.max_search_time_milliseconds = movetime_ms;
   }
+
   if (infinite)
   {
     search_engine.max_search_time_milliseconds = parts::INF;
