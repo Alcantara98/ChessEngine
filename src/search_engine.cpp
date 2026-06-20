@@ -706,7 +706,8 @@ auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
   if (context.is_forward_pruning_line ||
       (context.depth + context.ply) <= MIN_NULL_MOVE_ITERATION_DEPTH ||
       context.board_state.is_end_game || context.king_in_check ||
-      context.depth < MIN_NULL_MOVE_DEPTH)
+      context.depth < MIN_NULL_MOVE_DEPTH ||
+      context.static_eval + PAWN_VALUE < context.beta)
   {
     return false;
   }
