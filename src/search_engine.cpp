@@ -629,14 +629,16 @@ void SearchEngine::run_pvs_search(NodeContext &context,
   // search.
   context.eval = -negamax_alpha_beta_search(new_context(
       context.board_state, -context.alpha - 1, -context.alpha, new_search_depth,
-      lmr_line, move_index == 0, context.ply + 1, context.thread_index));
+      lmr_line, (move_index == 0 && context.is_pvs_line), context.ply + 1,
+      context.thread_index));
 
   if (context.eval > context.alpha && context.depth - 1 > new_search_depth)
   {
     context.eval = -negamax_alpha_beta_search(
         new_context(context.board_state, -context.alpha - 1, -context.alpha,
                     context.depth - 1, context.is_forward_pruning_line,
-                    move_index == 0, context.ply + 1, context.thread_index));
+                    (move_index == 0 && context.is_pvs_line), context.ply + 1,
+                    context.thread_index));
   }
 
   // Check if eval is greater than alpha. If it is, do a full search.
@@ -648,7 +650,8 @@ void SearchEngine::run_pvs_search(NodeContext &context,
     context.eval = -negamax_alpha_beta_search(
         new_context(context.board_state, -context.beta, -context.alpha,
                     context.depth - 1, context.is_forward_pruning_line,
-                    move_index == 0, context.ply + 1, context.thread_index));
+                    (move_index == 0 && context.is_pvs_line), context.ply + 1,
+                    context.thread_index));
   }
 }
 
@@ -703,7 +706,7 @@ auto SearchEngine::handle_tt_entry(NodeContext &context) -> bool
 
 auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
 {
-  if (context.is_forward_pruning_line ||
+  if (context.is_forward_pruning_line || context.is_pvs_line ||
       (context.depth + context.ply) <= MIN_NULL_MOVE_ITERATION_DEPTH ||
       context.board_state.is_end_game || context.king_in_check ||
       context.depth < MIN_NULL_MOVE_DEPTH ||
