@@ -83,11 +83,11 @@ auto evaluate_position(const BoardState &board_state) -> int
 
   if (white_bishop_count >= BISHOP_PAIR_COUNT)
   {
-    eval += MEDIUM_EVAL_VALUE;
+    eval += (MEDIUM_EVAL_VALUE + SMALL_EVAL_VALUE);
   }
   if (black_bishop_count >= BISHOP_PAIR_COUNT)
   {
-    eval -= MEDIUM_EVAL_VALUE;
+    eval -= (MEDIUM_EVAL_VALUE + SMALL_EVAL_VALUE);
   }
 
   // In raw evaluations, positive eval is good for white and negative eval is
