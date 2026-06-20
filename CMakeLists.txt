@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project(chess_engine)
+find_package(Threads REQUIRED)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -66,6 +67,12 @@ endif()
 
 # Shared engine library
 add_library(chess_engine_core STATIC ${ENGINE_SOURCES})
+
+target_link_libraries(
+    chess_engine_core
+    PUBLIC
+    Threads::Threads
+)
 
 # App 1: existing CLI main
 if(BUILD_CLI_APP)
