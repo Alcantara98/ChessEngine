@@ -611,6 +611,14 @@ void SearchEngine::run_pvs_search(NodeContext &context,
       // further.
       new_search_depth -=
           (quiet_move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
+
+      // If position is equal, search quiet moves deeper.
+      if (context.board_state.is_end_game ||
+          (context.static_eval > -PAWN_VALUE &&
+           context.static_eval < PAWN_VALUE))
+      {
+        new_search_depth += 2;
+      }
     }
 
     new_search_depth = std::max(new_search_depth, context.depth / 2);
