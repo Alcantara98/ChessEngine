@@ -18,6 +18,8 @@ struct NodeContext
   int ply;
   int thread_index;
   int original_alpha;
+  bool previous_state_in_check;
+  int iteration_depth;
   bool is_quiescence;
   uint64_t hash;
 
@@ -44,6 +46,9 @@ struct NodeContext
  * @param is_pvs_line Flag to indicate if the node is a PVS node.
  * @param ply Current ply of the search.
  * @param thread_index Thread index of the search thread.
+ * @param previous_state_in_check Whether previous state was in check.
+ * @param iteration_depth Current iteration depth of search.
+ * @param is_quiescence Flag whether node is a quiesence node.
  *
  * @return The created node context.
  */
@@ -55,6 +60,8 @@ auto new_context(BoardState &board_state,
                  bool is_pvs_line,
                  int ply,
                  int thread_index,
+                 bool previous_state_in_check,
+                 int iteration_depth,
                  bool is_quiescence = false) -> NodeContext;
 } // namespace engine::parts
 
