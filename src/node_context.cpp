@@ -10,6 +10,8 @@ auto new_context(BoardState &board_state,
                  bool is_pvs_line,
                  int ply,
                  int thread_index,
+                 bool previous_state_in_check,
+                 int iteration_depth,
                  bool is_quiescence) -> NodeContext
 {
   return NodeContext{board_state,
@@ -21,6 +23,8 @@ auto new_context(BoardState &board_state,
                      ply,
                      thread_index,
                      alpha,
+                     previous_state_in_check,
+                     iteration_depth,
                      is_quiescence,
                      board_state.get_current_state_hash()};
 }

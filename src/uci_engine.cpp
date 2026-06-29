@@ -266,7 +266,6 @@ void UCIEngine::search_for_best_move(int wtime_ms,
 {
   // Deterine Engine Clock depending on engine color
   int engine_clock = 0;
-  int engine_increment = 0;
 
   // Set default search time and depth
   search_engine.max_search_time_milliseconds = parts::DEFAULT_SEARCH_TIME_MS;
@@ -275,12 +274,10 @@ void UCIEngine::search_for_best_move(int wtime_ms,
   if (search_engine.engine_color == parts::PieceColor::WHITE)
   {
     engine_clock = wtime_ms;
-    engine_increment = winc_ms;
   }
   else
   {
     engine_clock = btime_ms;
-    engine_increment = binc_ms;
   }
 
   if (depth > 0)

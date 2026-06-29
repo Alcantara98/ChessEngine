@@ -236,16 +236,11 @@ private:
   /**
    * @brief Runs the negamax alpha beta search for the root node.
    *
-   * @param board_state BoardState object to search.
-   * @param alpha Highest score to be picked by maximizing node.
-   * @param beta Lowest score to be picked by minimizing node.
-   * @param depth Current depth of search.
-   * @param thread_index Thread index of the search thread.
+   * @param context Node context.
    *
    * @return Vector of pairs of moves and their scores.
    */
-  auto root_negamax_alpha_beta_search(
-      BoardState &board_state, int alpha, int beta, int depth, int thread_index)
+  auto root_negamax_alpha_beta_search(NodeContext context)
       -> std::vector<std::pair<Move, int>>;
 
   /**

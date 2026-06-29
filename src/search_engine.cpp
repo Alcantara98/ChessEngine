@@ -264,8 +264,9 @@ auto SearchEngine::run_search_with_aspiration_window(int thread_index,
   {
     int alpha = previous_eval - aspiration_window;
     int beta = previous_eval + aspiration_window;
-    move_scores = root_negamax_alpha_beta_search(board_state, alpha, beta,
-                                                 depth, thread_index);
+    move_scores = root_negamax_alpha_beta_search(
+        new_context(board_state, alpha, beta, depth, false, false, 0,
+                    thread_index, false, depth));
     if (!running_search_flag || move_scores.empty() ||
         (move_scores[0].second > alpha && move_scores[0].second < beta))
     {
@@ -275,8 +276,7 @@ auto SearchEngine::run_search_with_aspiration_window(int thread_index,
   return move_scores;
 }
 
-auto SearchEngine::root_negamax_alpha_beta_search(
-    BoardState &board_state, int alpha, int beta, int depth, int thread_index)
+auto SearchEngine::root_negamax_alpha_beta_search(NodeContext context)
     -> std::vector<std::pair<Move, int>>
 {
   std::vector<std::pair<Move, int>> move_scores;
@@ -285,13 +285,10 @@ auto SearchEngine::root_negamax_alpha_beta_search(
   // Check if the current state has been repeated three times. If it has, the
   // game is drawn. Evaluation for a draw is 0.
   if (!running_search_flag ||
-      board_state.current_state_has_been_repeated_three_times())
+      context.board_state.current_state_has_been_repeated_three_times())
   {
     return move_scores;
   }
-
-  NodeContext context = new_context(board_state, alpha, beta, depth, false,
-                                    false, 0, thread_index);
 
   if (context.thread_index == 0)
   {
@@ -307,14 +304,16 @@ auto SearchEngine::root_negamax_alpha_beta_search(
 
   // CHECK IF IN CHECK
   context.king_in_check =
-      (board_state.color_to_move == PieceColor::WHITE)
-          ? attack_check::king_is_checked(board_state, PieceColor::WHITE)
-          : attack_check::king_is_checked(board_state, PieceColor::BLACK);
+      (context.board_state.color_to_move == PieceColor::WHITE)
+          ? attack_check::king_is_checked(context.board_state,
+                                          PieceColor::WHITE)
+          : attack_check::king_is_checked(context.board_state,
+                                          PieceColor::BLACK);
 
   // PRINCIPAL VARIATION HEURISTIC
 
   std::vector<Move> possible_moves = move_generator::calculate_possible_moves(
-      board_state, true, &history_tables[context.thread_index], false);
+      context.board_state, true, &history_tables[context.thread_index], false);
 
   put_best_move_at_front(possible_moves, context.tt_best_move_index);
 
@@ -337,7 +336,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
       break;
     }
 
-    board_state.apply_move(possible_moves[move_index]);
+    context.board_state.apply_move(possible_moves[move_index]);
 
     int search_depth = context.depth;
 
@@ -345,7 +344,7 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     if (quiet_move_index > LMR_THRESHOLD * 3 &&
         context.depth >= MIN_LMR_DEPTH && !context.king_in_check &&
         (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
-        board_state.previous_move_stack.top().promotion_piece_type ==
+        context.board_state.previous_move_stack.top().promotion_piece_type ==
             PieceType::EMPTY)
     {
       search_depth -= LATE_MOVE_REDUCTION - 1;
@@ -363,21 +362,23 @@ auto SearchEngine::root_negamax_alpha_beta_search(
     {
       int beta_search = alpha_search + 1;
       context.eval = -negamax_alpha_beta_search(
-          new_context(board_state, -beta_search, -alpha_search,
+          new_context(context.board_state, -beta_search, -alpha_search,
                       search_depth - 1, context.is_forward_pruning_line,
-                      move_index == 0, context.ply + 1, context.thread_index));
+                      move_index == 0, context.ply + 1, context.thread_index,
+                      context.king_in_check, context.iteration_depth));
     }
     if (move_index == 0 || context.eval > alpha_search)
     {
       context.eval = -negamax_alpha_beta_search(
-          new_context(board_state, -context.beta, -alpha_search,
+          new_context(context.board_state, -context.beta, -alpha_search,
                       search_depth - 1, context.is_forward_pruning_line,
-                      move_index == 0, context.ply + 1, context.thread_index));
+                      move_index == 0, context.ply + 1, context.thread_index,
+                      context.king_in_check, context.iteration_depth));
     }
 
     move_scores.emplace_back(possible_moves[move_index], context.eval);
 
-    board_state.undo_move();
+    context.board_state.undo_move();
 
     if (context.eval > context.max_eval)
     {
@@ -468,7 +469,10 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
           : attack_check::king_is_checked(context.board_state,
                                           PieceColor::BLACK);
 
-  if (context.depth == 0 && context.king_in_check)
+  // NOTE: Limit extension to 2 plys to avoid stalling the search.
+  if (context.depth <= 0 &&
+      (context.king_in_check || context.previous_state_in_check) &&
+      (context.ply + 2) <= context.iteration_depth)
   {
     ++context.depth;
   }
@@ -487,7 +491,8 @@ auto SearchEngine::negamax_alpha_beta_search(NodeContext context) -> int
     return quiescence_search(
         new_context(context.board_state, context.alpha, context.beta, 0,
                     context.is_forward_pruning_line, context.is_pvs_line,
-                    context.ply, context.thread_index, true));
+                    context.ply, context.thread_index, context.king_in_check,
+                    context.iteration_depth, true));
   }
 
   context.static_eval =
@@ -596,8 +601,8 @@ void SearchEngine::run_pvs_search(NodeContext &context,
 
   bool lmr_line = context.is_forward_pruning_line;
   if (quiet_move_index > LMR_THRESHOLD && context.depth >= MIN_LMR_DEPTH &&
-      !context.king_in_check && !is_capture_move &&
-      !context.is_forward_pruning_line &&
+      !context.king_in_check && !context.previous_state_in_check &&
+      !is_capture_move && !context.is_forward_pruning_line &&
       (context.depth + context.ply) > MIN_LMR_ITERATION_DEPTH &&
       context.board_state.previous_move_stack.top().promotion_piece_type ==
           PieceType::EMPTY)
@@ -611,17 +616,23 @@ void SearchEngine::run_pvs_search(NodeContext &context,
       // further.
       new_search_depth -=
           (quiet_move_index / LMR_EXTREME_REDUCTION_INDEX_DIVISOR);
-
-      // If position is equal, search quiet moves deeper.
-      if (context.board_state.is_end_game ||
-          (context.static_eval > -PAWN_VALUE &&
-           context.static_eval < PAWN_VALUE))
-      {
-        new_search_depth += 2;
-      }
+    }
+    // If position is equal, search quiet moves deeper.
+    if (context.board_state.is_end_game ||
+        (context.static_eval > -PAWN_VALUE && context.static_eval < PAWN_VALUE))
+    {
+      new_search_depth += 1;
+    }
+    if (context.static_eval < context.original_alpha - PAWN_VALUE)
+    {
+      new_search_depth -= 1;
     }
 
-    new_search_depth = std::max(new_search_depth, context.depth / 2);
+    // Don't reduce the search depth too far.
+    if (new_search_depth < 3)
+    {
+      new_search_depth = 2;
+    }
   }
 
   // Do a null window search around alpha. We just want to know
@@ -630,15 +641,15 @@ void SearchEngine::run_pvs_search(NodeContext &context,
   context.eval = -negamax_alpha_beta_search(new_context(
       context.board_state, -context.alpha - 1, -context.alpha, new_search_depth,
       lmr_line, (move_index == 0 && context.is_pvs_line), context.ply + 1,
-      context.thread_index));
+      context.thread_index, context.king_in_check, context.iteration_depth));
 
   if (context.eval > context.alpha && context.depth - 1 > new_search_depth)
   {
-    context.eval = -negamax_alpha_beta_search(
-        new_context(context.board_state, -context.alpha - 1, -context.alpha,
-                    context.depth - 1, context.is_forward_pruning_line,
-                    (move_index == 0 && context.is_pvs_line), context.ply + 1,
-                    context.thread_index));
+    context.eval = -negamax_alpha_beta_search(new_context(
+        context.board_state, -context.alpha - 1, -context.alpha,
+        context.depth - 1, context.is_forward_pruning_line,
+        (move_index == 0 && context.is_pvs_line), context.ply + 1,
+        context.thread_index, context.king_in_check, context.iteration_depth));
   }
 
   // Check if eval is greater than alpha. If it is, do a full search.
@@ -647,11 +658,11 @@ void SearchEngine::run_pvs_search(NodeContext &context,
   // search above.
   if (context.eval > context.alpha && context.beta - context.alpha > 1)
   {
-    context.eval = -negamax_alpha_beta_search(
-        new_context(context.board_state, -context.beta, -context.alpha,
-                    context.depth - 1, context.is_forward_pruning_line,
-                    (move_index == 0 && context.is_pvs_line), context.ply + 1,
-                    context.thread_index));
+    context.eval = -negamax_alpha_beta_search(new_context(
+        context.board_state, -context.beta, -context.alpha, context.depth - 1,
+        context.is_forward_pruning_line,
+        (move_index == 0 && context.is_pvs_line), context.ply + 1,
+        context.thread_index, context.king_in_check, context.iteration_depth));
   }
 }
 
@@ -719,10 +730,10 @@ auto SearchEngine::do_null_move_search(NodeContext &context) -> bool
 
   int reduction = context.depth / NULL_MOVE_ADDITIONAL_DEPTH_DIVISOR;
 
-  context.eval = -negamax_alpha_beta_search(
-      new_context(context.board_state, -context.beta, -(context.beta - 1),
-                  context.depth - reduction, true, false, context.ply + 1,
-                  context.thread_index));
+  context.eval = -negamax_alpha_beta_search(new_context(
+      context.board_state, -context.beta, -(context.beta - 1),
+      context.depth - reduction, true, false, context.ply + 1,
+      context.thread_index, context.king_in_check, context.iteration_depth));
 
   context.board_state.undo_null_move();
 
@@ -989,7 +1000,8 @@ void SearchEngine::run_quiescence_search_procedure(NodeContext &context)
 
     int eval = -quiescence_search(
         new_context(context.board_state, -context.beta, -context.alpha, 0,
-                    false, false, context.ply, context.thread_index, true));
+                    false, false, context.ply, context.thread_index,
+                    context.king_in_check, context.iteration_depth, true));
 
     context.board_state.undo_move();
 
