@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.12)
 project(chess_engine)
 find_package(Threads REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.15.1
+)
+set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(spdlog)
+
 # C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -72,6 +81,7 @@ target_link_libraries(
     chess_engine_core
     PUBLIC
     Threads::Threads
+    spdlog::spdlog
 )
 
 # App 1: existing CLI main
