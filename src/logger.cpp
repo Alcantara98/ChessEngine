@@ -23,11 +23,12 @@ void init_logging(const std::string &log_name)
   std::filesystem::create_directories(LOG_DIR);
 
   const std::string log_file_path = LOG_DIR + "/" + log_name + ".log";
-  auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-      log_file_path, false);
+  auto file_sink =
+      std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file_path, false);
   auto logger = std::make_shared<spdlog::logger>(log_name, file_sink);
 
-  // date + time.ms + level + file:line — file:line is easy to jump to in the editor
+  // date + time.ms + level + file:line — file:line is easy to jump to in the
+  // editor
   logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %s:%#: %v");
   logger->set_level(spdlog::level::info);
   logger->flush_on(spdlog::level::info);
