@@ -39,3 +39,4 @@ out
 .cache
 core
 log
+*.code-workspace
