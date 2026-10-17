@@ -10,7 +10,6 @@ FROM ubuntu:24.04
 
 ARG LLVM_VERSION=18
 ARG USER_UID=1000
-ARG USER_GID=${USER_UID}
 ARG USERNAME=master-elby
 ARG HOST_USERNAME=master-user
 
@@ -64,13 +63,13 @@ ENV CC=clang \
     CXX=clang++
 
 # Reuse the default `ubuntu` user that ships with Ubuntu 24.04 as the dev
-# user, renaming it to ${USERNAME} and adjusting its UID/GID to match the
-# host so bind-mounted source files keep correct ownership.
-RUN groupmod --gid ${USER_GID} --new-name ${USERNAME} ubuntu && \
-    usermod  --uid ${USER_UID} --gid ${USER_GID} \
-             --login ${USERNAME} \
-             --home /home/${USERNAME} --move-home ubuntu && \
-    chown -R ${USER_UID}:${USER_GID} /home/${USERNAME}
+# user, renaming it to ${USERNAME} and matching the host UID so bind-mounted
+# source files keep correct ownership. GID is left as Ubuntu's default.
+RUN groupmod --new-name "${USERNAME}" ubuntu && \
+    usermod  --uid "${USER_UID}" \
+             --login "${USERNAME}" \
+             --home "/home/${USERNAME}" --move-home ubuntu && \
+    chown -R "${USER_UID}:${USERNAME}" "/home/${USERNAME}"
 
 # Grant the dev user passwordless sudo.
 RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
