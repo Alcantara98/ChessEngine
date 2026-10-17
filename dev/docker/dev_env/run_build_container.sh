@@ -16,7 +16,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 HOST_UID="$(id -u)"
-HOST_GID="$(id -g)"
 HOST_USERNAME="$(id -un)"
 
 image_exists() {
@@ -35,7 +34,6 @@ build_image() {
   echo "Building Docker image '${IMAGE_NAME}'..."
   docker build \
     --build-arg "USER_UID=${HOST_UID}" \
-    --build-arg "USER_GID=${HOST_GID}" \
     --build-arg "HOST_USERNAME=${HOST_USERNAME}" \
     -t "${IMAGE_NAME}" \
     -f "${SCRIPT_DIR}/Dockerfile" \
